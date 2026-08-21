@@ -174,19 +174,32 @@ oversight/
     Globex R-4471/        posting, CV, cover letter
 ```
 
-**Open `oversight` once, in Gemini or ChatGPT or whatever you like, and leave it open.** For each
-application, say:
+**Open `oversight` in Gemini or ChatGPT or whatever you like** and say:
 
 > **"Read OVERSIGHT.md and follow it. Review Acme R-12345."**
 
-That is the whole procedure. Nothing to run, nothing to remember, and no reopening a new folder for every
-job — because with four applications running at once, that is the step people quietly stop doing.
+The folders rebuild on every edit, so they are never out of date. Nothing to run, nothing to set up.
 
-**The brief makes the reviewer take one application at a time** and refuse to read the others: four
-postings held in mind at once means a CV judged against the wrong requirements, which is an error that is
-invisible in the output and sounds authoritative. If you do not name one, it will ask.
+> 🔴 **Start a new chat for every review.** Not a new folder — a new **conversation**.
+>
+> This is the one bit of procedure worth keeping, and it is not fussiness. Suppose it reviews your CV and
+> says a bullet is vague. You fix it and ask the same chat again. **It now knows what that bullet was
+> meant to say, so the new version reads clearly to it — because it is finishing the sentence from
+> memory.** It approves something a recruiter would not.
+>
+> The same applies to a different job (it carries the last employer's requirements into this one) and to
+> explaining anything to it (*"that number is real, it's from the X project"* is context the recruiter
+> will never have).
+>
+> **Its entire value is that it knows nothing about you.** Every turn of conversation spends some of that.
+> One review, one fresh chat, then close it.
 
-The folders rebuild on every edit, so they are never out of date.
+**One review covers everything going in together** — CV, cover letter and form answers are one submission
+and get read as one. A CV and letter that repeat or contradict each other is a finding you only get by
+reading them side by side.
+
+The brief tells it to refuse if the chat is not empty, and to ask which application if you do not name
+one. That is a backstop, not the mechanism — **the mechanism is you opening a new chat.**
 
 > 🔴 **Open the `oversight` folder, never your wiki folder.**
 >

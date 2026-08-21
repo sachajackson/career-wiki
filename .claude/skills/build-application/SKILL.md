@@ -235,6 +235,11 @@ never stale. **You do not need to run it, and neither does the user.**
 **Name the application in the sentence.** The folder holds every application they have built; the brief
 makes the reviewer ask which one if not told, but telling it saves a round trip.
 
+🔴 **And tell them to start a new chat every time** — including after a revision, which is the case people
+get wrong. A reviewer that saw the first draft knows what a vague bullet was meant to say and reads the
+replacement as clear. **It approves what a recruiter would reject.** The brief makes it refuse, but the
+refusal only fires if the model notices; the reliable fix is a fresh conversation.
+
 **Why this sentence matters more than it looks.** A non-technical user who wants a second opinion and has
 not been given a path will point the other tool at whatever they can find — which is the application
 folder, which sits inside the wiki, one level from their salary floor and their notes about colleagues.

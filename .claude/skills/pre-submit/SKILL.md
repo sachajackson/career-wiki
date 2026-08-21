@@ -123,6 +123,10 @@ withheld deliberately: `do_not_claim` is a list of their gaps.
 
 **Bring the review back here. Do not let the other tool edit anything.**
 
+🔴 **A fresh chat per review, including after a fix.** A reviewer that remembers the previous draft
+completes the vague sentence from memory and approves it. **Re-reviewing a revision in the same
+conversation is worse than not re-reviewing at all**, because it returns a pass that has no basis.
+
 **No API key? Use `--dry-run`**, which prints the prompt and sends nothing. Paste it into any chat
 interface. That works just as well and costs nothing.
 
