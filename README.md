@@ -162,7 +162,14 @@ It refuses to guess. Attribution is read from an explicit `employer:` field, nev
 text — inference was tried and produced confident nonsense, so when the field is missing the check
 **reports itself as skipped** rather than passing.
 
-**`tools/review/` — the oversight layer.** An optional second model, ideally from a different vendor,
+**`OVERSIGHT.md` — review it in any tool you like.** Every application folder gets a copy: a
+self-contained brief telling an independent reviewer what it may read, what it must not, what to report
+and in what order. Run `tools/export_review.py` to build a folder **outside your wiki** holding only the
+posting, the outgoing documents and that brief — then open it in Gemini or ChatGPT and say *"read
+OVERSIGHT.md and follow it."* The export exists because telling a model not to read your private notes is
+not the same as it being unable to.
+
+**`tools/review/` — the same review, automated.** An optional second model, ideally from a different vendor,
 reads the posting and your documents and reports what is unsupported, generic or mismatched. **It never
 sees your wiki** — it gets exactly what a recruiter gets, which is both the point and the privacy
 position. No API key needed to use it: `--dry-run` prints the prompt for you to paste anywhere.

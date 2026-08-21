@@ -199,6 +199,10 @@ section**, and it is normal to make it.
 **Save the posting as `posting.txt` beside it** — coverage needs it to rank what is missing by what this
 employer actually asked for, and the role page needs it anyway.
 
+**Also copy `templates/OVERSIGHT.md` into the folder.** It is the brief an independent reviewer reads,
+and it travels with the application so the review can happen in any tool later without reconstructing the
+instructions.
+
 **`do_not_claim` is whatever the cover letter concedes.** A CV claiming what the letter concedes is worse
 than either document alone.
 

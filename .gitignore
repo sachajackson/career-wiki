@@ -30,3 +30,6 @@ __pycache__/
 
 # Oversight layer: API keys
 tools/review/config.json
+
+# Review exports: copies of outgoing documents, regenerated on demand
+review-exports/

@@ -102,6 +102,27 @@ enough to write will find it natural enough to approve.
 A reviewer who has read the wiki judges the CV against what it knows to be true, which is the wrong test —
 and sending the wiki to a third-party API would be a serious privacy escalation for a marginal gain.
 
+### Reviewing in another vendor's tool
+
+**The portable route, and the one to prefer** — no API key, and the applicant sees the review happen:
+
+```bash
+python3 tools/export_review.py "<the application folder>"
+```
+
+That builds a folder **outside the wiki** containing only the posting, the outgoing documents and
+`OVERSIGHT.md`. Open **that folder** in Gemini, ChatGPT or anything else and say:
+
+> *Read OVERSIGHT.md and follow it.*
+
+🔴 **Export rather than pointing the other tool at the application folder directly.** `OVERSIGHT.md` tells
+the reviewer not to read the wiki, but **an instruction to a model is not a boundary** — an application
+folder inside the wiki is one `cd ..` away from the applicant's salary floor and their notes about
+colleagues. The export makes containment a property of the filesystem instead. `application.json` is
+withheld deliberately: `do_not_claim` is a list of their gaps.
+
+**Bring the review back here. Do not let the other tool edit anything.**
+
 **No API key? Use `--dry-run`**, which prints the prompt and sends nothing. Paste it into any chat
 interface. That works just as well and costs nothing.
 
