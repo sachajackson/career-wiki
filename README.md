@@ -1,5 +1,64 @@
 # Career Wiki
 
+> # ⚠️ Read this before you use anything here
+>
+> **This system is built on large language models. They produce fluent, confident, plausible text, and
+> some of it will be wrong.** That is not a defect awaiting a fix — it is how the technology works. A
+> model can invent a number, attach a real achievement to the wrong job, misread a date, misstate a
+> qualification, or write a sentence you cannot support, and it will do all of that in the same assured
+> tone as everything it gets right.
+>
+> ### You must read and verify every single output, in full, before it leaves your hands
+>
+> **Every CV, cover letter, profile, form answer and assessment this produces is a draft for you to
+> check.** Not a finished document. Read it line by line against what you actually know to be true:
+> dates, job titles, employers, figures, technologies, qualifications, and which role each achievement
+> belongs to. **If you cannot personally stand over a sentence in an interview, take it out.**
+>
+> ### You are solely responsible for what you submit
+>
+> **The person whose name is on the application is accountable for its contents.** Not this software, not
+> its authors, not the model provider. If something inaccurate reaches an employer, that is your
+> submission and your consequence.
+>
+> **Those consequences are real.** An unsupportable claim can lose you an application, an offer, or a job
+> after you have started. In many places a material misstatement in a job application is grounds for
+> summary dismissal, and depending on the claim and the jurisdiction it can amount to fraud or
+> misrepresentation with legal consequences beyond employment. **Answers about right to work, visa status,
+> sponsorship, qualifications and professional registration are legally significant. Verify them
+> yourself.**
+>
+> ### The checks in this repo reduce risk. They do not remove it
+>
+> There is a deterministic verifier, a lint pass and an independent review layer, and they exist precisely
+> because model output cannot be trusted unexamined. **They are not a guarantee.** A clean run means
+> *nothing was provably wrong by the checks that ran* — it does not mean the document is accurate, and it
+> never means you can skip reading it.
+>
+> ### No warranty, no liability, no advice
+>
+> **This software is provided "as is", without warranty of any kind**, express or implied, per the MIT
+> licence in `LICENSE`. **The authors and contributors accept no liability for any loss or damage arising
+> from its use**, including lost opportunities, withdrawn offers, terminated employment, reputational harm
+> or any other consequence, however caused.
+>
+> **Nothing here is legal, immigration, employment, financial or career advice.** It is not a substitute
+> for a solicitor, an employment adviser, an immigration adviser or a qualified professional. If a
+> question is genuinely legal — redundancy rights, notice, discrimination, visa eligibility, contractual
+> obligations — take it to someone qualified.
+>
+> **Third parties are outside anyone's control here.** Job boards, applicant tracking systems, employers
+> and any other AI vendor you choose to use have their own terms, their own data practices and their own
+> behaviour. **Read their terms. Using the optional job-search or review integrations is your decision and
+> your responsibility.**
+>
+> ### Using it means you accept all of the above
+>
+> **If you are not willing to check the output yourself, do not use this.** An unchecked AI-written CV is
+> worse than no CV, because it is confident, specific and wrong in ways you will be asked about out loud.
+
+---
+
 **An AI-maintained knowledge base for running a job search properly.**
 
 You put your CV in a folder. An AI agent interviews you about what you actually do, builds a structured
@@ -15,6 +74,7 @@ You never write the wiki. You answer questions and make the decisions.
 
 - [The problem this solves](#the-problem-this-solves)
 - [What it actually does](#what-it-actually-does) — including just pasting a job link
+- [Checking the output](#checking-the-output) — **the three layers, and how to run oversight**
 - [The scoring framework](#the-scoring-framework)
 - [Installing it](#installing-it) — start here if you are not technical; **the desktop app needs no terminal**
 - [Your first hour](#your-first-hour)
@@ -142,110 +202,6 @@ confirmed, whether a client name or a colleague's name has ended up in an outgoi
 right employer is named in the letter, and whether the sponsorship question was read twice. Then it does
 the bookkeeping while it is fresh.
 
-### Two checking layers that are not models
-
-**Everything above is probabilistic, including whichever model wrote your CV.** A model that invented a
-figure while writing will find it plausible while reviewing. So the last two passes are built on the
-assumption that the writer cannot be trusted to check itself.
-
-**`tools/verify.py` — the deterministic layer.** No model, no network. It reads your wiki and proves four
-things about an outgoing document:
-
-| | |
-|---|---|
-| **UNSOURCED** | A figure appears in the CV and nowhere in the wiki. **Treat as fabricated** |
-| **ATTRIBUTION** | A real figure is sitting on the wrong employer. **Every sentence is true and the document still lies.** This is the error that survives every kind of review |
-| **UNVERIFIED** | It is in the wiki, but nobody confirmed it |
-| **STALE** | It traces to a page whose `stale_after` has passed |
-
-It refuses to guess. Attribution is read from an explicit `employer:` field, never inferred from nearby
-text — inference was tried and produced confident nonsense, so when the field is missing the check
-**reports itself as skipped** rather than passing.
-
-**A second opinion from a different AI — and you do not have to set anything up.**
-
-There is a folder called **`oversight`**. That is the one to open. It is named after what you are asking
-for, so there is nothing to look up:
-
-```
-oversight/
-    OVERSIGHT.md          <- the reviewer's instructions
-    Acme R-12345/         posting, CV, cover letter
-    Globex R-4471/        posting, CV, cover letter
-```
-
-**Open `oversight` in Gemini or ChatGPT or whatever you like** and say:
-
-> **"Read OVERSIGHT.md and follow it. Review Acme R-12345."**
-
-The folders rebuild on every edit, so they are never out of date. Nothing to run, nothing to set up.
-
-> 🔴 **Start a new chat for every review.** Not a new folder — a new **conversation**.
->
-> This is the one bit of procedure worth keeping, and it is not fussiness. Suppose it reviews your CV and
-> says a bullet is vague. You fix it and ask the same chat again. **It now knows what that bullet was
-> meant to say, so the new version reads clearly to it — because it is finishing the sentence from
-> memory.** It approves something a recruiter would not.
->
-> The same applies to a different job (it carries the last employer's requirements into this one) and to
-> explaining anything to it (*"that number is real, it's from the X project"* is context the recruiter
-> will never have).
->
-> **Its entire value is that it knows nothing about you.** Every turn of conversation spends some of that.
-> One review, one fresh chat, then close it.
-
-**One review covers everything going in together** — CV, cover letter and form answers are one submission
-and get read as one. A CV and letter that repeat or contradict each other is a finding you only get by
-reading them side by side.
-
-**Nobody can make a model forget.** Clearing context and opening a new chat are things only you can do —
-no model has access to either, whatever it may say. So the system does the achievable thing instead: it
-makes the failure **visible**.
-
-Each folder carries a `REVIEW-ID` — a fingerprint of exactly those documents, which changes the moment any
-of them does. The reviewer must open its review with that line. That turns two silent failures into loud
-ones:
-
-- **It has already reviewed in this chat.** It finds its own earlier `REVIEW-ID` in the conversation and
-  refuses, instead of quietly doing a worse job.
-- **You are holding a review of an old draft.** The ID on the review will not match the one in the folder,
-  so you can tell at a glance that its approval was of something you are no longer sending.
-
-**And if you edit anything after a review, you are told.** Hand the review back here, it gets filed, and
-the next time you touch that CV the system notices the fingerprint has moved and says so by name: *your
-oversight review for this application was of the previous version, and its verdict no longer applies.*
-
-That is the failure most worth catching, because it is the comfortable one. A genuine SEND verdict, from a
-real review, of a document you have since changed — **a pass you believe you have is more dangerous than
-no pass at all**, because you will act on it.
-
-The brief also makes it ask which application if you do not name one. **All of this is a backstop — the
-mechanism is still you opening a new chat.** But now, when that goes wrong, you find out.
-
-> 🔴 **Open the `oversight` folder, never your wiki folder.**
->
-> This is the one thing worth being careful about. Your wiki holds your salary floor, why you are leaving,
-> and things you have said about colleagues. `oversight` holds only what the recruiter is going to
-> receive anyway, so showing it to another company's AI costs you nothing.
->
-> The brief also *tells* the reviewer not to go looking — but telling a model not to read something is not
-> the same as it being unable to, which is why the folder exists separately at all.
-
-**`tools/review/` — the same review, automated.** An optional second model, ideally from a different vendor,
-reads the posting and your documents and reports what is unsupported, generic or mismatched. **It never
-sees your wiki** — it gets exactly what a recruiter gets, which is both the point and the privacy
-position. No API key needed to use it: `--dry-run` prints the prompt for you to paste anywhere.
-
-**Where the two disagree, the deterministic layer wins.** It checks facts; the reviewer checks
-impressions.
-
-**And a third question neither of those asks: what did you leave out?** `verify.py --coverage --posting`
-reads all three — your CV, your wiki and the job spec — and reports the achievements this employer's own
-language points at that your CV does not carry. Most omissions are correct — a two-page CV
-cannot hold everything. But it forces the question **decision or oversight**, and the second kind is how
-the best thing you have done stays invisible for years because no single application happened to call for
-it. Anything marked `exclude_from_cv: true` stays excluded permanently.
-
 ### `/profile-refresh` — LinkedIn and Indeed
 
 Rewrites your public profiles from the wiki, as text you paste in. Run it **before** a batch of
@@ -279,6 +235,144 @@ application, the wiki writes a better CV in ten minutes than a fresh interview w
 Contradictions between pages, claims that have expired, unverified assertions that have found their way
 into a CV, the same number attached to two different jobs across two application packs, roles with no
 posting link. Ranked by what could actually cause damage.
+
+---
+
+## Checking the output
+
+**The disclaimer at the top is the rule: you check everything.** This section is about what the system
+does to make that job smaller, and what it deliberately does not claim to do.
+
+Everything that writes here is a language model, **including whichever model would review its own work.**
+A model that found a figure plausible enough to write finds it plausible enough to approve. So the checks
+are built on the assumption that the writer cannot audit itself, and there are three of them, asking three
+different questions.
+
+| | Asks | What it is |
+|---|---|---|
+| **`verify.py`** | **Is it true?** | Arithmetic and string matching against your wiki. No model, no network |
+| **`oversight/`** | **Does it convince?** | A different vendor's model, reading only what a recruiter reads |
+| **`--coverage`** | **What did you leave out?** | Your wiki and the job advert, compared against the CV |
+
+---
+
+### 1. The deterministic layer — `verify.py`
+
+**No model is involved.** It reads your wiki, reads the outgoing document, and proves four things:
+
+| Finding | What it means |
+|---|---|
+| 🔴 **UNSOURCED** | A figure appears in the CV and **nowhere in your wiki**. Treat it as invented until you prove otherwise |
+| 🔴 **ATTRIBUTION** | A real figure is sitting on the **wrong employer**. Every sentence is true and the document still misleads. This is the error that survives every kind of review, because nothing in it reads as false |
+| **UNVERIFIED** | The figure is in your wiki, but you have never confirmed it |
+| **STALE** | It traces to a page whose review date has passed |
+
+**It refuses to guess.** Attribution is read from an explicit field, never inferred from nearby text —
+inference was built, tested, and produced confident nonsense, so when the data is missing the check
+**reports itself as skipped** rather than quietly passing. **Read the SKIPPED lines**: a clean run with two
+checks disabled means very little.
+
+**You never run it.** A hook fires on every write or edit of a CV or cover letter, and the findings go
+straight to the agent, which fixes them and triggers the check again. One rule governs the fixing, and it
+matters: **an UNSOURCED figure is never resolved by adding it to the wiki.** That would launder an
+invention into a source, and every future application would then treat it as evidence. It comes out of the
+document, or you confirm it.
+
+### 2. The oversight layer — a second opinion from a different AI
+
+**Why a different one:** the point is not that another model is better. It is that its mistakes are not
+*the same* mistakes. Two passes from the same model share the same blind spots.
+
+#### How to use it
+
+There is a folder called **`oversight`**. Open it in Gemini, ChatGPT or anything else, and say:
+
+> **"Read OVERSIGHT.md and follow it. Review Acme R-12345."**
+
+That is the whole procedure. The folder rebuilds itself every time a document changes, so it is never out
+of date, and it contains one subfolder per application:
+
+```
+oversight/
+    OVERSIGHT.md          <- the reviewer's instructions
+    Acme R-12345/         posting, CV, cover letter, REVIEW-ID
+    Globex R-4471/        posting, CV, cover letter, REVIEW-ID
+```
+
+#### What it gives you
+
+Not a proofread. A structured, adversarial read in a fixed order: **fatal problems** that get an
+application binned unread, **unsupported claims** with the follow-up question an interviewer would ask,
+**generic lines** that would read identically on someone else's CV, **mismatches** between what the advert
+asks for and what your documents lead on, **passages that read as machine-written**, and finally **the
+strongest objection a hiring manager could make.** It ends with one line: `SEND`, `FIX FIRST` or
+`DO NOT SEND`.
+
+It is told not to rewrite anything, not to open with encouragement, and not to comment on whether claims
+are *believable* — that is the deterministic layer's job and it is a different question from whether they
+are *specific*.
+
+#### Two rules, and neither is fussiness
+
+> 🔴 **Open `oversight`. Never open your wiki.**
+>
+> Your wiki holds your salary floor, why you are leaving, and things you have said about colleagues.
+> `oversight` holds only what the employer is going to receive anyway — so showing it to another company's
+> AI costs you nothing at all.
+>
+> The brief also tells the reviewer to stay out of everything else, but **telling a model not to read
+> something is not the same as it being unable to**, which is why the folder exists separately in the
+> first place.
+
+> 🔴 **Start a new chat for every review — including after you fix something.**
+>
+> Suppose it says a bullet is vague, you fix it, and you ask the same chat again. **It now knows what that
+> bullet was meant to say, so the new version reads clearly to it — because it is completing the sentence
+> from memory.** It approves something a recruiter would reject.
+>
+> **Its entire value is that it knows nothing about you.** Every turn of conversation spends some of that,
+> which is why it also refuses explanations: *"that number is real, it's from the X project"* is context
+> the recruiter will never have.
+
+#### When it goes wrong, you are told
+
+**No model can clear its own memory or start a new chat** — those are things only you can do. So instead
+the system makes the failure visible.
+
+Every folder carries a **`REVIEW-ID`**, a fingerprint of exactly those documents that changes the instant
+any of them does. The reviewer must open its review with that line. Which means:
+
+- **If it has already reviewed in that chat**, it finds its own earlier ID and refuses, instead of quietly
+  doing a worse job.
+- **If you edit anything afterwards**, hand the review back here and it gets filed — then the next time
+  you touch that CV you are told by name: *your oversight review for this application was of the previous
+  version, and its verdict no longer applies.*
+
+**That second one is the failure most worth catching, because it is the comfortable one.** A genuine
+verdict, from a real review, of a document you have since changed. **A pass you believe you have is more
+dangerous than no pass**, because you will act on it.
+
+### 3. Coverage — what you left out
+
+`verify.py --coverage --posting` reads three things — your CV, your wiki and the job advert — and reports
+the achievements **this employer's own language points at** that your CV does not carry.
+
+**Most omissions are correct.** A two-page CV cannot hold everything, and it is reported separately from
+the findings for that reason. The question it forces is **decision or oversight** — and the second kind is
+how the best thing you have ever done stays invisible for years, because no single application happened to
+ask for it and nobody ever looked at the set.
+
+It matches words, not meaning: it cannot see that *"shipping cadence"* in an advert and *"release
+management"* in your wiki are the same idea. So the agent is told to repeat the exercise itself
+afterwards, with comprehension the script does not have. Anything you have marked as permanently excluded
+stays excluded and is never raised.
+
+### What none of this does
+
+**It cannot tell you whether the document is good**, whether it is honest about things your wiki never
+recorded, or whether you should send it. **A clean run means nothing was provably wrong by the checks that
+ran.** Read it yourself. That is not a formality — it is the only step that actually establishes the
+document is true.
 
 ---
 
@@ -595,6 +689,9 @@ for leaving to a cloud account, possibly a work-managed one.
   the first call rather than guess.
 - **The search ranking is triage, not judgement.** A keyword tally decides what is worth reading, nothing
   more. Good roles do land low in it, which is why the shortlist gets read rather than trusted.
+- 🔴 **It cannot tell you whether what it wrote is true.** The deterministic layer proves figures trace
+  to your wiki; nothing proves your wiki is right. **Only you can do that**, and the disclaimer at the top
+  is not boilerplate.
 - **It cannot make anything private from the model.** See above. Local storage is not concealment.
 - **It will not invent anything.** No metric, title or achievement you did not provide. Ask it to
   embellish and it will decline and explain why the claim would not survive a follow-up question.
