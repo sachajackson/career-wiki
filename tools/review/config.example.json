@@ -1,0 +1,9 @@
+{
+  "_comment": "Copy to config.json (gitignored) and set ONE provider. Prefer a different vendor to whichever model wrote the application -- correlated blind spots are the thing this layer exists to avoid.",
+
+  "provider": "openai",
+
+  "anthropic": { "api_key_env": "ANTHROPIC_API_KEY", "model": "claude-sonnet-5",   "max_tokens": 4000 },
+  "openai":    { "api_key_env": "OPENAI_API_KEY",    "model": "gpt-4o",            "max_tokens": 4000 },
+  "google":    { "api_key_env": "GEMINI_API_KEY",    "model": "gemini-2.0-flash",  "max_tokens": 4000 }
+}

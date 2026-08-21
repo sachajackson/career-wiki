@@ -142,6 +142,34 @@ confirmed, whether a client name or a colleague's name has ended up in an outgoi
 right employer is named in the letter, and whether the sponsorship question was read twice. Then it does
 the bookkeeping while it is fresh.
 
+### Two checking layers that are not models
+
+**Everything above is probabilistic, including whichever model wrote your CV.** A model that invented a
+figure while writing will find it plausible while reviewing. So the last two passes are built on the
+assumption that the writer cannot be trusted to check itself.
+
+**`tools/verify.py` — the deterministic layer.** No model, no network. It reads your wiki and proves four
+things about an outgoing document:
+
+| | |
+|---|---|
+| **UNSOURCED** | A figure appears in the CV and nowhere in the wiki. **Treat as fabricated** |
+| **ATTRIBUTION** | A real figure is sitting on the wrong employer. **Every sentence is true and the document still lies.** This is the error that survives every kind of review |
+| **UNVERIFIED** | It is in the wiki, but nobody confirmed it |
+| **STALE** | It traces to a page whose `stale_after` has passed |
+
+It refuses to guess. Attribution is read from an explicit `employer:` field, never inferred from nearby
+text — inference was tried and produced confident nonsense, so when the field is missing the check
+**reports itself as skipped** rather than passing.
+
+**`tools/review/` — the oversight layer.** An optional second model, ideally from a different vendor,
+reads the posting and your documents and reports what is unsupported, generic or mismatched. **It never
+sees your wiki** — it gets exactly what a recruiter gets, which is both the point and the privacy
+position. No API key needed to use it: `--dry-run` prints the prompt for you to paste anywhere.
+
+**Where the two disagree, the deterministic layer wins.** It checks facts; the reviewer checks
+impressions.
+
 ### `/profile-refresh` — LinkedIn and Indeed
 
 Rewrites your public profiles from the wiki, as text you paste in. Run it **before** a batch of

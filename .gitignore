@@ -27,3 +27,6 @@ config.json
 __pycache__/
 *.pyc
 .env
+
+# Oversight layer: API keys
+tools/review/config.json

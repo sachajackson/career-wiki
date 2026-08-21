@@ -178,6 +178,11 @@ it** — a CV that silently runs to three pages is a real failure.
 
 ## Step 7 — the pre-release check
 
+**Two passes, and they catch different things.** `tools/cv_lint.py` checks how it reads — characters,
+vocabulary, cadence. `tools/verify.py` checks whether it is *true* — every figure traced to the wiki, on
+the right employer, human-confirmed. **Run both.** See `/pre-submit` for the invocation.
+
+
 **Two passes, and they catch different things.**
 
 **Mechanical first:**

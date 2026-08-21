@@ -54,6 +54,56 @@ correct is the applicant's call, not yours.
 - **Nothing claimed that the cover letter concedes.** A skills tag contradicting the letter it is attached
   to is worse than no tag.
 
+## 3.5 Run the deterministic layer
+
+```bash
+pdftotext -layout "<the CV>.pdf" - | python3 tools/verify.py - \
+    --wiki wiki --employer "<Employer>" --employers "<all past employers, comma separated>" \
+    --ban "<anything the cover letter concedes>" --spelling us|uk
+```
+
+**Every model in this pipeline is probabilistic, including whichever one wrote the CV and whichever one
+reviews it.** A model that invented a figure while writing will find that figure plausible while
+checking. So the last check on the way out is arithmetic and string matching against the wiki, which has
+no opinion.
+
+It proves four things a reader cannot:
+
+| Finding | Means |
+|---|---|
+| **UNSOURCED** | A figure in the document exists nowhere in the wiki. **Treat as fabricated until proven otherwise** |
+| **ATTRIBUTION** | A real figure is sitting on the wrong employer. **Every sentence is true and the document still lies** |
+| **UNVERIFIED** | The figure is in the wiki but nobody has confirmed it |
+| **STALE** | It traces to a page whose `stale_after` has passed |
+
+🔴 **Read the SKIPPED lines.** If the wiki lacks `employer:` or `verified:` fields, the two most valuable
+checks silently do not run, and a clean result means nothing. **Fix the wiki rather than accepting the
+pass.**
+
+**A clean run is not approval.** It means nothing is provably wrong. Judgement is still yours.
+
+## 3.6 Optional: an independent second opinion
+
+```bash
+python3 tools/review/review.py --posting job.txt --cv cv.txt --letter letter.txt
+```
+
+**A second model, preferably from a different vendor**, reads the posting and the outgoing documents and
+reports what is unsupported, generic, mismatched or machine-sounding. **It is not about one model being
+better — it is about the failure modes not being correlated.** A model that found a phrasing natural
+enough to write will find it natural enough to approve.
+
+🔴 **The reviewer never sees the wiki, and this is deliberate.** It gets only what the recruiter will get.
+A reviewer who has read the wiki judges the CV against what it knows to be true, which is the wrong test —
+and sending the wiki to a third-party API would be a serious privacy escalation for a marginal gain.
+
+**No API key? Use `--dry-run`**, which prints the prompt and sends nothing. Paste it into any chat
+interface. That works just as well and costs nothing.
+
+**Its verdict is an opinion from something that has never met the applicant.** Weigh it; do not obey it.
+Where it contradicts the deterministic layer, **the deterministic layer wins** — it is checking facts,
+the reviewer is checking impressions.
+
 ## 4. Confidentiality
 
 Run the sensitive-data rules from `CLAUDE.md` over **the outgoing documents**, not the wiki:

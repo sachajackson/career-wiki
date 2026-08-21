@@ -70,6 +70,24 @@ verified:
 career wiki fills with claims that look identical and are not, and the difference decides whether a
 sentence can go in front of a recruiter.
 
+### `employer` — required on any page carrying a number
+
+```yaml
+employer: Acme Corp
+```
+
+**Put it on every page that states a figure**, naming the employer the figure belongs to.
+
+**This is not decoration: it is the input to the deterministic check.** `tools/verify.py` compares the
+employer a figure sits under in an outgoing CV against the employer the wiki attributes it to, and
+**without this field that check cannot run at all.** It is the check that catches a real achievement
+attached to the wrong role — an error that survives every kind of review, because every individual
+sentence is true.
+
+**Proximity is not a substitute.** Inferring the owner from nearby text was tried and produced confident
+nonsense: a discursive page mentions four employers within six lines of any number, so every attribution
+"passed". If the field is absent, the check reports itself as skipped rather than guessing.
+
 ### `stale_after` — claims expire on a date, not silently
 
 ```yaml
