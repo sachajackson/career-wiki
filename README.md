@@ -16,7 +16,7 @@ You never write the wiki. You answer questions and make the decisions.
 - [The problem this solves](#the-problem-this-solves)
 - [What it actually does](#what-it-actually-does) — including just pasting a job link
 - [The scoring framework](#the-scoring-framework)
-- [Installing it](#installing-it) — start here if you are not technical
+- [Installing it](#installing-it) — start here if you are not technical; **the desktop app needs no terminal**
 - [Your first hour](#your-first-hour)
 - [Setting up job search](#setting-up-job-search)
 - [How it stores things](#how-it-stores-things)
@@ -252,9 +252,30 @@ and a full init plus a few applications uses a meaningful amount of usage.
 
 ### 2. Install Claude Code
 
-Claude Code is a program that runs in your terminal and can read and write files on your computer. The
-authoritative instructions, which stay correct if the commands below ever change, are at
-**[docs.claude.com/en/docs/claude-code](https://docs.claude.com/en/docs/claude-code)**.
+Claude Code is the agent that reads and writes the files. **There are two ways to run it, and the desktop
+app is the easier one if you are not comfortable in a terminal.** Both use the same engine and both work
+identically with this repo.
+
+The authoritative instructions, which stay correct if anything below changes, are at
+**[code.claude.com/docs](https://code.claude.com/docs)**.
+
+#### Option A — the desktop app (recommended if you are not technical)
+
+Download and install:
+
+- **[macOS](https://claude.ai/api/desktop/darwin/universal/dmg/latest/redirect)** — universal build,
+  Intel and Apple Silicon
+- **[Windows](https://claude.ai/api/desktop/win32/x64/setup/latest/redirect)** — x64. **Install
+  [Git for Windows](https://git-scm.com/downloads/win) first**, then restart the app
+- **Linux** — apt or .deb, see [the Linux guide](https://code.claude.com/docs/en/desktop-linux)
+
+Then launch Claude, sign in, and **click the `Code` tab**.
+
+> 🔴 **The `Code` tab, not `Chat`.** The desktop app has three tabs — Chat, Cowork and Code. Only **Code**
+> can read your files and run the tools this repo needs. If you are typing into the ordinary chat window,
+> none of this will work.
+
+#### Option B — the terminal
 
 **macOS or Linux** — open Terminal (on a Mac: press Command+Space, type "Terminal", press Enter) and
 paste:
@@ -269,7 +290,9 @@ curl -fsSL https://claude.ai/install.sh | bash
 irm https://claude.ai/install.ps1 | iex
 ```
 
-There is also a desktop app if you would rather not use a terminal at all — see the docs link above.
+**You can use both**, on the same folder, at the same time. They keep separate conversation histories but
+share the same `CLAUDE.md` and the same wiki. To move a terminal session into the desktop app, type
+`/desktop`.
 
 ### 3. Check you have Python
 
@@ -312,14 +335,33 @@ Nothing in `sources` is ever uploaded anywhere or committed to git. It stays on 
 
 ### 6. Start
 
-```bash
-claude
-```
+**In the desktop app:** open the `Code` tab, and before typing anything set the two things that matter in
+the prompt area:
 
-Then type:
+| Setting | Choose |
+|---|---|
+| **Environment** | **Local** — it needs to reach files on your own machine |
+| **Project folder** | the `career-wiki` folder you just downloaded |
+
+Then type `/career-init` and press Enter. Typing `/` at any point lists every command in this repo — they
+are picked up automatically from the project folder, with nothing to install.
+
+**In the terminal:** navigate to the folder and run `claude`, then type:
 
 ```
 /career-init
+```
+
+#### Running the job search
+
+Once you get to `/role-radar`, **just ask** — "run the radar for the last week" — and the agent runs the
+script itself. You never need to type a command.
+
+If you would rather watch it run, the desktop app has a built-in terminal: **Views → Terminal**, or press
+**Ctrl+`**. It opens in your project folder already, so this works directly:
+
+```bash
+python3 tools/radar/radar.py --days 7
 ```
 
 ### 7. Optional but recommended — read the wiki in Obsidian
