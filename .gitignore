@@ -1,0 +1,29 @@
+# ---------------------------------------------------------------------------
+# THE MOST IMPORTANT FILE IN THIS REPO.
+#
+# This system ingests CVs, salary floors, family circumstances and, if you use
+# it honestly, things you would not say out loud at work. None of that belongs
+# in version control on a public host.
+#
+# Everything you or the agent generates is ignored by default. The repo tracks
+# scaffolding only. If you WANT history for your own wiki, make it a separate
+# private repo inside wiki/ rather than loosening these rules.
+# ---------------------------------------------------------------------------
+
+sources/*
+!sources/.gitkeep
+!sources/README.md
+
+wiki/*
+!wiki/.gitkeep
+
+# Radar working files: regenerated every run, and seen.json records what you
+# have been shown, which is itself a record of your job search.
+tools/radar/*.json
+tools/radar/shortlist.md
+config.json
+
+.DS_Store
+__pycache__/
+*.pyc
+.env

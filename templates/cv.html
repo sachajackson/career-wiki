@@ -1,0 +1,100 @@
+<!doctype html>
+<!--
+  CV template. The agent fills this in; the user prints it to PDF from the
+  browser (Cmd/Ctrl+P, destination "Save as PDF", margins "None", and turn OFF
+  "Headers and footers" or the browser stamps a URL on every page).
+
+  Why HTML and not .docx: this needs nothing installed and behaves identically
+  on every platform. Print CSS below controls margins and page breaks.
+
+  Editing rules:
+    - ASCII only. No em dashes, curly quotes or emoji.
+    - Keep every bullet to two printed lines or fewer.
+    - Delete the whole <section> for anything that does not apply.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CV</title>
+<style>
+  @page { size: A4; margin: 12mm 14mm; }
+  :root { --ink:#000; --muted:#3f3f3f; --accent:#1f3864; --rule:#999; }
+  * { box-sizing: border-box; }
+  body { font-family: Calibri, Carlito, "Segoe UI", Helvetica, Arial, sans-serif;
+         font-size: 10pt; line-height: 1.34; color: var(--ink); margin: 0; }
+  .page { max-width: 190mm; margin: 0 auto; padding: 6mm 0; }
+  h1 { font-size: 19pt; margin: 0 0 2mm; letter-spacing: .3px; }
+  .strap { color: var(--muted); font-size: 10.5pt; padding-bottom: 2mm;
+           border-bottom: 1.5px solid var(--ink); }
+  .contact { color: var(--muted); font-size: 9.5pt; margin: 2mm 0 6mm; }
+  h2 { font-size: 11pt; text-transform: uppercase; letter-spacing: .6px;
+       margin: 6mm 0 2mm; padding-bottom: 1mm; border-bottom: 1px solid var(--rule); }
+  .role { font-weight: 700; font-size: 10.5pt; margin: 4mm 0 0.5mm; }
+  .role .org { color: var(--accent); }
+  .dates { color: var(--muted); font-style: italic; font-size: 9.5pt; margin: 0 0 1.5mm; }
+  ul { margin: 0 0 0 4.5mm; padding: 0; }
+  li { margin: 0 0 1.1mm; }
+  p { margin: 0 0 2mm; }
+  section, .role-block { break-inside: avoid; page-break-inside: avoid; }
+  h2 { break-after: avoid; page-break-after: avoid; }
+  @media screen { body { background:#f4f4f4; } .page { background:#fff; margin:8mm auto;
+    padding:12mm 14mm; box-shadow:0 1px 6px rgba(0,0,0,.18); } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>FULL NAME</h1>
+  <div class="strap">Positioning line: what this application is arguing, in under twelve words</div>
+  <div class="contact">Town, Country | email@example.com | https://www.linkedin.com/in/handle</div>
+
+  <section>
+    <h2>Profile</h2>
+    <p>Four to six sentences. Lead with the thing this specific posting is about. Not a summary of the
+    CV below it.</p>
+  </section>
+
+  <section>
+    <h2>Skills</h2>
+    <p>Semicolon-separated. Only things the person could actually do today.</p>
+  </section>
+
+  <section>
+    <h2>Experience</h2>
+
+    <div class="role-block">
+      <div class="role">Job Title, <span class="org">Employer, Location</span></div>
+      <div class="dates">Mon YYYY - Present</div>
+      <ul>
+        <li>First bullet carries the application's argument. Choose it deliberately.</li>
+        <li>Vary these. Some short. Some longer, carrying a before-and-after pair and the constraint it
+        was delivered under.</li>
+      </ul>
+    </div>
+
+    <div class="role-block">
+      <div class="role">Previous Title, <span class="org">Employer, Location</span></div>
+      <div class="dates">Mon YYYY - Mon YYYY</div>
+      <ul><li>Three to five bullets. Older roles get fewer.</li></ul>
+    </div>
+
+  </section>
+
+  <section>
+    <h2>Education</h2>
+    <p>Qualification, Institution, Year, Result.</p>
+  </section>
+
+  <section>
+    <h2>Certifications</h2>
+    <p>Name, Issuer, Year; separated by semicolons.</p>
+  </section>
+
+  <section>
+    <h2>References</h2>
+    <p>Available on request.</p>
+  </section>
+
+</div>
+</body>
+</html>
