@@ -119,6 +119,16 @@ file it back as a page.
 **Lint.** Health-check: contradictions, expired `stale_after`, unverified claims used externally, orphan
 pages, concepts mentioned but lacking a page.
 
+## Scope
+
+**This system covers the job search up to the moment the applicant clicks submit.** Sourcing, eliciting,
+scoring, writing, form-filling and the final check.
+
+**It does not yet cover what happens afterwards** — interview preparation, offer evaluation, negotiation,
+follow-up cadence or rejection debriefs. If the user asks for one of those, help them anyway using what
+the wiki holds, but **say plainly that it is outside what the skills cover**, so they know they are
+getting a considered answer rather than a documented process.
+
 ## The compounding principle — read this before anything else
 
 **This is a wiki, not a CV generator, and the difference decides how you behave in every session.**

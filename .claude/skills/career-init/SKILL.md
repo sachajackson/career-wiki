@@ -26,7 +26,7 @@ It should tell them something about their own document they did not know.
 ## 2. Scaffold
 
 Copy `templates/` into `wiki/`, filling in what the sources support. Create `index.md`, `log.md`,
-`Career.md`, `Operating Model.md`, `CV.md` and a `roles/` folder. OKF frontmatter on everything, per
+`Career.md`, `Operating Model.md`, `CV.md`, `Standing Answers.md` and a `roles/` folder. OKF frontmatter on everything, per
 `CLAUDE.md`.
 
 **Mark everything drawn from a document as unverified** — no `verified` key. It becomes human-reviewed
@@ -79,7 +79,23 @@ their salary floor in PAY, their geography as vetoes.
 commute they would accept for enough money). Ask which their constraints are. Most people have both and
 have never separated them.
 
-## 6. Close the loop
+## 6. Start the standing answers
+
+Instantiate `templates/Standing Answers.md`. **Do not try to fill it all now** — most of it is `TBC` until
+there is a real application. But get the three that block everything:
+
+- **Right to work and sponsorship.** Knockout questions on every form, and a careless answer is an
+  automatic rejection nobody reviews.
+- **Notice period**, and the earliest realistic start.
+- 🔴 **"Why are you leaving?"** — the most-asked question in any process, and the one that must be
+  identical in the cover letter, the form, the phone call and the interview. **Do not accept the first
+  answer as final.** Ask what they would say out loud, then read it back. It reads differently spoken.
+
+**If the reason is redundancy, being at risk, or something that went wrong**: record the plain fact, help
+them find the shortest true framing, and **do not push for detail.** It is common, it is not a mark against
+them, and over-explaining is the only real risk.
+
+## 7. Close the loop
 
 Append to `log.md`. Then tell them:
 

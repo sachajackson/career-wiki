@@ -18,6 +18,48 @@ If a fetch fails, say what failed rather than concluding. **A 403 is not evidenc
 careers site that will not render for an automated browser tells you nothing about the role. If you cannot
 resolve it, ask the user to check while logged in.
 
+## Step 0.5 — how are they applying? Decide the route before writing anything
+
+**The route matters more than the document, and it is decided once, before any work.**
+
+### Is there a warm route in?
+
+🟢 **A referral is the highest-leverage thing available before submitting, and it costs one message.**
+Referred candidates are read by a human rather than filtered, and at many employers referrals are a
+formal, incentivised programme. **Ask, every time:**
+
+> *"Do you know anyone at this company, or anyone who would know someone? A former colleague, someone in
+> your network, an alum of somewhere you worked?"*
+
+If yes, **the sequence changes**: they ask the contact first, and apply through the referral route rather
+than the public one. Applying cold and *then* asking for a referral is much weaker — some systems will not
+attach a referral to an existing application at all.
+
+**If the answer is no, say so and move on.** Do not turn this into a networking project.
+
+### Agency, or direct?
+
+🔴 **The trap that quietly kills applications: duplicate submission.** If a recruitment agency has already
+sent their CV to this employer, a direct application creates two records. Employers routinely reject both
+rather than adjudicate a fee dispute, and nobody explains why.
+
+**So ask before applying:**
+
+| Question | If yes |
+|---|---|
+| Has any agency sent your CV to this employer, for any role, in the last 6-12 months? | **Check with the agency before applying directly** |
+| Is this posting itself from an agency? | The employer is often unnamed. **Ask which employer before they submit you** — that is the applicant's call to make, not the agency's |
+| Are they working with a recruiter on this? | **Never let an agency send a CV without explicit per-employer permission.** Give it role by role, never as a blanket |
+
+**Record the answer on the role page.** Six weeks later nobody remembers which agency was told what.
+
+### Same employer, more than one role?
+
+Applying for several roles at one employer at the same time reads as unfocused and can weaken all of them.
+**Two or three closely related roles is normal; a scattergun across a careers site is not.** If they are
+already in a live process there, applying for a second role usually goes through the recruiter they are
+already speaking to, not through the front door again.
+
 ## Step 1 — read the posting properly, then write it down
 
 Create a role page in `wiki/roles/`. Capture the **requisition number and posting URL** — both are often
@@ -77,6 +119,47 @@ application. Produce a paste-ready file, `<Employer> <Req> - ATS Notes.md`, with
   attached to is worse than an absent tag
 - **A pre-submit checklist**, including: re-read every auto-parsed field, and check the current role did
   not merge with a previous one when the CV was parsed
+
+## Step 5.5 — the form's own questions
+
+**Step 5 covers the fields that describe their history. This covers the questions the form asks them**,
+which is where applications are lost silently.
+
+### Knockout questions — get these exactly right
+
+🔴 **These are machine-scored and a wrong answer is an automatic rejection no human ever sees.**
+
+Right to work, sponsorship, notice period, willingness to relocate, salary expectation, security
+clearance, driving licence, professional registration.
+
+**Take them from `Standing Answers.md`**, which holds the settled versions. Two rules:
+
+- **Answer exactly what is asked.** Sponsorship questions in particular are often phrased so the
+  safe-sounding answer is the wrong one. **Read the question twice.**
+- **If the phrasing genuinely does not fit their situation**, choose the literally true answer and address
+  the nuance in the cover letter. **Never guess, and never soften.**
+
+### Free-text supplementary questions
+
+Many forms ask "why do you want to work here?" or "describe a time when…" in a box with a character limit.
+**These are read**, often before the CV, and they are usually answered badly because the applicant has
+already spent their effort on the attachment.
+
+- **Do not paste the cover letter in.** It answers a different question and the reader can tell.
+- **Respect the character limit**, and check it — some count spaces, some truncate silently mid-word.
+- **One concrete example beats three claims.** These boxes are where the stranger test matters most.
+- **Draft them in the ATS pack file**, unwrapped and paste-ready, not into the browser where a session
+  timeout loses them.
+
+### Voluntary disclosure
+
+Diversity, ethnicity, disability, veteran status. **Genuinely optional, separated from the hiring
+decision, and the applicant's business alone.** Note that the section exists so it is not a surprise, and
+say nothing about how to answer it.
+
+**One thing worth flagging, once**: if they need an adjustment for the process itself — extra time, a
+different format, accessibility at interview — **that is a separate request to the recruiter, not this
+section**, and it is normal to make it.
 
 ## Step 6 — produce the actual document
 

@@ -61,7 +61,10 @@ an evening.
 
 ## What it actually does
 
-Six commands, run inside Claude Code. Each is a *skill* — a set of instructions the agent follows.
+Seven commands, run inside Claude Code. Each is a *skill* — a set of instructions the agent follows.
+
+**The system covers everything up to the submit button and stops there.** Interview preparation, offers
+and negotiation are not in it yet.
 
 ### `/career-init` — run once, first
 
@@ -126,6 +129,18 @@ the same on every machine.
 
 **If you already have your own writing standard, it takes precedence** — the agent asks early and keeps
 yours in the wiki.
+
+### `/pre-submit` — the last check before the button
+
+Run with the form open and everything filled in. **An application is the one thing here with no undo** —
+the recruiter's first read is the only first read there is, and nobody writes back to say which line lost
+it.
+
+It checks the things that are unfixable afterwards: whether the decision still holds, whether the CV, the
+form and your LinkedIn agree on titles, dates and team sizes, whether every claim is one you have actually
+confirmed, whether a client name or a colleague's name has ended up in an outgoing document, whether the
+right employer is named in the letter, and whether the sponsorship question was read twice. Then it does
+the bookkeeping while it is fresh.
 
 ### `/profile-refresh` — LinkedIn and Indeed
 
