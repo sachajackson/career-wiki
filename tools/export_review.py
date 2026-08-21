@@ -2,7 +2,7 @@
 """export_review -- build a self-contained folder safe to open in another vendor's tool.
 
     python3 tools/export_review.py "wiki/applications/Acme R-12345"
-    -> review-exports/Acme R-12345/   (OVERSIGHT.md, posting, CV, cover letter)
+    -> oversight/Acme R-12345/   (OVERSIGHT.md, posting, CV, cover letter)
 
 WHY THIS EXISTS RATHER THAN JUST POINTING THE REVIEWER AT THE APPLICATION FOLDER
 
@@ -32,7 +32,8 @@ additional exposure.
 import os, re, shutil, sys
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TEMPLATE = os.path.join(HERE, "templates", "OVERSIGHT.md")
+OVERSIGHT_DIR = os.path.join(HERE, "oversight")
+TEMPLATE = os.path.join(OVERSIGHT_DIR, "OVERSIGHT.md")
 
 ALLOWED = [
     (re.compile(r"posting", re.I), "the job advertisement"),
@@ -50,7 +51,7 @@ def main():
     if not os.path.isdir(src):
         sys.exit(f"not a directory: {src}")
 
-    out_root = sys.argv[2] if len(sys.argv) > 2 else os.path.join(HERE, "review-exports")
+    out_root = sys.argv[2] if len(sys.argv) > 2 else OVERSIGHT_DIR
     dst = os.path.join(out_root, os.path.basename(src))
     if os.path.exists(dst):
         shutil.rmtree(dst)
@@ -78,12 +79,11 @@ def main():
     if os.path.exists(TEMPLATE):
         shutil.copy2(TEMPLATE, os.path.join(dst, "OVERSIGHT.md"))
         copied.append(("OVERSIGHT.md", "the reviewer's instructions"))
-        # Also at the root, so the whole export directory can be opened once and
-        # left open across several applications. Someone with four live
-        # applications will not open a new folder for each; they will stop
-        # bothering. The brief handles both layouts, and both copies come from
-        # the same template on every run, so they cannot drift.
-        shutil.copy2(TEMPLATE, os.path.join(out_root, "OVERSIGHT.md"))
+        # The canonical brief already sits at the root of oversight/. Copy it
+        # into the subfolder too, so a single application folder sent on its own
+        # still carries its instructions. Same source, so they cannot drift.
+        if os.path.abspath(out_root) != os.path.abspath(OVERSIGHT_DIR):
+            shutil.copy2(TEMPLATE, os.path.join(out_root, "OVERSIGHT.md"))
     else:
         print(f"WARNING: {TEMPLATE} missing -- the reviewer will have no brief", file=sys.stderr)
 
@@ -101,8 +101,9 @@ def main():
 
     others = sorted(d for d in os.listdir(out_root)
                     if os.path.isdir(os.path.join(out_root, d)))
+    shown = os.path.relpath(out_root, HERE) if out_root.startswith(HERE) else out_root
     print(f"""
-Open {out_root}/ in the other tool -- once, and leave it open -- then say:
+Open the {shown}/ folder in the other tool -- once, and leave it open -- then say:
 
     Read OVERSIGHT.md and follow it. Review {os.path.basename(src)}.
 

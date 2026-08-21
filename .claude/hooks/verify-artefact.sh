@@ -57,7 +57,7 @@ appdir=$(dirname "$cfg")
 python3 "$root/tools/export_review.py" "$appdir" >/dev/null 2>&1 || true
 
 if [ $status -eq 0 ]; then
-  printf '{"systemMessage":"verify: %s is clean on the deterministic checks. Reviewer export refreshed at review-exports/%s/"}\n' \
+  printf '{"systemMessage":"verify: %s is clean on the deterministic checks. oversight/%s/ refreshed"}\n' \
     "$(basename "$path")" "$(basename "$appdir")"
   exit 0
 fi

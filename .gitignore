@@ -31,5 +31,9 @@ __pycache__/
 # Oversight layer: API keys
 tools/review/config.json
 
-# Review exports: copies of outgoing documents, regenerated on demand
-review-exports/
+# oversight/ -- the folder the user opens in another vendor's tool.
+# The brief is tracked so it exists from clone time and is discoverable before
+# any application is built. Everything generated beside it is a copy of the
+# user's outgoing documents and is not.
+oversight/*
+!oversight/OVERSIGHT.md

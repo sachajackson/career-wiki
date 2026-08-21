@@ -228,7 +228,7 @@ never stale. **You do not need to run it, and neither does the user.**
 
 🔴 **But you must tell them where it is, in plain words, when you deliver the pack.** Something like:
 
-> *If you want a second opinion from a different AI, open the `review-exports` folder — it has all your
+> *If you want a second opinion from a different AI, open the `oversight` folder — it has all your
 > applications in it — and say "read OVERSIGHT.md and follow it. Review \<Employer Requisition\>". Open
 > that folder, not your wiki.*
 

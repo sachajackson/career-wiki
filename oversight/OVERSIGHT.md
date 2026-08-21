@@ -1,7 +1,7 @@
 # OVERSIGHT — instructions for an independent reviewer
 
-**You have been pointed at this folder to review a job application before it is submitted. Read this file
-first and follow it exactly.**
+**You are in the `oversight` folder of someone's job-search wiki. You have been asked to review a job
+application before it is submitted. Read this file first and follow it exactly.**
 
 You were not the model that wrote these documents. That is the entire reason you are here, and it is the
 one thing about you that cannot be replaced by another pass from the model that did.

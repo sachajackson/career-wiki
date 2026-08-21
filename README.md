@@ -164,16 +164,17 @@ text — inference was tried and produced confident nonsense, so when the field 
 
 **A second opinion from a different AI — and you do not have to set anything up.**
 
-Every time a CV or cover letter is written, it appears in **one folder that holds all your applications**:
+There is a folder called **`oversight`**. That is the one to open. It is named after what you are asking
+for, so there is nothing to look up:
 
 ```
-review-exports/
-    OVERSIGHT.md
-    Acme R-12345/     posting, CV, cover letter
-    Globex R-4471/    posting, CV, cover letter
+oversight/
+    OVERSIGHT.md          <- the reviewer's instructions
+    Acme R-12345/         posting, CV, cover letter
+    Globex R-4471/        posting, CV, cover letter
 ```
 
-**Open `review-exports` once, in Gemini or ChatGPT or whatever you like, and leave it open.** For each
+**Open `oversight` once, in Gemini or ChatGPT or whatever you like, and leave it open.** For each
 application, say:
 
 > **"Read OVERSIGHT.md and follow it. Review Acme R-12345."**
@@ -187,10 +188,10 @@ invisible in the output and sounds authoritative. If you do not name one, it wil
 
 The folders rebuild on every edit, so they are never out of date.
 
-> 🔴 **Open the `review-exports` folder, never your wiki folder.**
+> 🔴 **Open the `oversight` folder, never your wiki folder.**
 >
 > This is the one thing worth being careful about. Your wiki holds your salary floor, why you are leaving,
-> and things you have said about colleagues. `review-exports` holds only what the recruiter is going to
+> and things you have said about colleagues. `oversight` holds only what the recruiter is going to
 > receive anyway, so showing it to another company's AI costs you nothing.
 >
 > The brief also *tells* the reviewer not to go looking — but telling a model not to read something is not
