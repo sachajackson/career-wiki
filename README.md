@@ -198,8 +198,21 @@ The folders rebuild on every edit, so they are never out of date. Nothing to run
 and get read as one. A CV and letter that repeat or contradict each other is a finding you only get by
 reading them side by side.
 
-The brief tells it to refuse if the chat is not empty, and to ask which application if you do not name
-one. That is a backstop, not the mechanism — **the mechanism is you opening a new chat.**
+**Nobody can make a model forget.** Clearing context and opening a new chat are things only you can do —
+no model has access to either, whatever it may say. So the system does the achievable thing instead: it
+makes the failure **visible**.
+
+Each folder carries a `REVIEW-ID` — a fingerprint of exactly those documents, which changes the moment any
+of them does. The reviewer must open its review with that line. That turns two silent failures into loud
+ones:
+
+- **It has already reviewed in this chat.** It finds its own earlier `REVIEW-ID` in the conversation and
+  refuses, instead of quietly doing a worse job.
+- **You are holding a review of an old draft.** The ID on the review will not match the one in the folder,
+  so you can tell at a glance that its approval was of something you are no longer sending.
+
+The brief also makes it ask which application if you do not name one. **All of this is a backstop — the
+mechanism is still you opening a new chat.** But now, when that goes wrong, you find out.
 
 > 🔴 **Open the `oversight` folder, never your wiki folder.**
 >

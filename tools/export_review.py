@@ -29,7 +29,7 @@ WHAT IT DELIBERATELY DOES NOT COPY
 Everything copied is going to a recruiter anyway, so a review costs no
 additional exposure.
 """
-import os, re, shutil, sys
+import hashlib, os, re, shutil, sys, datetime
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OVERSIGHT_DIR = os.path.join(HERE, "oversight")
@@ -76,6 +76,23 @@ def main():
         shutil.copy2(path, os.path.join(dst, name))
         copied.append((name, why))
 
+    # A fingerprint of exactly what was exported. The reviewer is told to state
+    # it as the first line of its review, which makes two silent failures loud:
+    # a second review in the same conversation (it has already stated an ID),
+    # and a review of a version that is no longer the one being submitted (the
+    # ID does not match the current export). A model cannot clear its own
+    # context, so the achievable goal is not prevention but detection.
+    digests = []
+    for name, _ in sorted(copied):
+        with open(os.path.join(dst, name), "rb") as fh:
+            digests.append(f"{hashlib.sha256(fh.read()).hexdigest()[:12]}  {name}")
+    review_id = hashlib.sha256("\n".join(digests).encode()).hexdigest()[:10].upper()
+    with open(os.path.join(dst, "REVIEW-ID.txt"), "w", encoding="utf-8") as fh:
+        fh.write(f"REVIEW-ID: {review_id}\n\n"
+                 f"Exported {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')} local.\n"
+                 f"This identifies the exact documents below. If they change, it changes.\n\n"
+                 + "\n".join(digests) + "\n")
+
     if os.path.exists(TEMPLATE):
         shutil.copy2(TEMPLATE, os.path.join(dst, "OVERSIGHT.md"))
         copied.append(("OVERSIGHT.md", "the reviewer's instructions"))
@@ -87,7 +104,7 @@ def main():
     else:
         print(f"WARNING: {TEMPLATE} missing -- the reviewer will have no brief", file=sys.stderr)
 
-    print(f"\nexport -> {dst}\n")
+    print(f"\nexport -> {dst}\n\n  REVIEW-ID {review_id}\n")
     for n, w in copied:
         print(f"  copied   {n}  ({w})")
     for n, w in skipped:

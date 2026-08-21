@@ -123,6 +123,20 @@ withheld deliberately: `do_not_claim` is a list of their gaps.
 
 **Bring the review back here. Do not let the other tool edit anything.**
 
+### If they bring back a review, check it was of this version
+
+**Every review starts with a `REVIEW-ID` line.** Compare it against
+`oversight/<Employer Requisition>/REVIEW-ID.txt`.
+
+| | |
+|---|---|
+| **They match** | The review was of exactly what is about to be submitted |
+| 🔴 **They differ** | **The documents changed after that review.** Whatever it approved is not what is going out. Say so plainly and treat the review as spent |
+| **No ID in the review** | The reviewer did not follow the brief. Treat its verdict as unverified |
+
+**This is worth thirty seconds** because the failure is silent and comfortable: a pass from a real review
+of a document that no longer exists, held with full confidence.
+
 🔴 **A fresh chat per review, including after a fix.** A reviewer that remembers the previous draft
 completes the vague sentence from memory and approves it. **Re-reviewing a revision in the same
 conversation is worse than not re-reviewing at all**, because it returns a pass that has no basis.
