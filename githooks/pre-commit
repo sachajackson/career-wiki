@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# Refuses to commit personal material into the public repo.
+#
+# .gitignore is not a guard. It stops accidents of omission -- `git add -A`
+# skipping what it should skip -- and nothing else. It does not survive
+# `git add -f`, an edited ignore rule, a tool that stages files directly, or a
+# path nobody thought to list. This does, because it inspects what is actually
+# staged, at the last moment before it becomes history.
+#
+# That matters more here than in most repos: the remote is public, and git
+# history is permanent. A personal file committed and pushed is not fixed by
+# deleting it in the next commit.
+#
+# Enable with:  git config core.hooksPath githooks
+set -euo pipefail
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+
+blocked=""
+
+# 1. Paths that are the user's by definition.
+while IFS= read -r f; do
+  case "$f" in
+    sources/*)
+      [ "$f" = "sources/README.md" ] && continue
+      blocked+="  $f  (sources/ is the user's own documents)"$'\n' ;;
+    wiki/*)
+      blocked+="  $f  (wiki/ is generated from a real person's history)"$'\n' ;;
+    oversight/*)
+      [ "$f" = "oversight/OVERSIGHT.md" ] && continue
+      blocked+="  $f  (a copy of documents being submitted)"$'\n' ;;
+    */application.json|application.json)
+      blocked+="  $f  (per-application config, may name a real employer)"$'\n' ;;
+    tools/radar/*.json|tools/radar/shortlist.md|config.json)
+      blocked+="  $f  (search results and history)"$'\n' ;;
+  esac
+done <<< "$staged"
+
+# 2. Content that looks personal wherever it sits. Cheap heuristics, deliberately
+#    noisy -- a false positive costs one --no-verify; a false negative is public.
+for f in $staged; do
+  [ -f "$f" ] || continue
+  case "$f" in
+    *.png|*.jpg|*.pdf|*.docx|*.zip) continue ;;
+    # This file, and the docs describing it, necessarily contain the patterns
+    # they look for. Scanning them flags the guard as its own violation.
+    githooks/*|CONTRIBUTING.md|PRIVACY.md) continue ;;
+  esac
+  hits=$(grep -nEi \
+    -e '[A-Za-z0-9._%+-]+@(gmail|outlook|hotmail|yahoo|icloud|proton)\.[a-z]+' \
+    -e 'linkedin\.com/in/[a-z0-9-]+' \
+    -e '\b(my salary|current salary|salary floor is|notice period is)\b' \
+    "$f" 2>/dev/null | head -3 || true)
+  if [ -n "$hits" ]; then
+    blocked+="  $f  -- looks personal:"$'\n'
+    while IFS= read -r h; do blocked+="      ${h:0:110}"$'\n'; done <<< "$hits"
+  fi
+done
+
+if [ -n "$blocked" ]; then
+  cat >&2 <<EOF
+
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │  COMMIT BLOCKED -- this looks like personal material                 │
+  └──────────────────────────────────────────────────────────────────────┘
+
+$blocked
+  This repo is public and git history is permanent. A personal file that is
+  committed and pushed is not fixed by deleting it in a later commit.
+
+  If this is genuinely template or example content, unstage the real thing and
+  commit a fictional version instead. Placeholder emails should use example.com.
+
+  To override, if you are certain:   git commit --no-verify
+
+EOF
+  exit 1
+fi
+exit 0

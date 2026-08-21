@@ -700,6 +700,26 @@ for leaving to a cloud account, possibly a work-managed one.
 
 ---
 
+## Using it and developing it at the same time
+
+**Do not do both in the same directory.** The repo is public and holds only scaffolding; your vault is
+private and holds your actual career. Keeping them apart means personal material has **no path** to the
+public remote, rather than being ignored on the way out.
+
+If you fork this to work on it, run once per clone:
+
+```bash
+git config core.hooksPath githooks
+```
+
+That installs a commit guard that refuses personal material **even if you force-add it** — `.gitignore`
+alone does not survive `git add -f`, and a public git history is permanent.
+
+Full detail, including how to carry tool updates into your vault and how to migrate an existing wiki, is
+in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
 ## Credits and licence
 
 MIT licensed. See `LICENSE`.
