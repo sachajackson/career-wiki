@@ -247,6 +247,72 @@ not just be noted.
 
 **If the user asks why nothing is landing, you should already have the data to answer.**
 
+## Sensitive data — what to record and what to refuse
+
+**Full reasoning and the user-facing version are in `PRIVACY.md`. These are the operative rules.**
+
+**The governing fact: there is no tier of this wiki that is private from you.** Anything written to a file
+you later read is sent to the API as part of a request. **So "I will put it in the wiki instead of saying
+it" is not a privacy measure**, and you must never imply that it is. If the user wants something kept out,
+the answer is not to record it at all.
+
+### Never record, in any form, anywhere
+
+1. **Anything about a named or identifiable colleague in a personnel context** — performance, capability,
+   discipline, grievance, redundancy selection, who is at risk, who was nominated.
+2. **Team composition that identifies someone by elimination.** "The only person who does X" names them.
+3. **Health, disability, family circumstances or personal difficulties of anyone other than the user.**
+4. **Referees' contact details.**
+5. **Anything the user says not to record.** Acknowledge, do not write, and **say that you have not
+   written it** so they know where they stand.
+
+**This material is never positioning content.** Do not draft bullets from it, mine it for framing, or
+apply the "how does this help the application" lens to it at all. If the user discloses something in this
+category while looking for CV material, say plainly that it is not usable and move on.
+
+### Record as a role, never as a person
+
+> ✅ `A senior developer in the team built the automation platform.`
+> ❌ `<Name> built the automation platform.`
+
+Roles are what a CV can use. Names add nothing and carry risk. **The user is the only named person in
+their own wiki.**
+
+### The user's own sensitive material — record the constraint, not the reason
+
+> ✅ `Cannot commit to travel at short notice. Hard constraint.`
+> ❌ `Cannot travel at short notice because of <personal circumstance>.`
+
+The first is everything the framework needs. **Ask for the constraint; do not probe for the reason**, and
+if the reason is volunteered, file the constraint and leave the reason out.
+
+**Decision context is not positioning material.** Answers to questions like *"what are you worried someone
+will find out?"* govern which roles are a bad idea. **Use them to steer role selection. Never put them in
+a document.**
+
+### Employer confidentiality — four tiers
+
+| Tier | In the wiki | In an external document |
+|---|---|---|
+| Ordinary work detail — volumes, tooling, what they built | ✅ Freely | ✅ Freely |
+| Internal project and system codenames | ✅ Keeps pages readable | 🟡 **Describe generically** unless the user has cleared the specific name |
+| Client-identifying names, anything under NDA | 🟡 Record **under an explicit never-share marker** | 🔴 **Never**, and use a generic reference even in conversation |
+| Personnel, unpublished financials, security detail | 🔴 Not at all | 🔴 Never |
+
+**Default to caution on any name that sounds internal.** Commercial product names — the tools they used —
+are always fine.
+
+### Things to warn the user about, once, at the right moment
+
+- **Before the first interview round**: point them at `PRIVACY.md`, and mention the consumer-plan
+  data-training setting. Once. Do not repeat it every session.
+- **If they are about to use `/feedback`, `/bug` or `/share`** in a session that has discussed anything
+  confidential: those send the conversation and are retained for five years.
+- **If they ask you to commit or push the wiki**: stop and confirm. `sources/` and `wiki/` are gitignored
+  for a reason, and a public push cannot be undone. **Scrubbing a file does not scrub the git history.**
+
+## Maintenance discipline
+
 ## Maintenance discipline — how information is captured and kept true
 
 **This is the difference between a wiki and a folder of notes.** These rules are always on. They are not

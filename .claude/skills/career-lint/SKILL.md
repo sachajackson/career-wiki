@@ -24,10 +24,25 @@ until someone reads two of them side by side.
 **4. Numbers on the wrong role.** Every quantified claim should trace to a specific role in a specific
 period. Attribution drift happens when a bullet is written from the angle rather than from the page.
 
-**5. Orphans and gaps.** Pages nothing links to. Concepts mentioned repeatedly with no page. Open
+**5. Sensitive data.** 🔴 **Rank this first when it finds anything.** Scan for material that should not
+be there under `CLAUDE.md`:
+
+- **Named individuals other than the user.** Any proper noun in a personnel, performance or team-structure
+  context. Rewrite to the role, or remove.
+- **Identification by elimination** — a description narrow enough to name one person without naming them.
+- **Client-identifying names** appearing in a generated CV, cover letter or form pack rather than only in
+  the wiki. **Check the deliverables, not just the pages.**
+- **Reasons where a constraint would do** — personal circumstances recorded alongside a limit that stands
+  on its own.
+- **Referee contact details** anywhere.
+
+Report these before anything else, with the exact file and line, and offer to fix each one. **Do not
+"tidy" them silently** — the user needs to know what was recorded and where it went.
+
+**6. Orphans and gaps.** Pages nothing links to. Concepts mentioned repeatedly with no page. Open
 questions that have been open a long time — some are answerable in one message.
 
-**6. The scoring table.** Roles with no posting URL. Statuses that have not been updated. Scores whose
+**7. The scoring table.** Roles with no posting URL. Statuses that have not been updated. Scores whose
 justification no longer matches the reasoning on the role page.
 
 ## How to report it

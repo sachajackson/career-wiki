@@ -20,6 +20,7 @@ You never write the wiki. You answer questions and make the decisions.
 - [Your first hour](#your-first-hour)
 - [Setting up job search](#setting-up-job-search)
 - [How it stores things](#how-it-stores-things)
+- [Sensitive data](#sensitive-data) — **read before your first session**
 - [Honest limits](#honest-limits)
 - [Credits and licence](#credits-and-licence)
 
@@ -435,6 +436,37 @@ years ago. `/career-lint` surfaces them.
 
 ---
 
+## Sensitive data
+
+**[`PRIVACY.md`](PRIVACY.md) is the full version. Read it before your first interview session.** The parts
+that surprise people:
+
+**There is no tier of this wiki that is private from the model.** Claude Code runs locally, but to answer
+anything it sends the contents of the files it reads to Anthropic's API. Writing something into a file
+rather than saying it out loud changes nothing. **If you want something kept out, the answer is not to
+record it** — say so, and it will not be written.
+
+**Check your data-training setting if you are on a Free, Pro or Max plan.** Consumer conversations are
+used to improve models *only if that setting is on*, and retention is five years when it is, thirty days
+when it is not. Team, Enterprise and API are not trained on. A wiki holding your employer's internal
+detail deserves a deliberate decision rather than a default:
+[claude.ai/settings/data-privacy-controls](https://claude.ai/settings/data-privacy-controls).
+
+**Other people never consented to being in this.** Colleagues are recorded as roles — *"a senior developer
+in the team"* — never as names, and **never at all** in a performance, capability or redundancy context.
+That material is not CV content and the agent will not draft from it.
+
+**Your own difficult material is handled as a constraint, not a reason.** *"Cannot commit to travel at
+short notice"* is everything the scoring needs. Why is nobody's business, including this file's.
+
+**A gitignored file is not an encrypted file.** Turn on FileVault or BitLocker, and think twice before
+putting the wiki in Dropbox, iCloud or OneDrive — those will replicate your salary floor and your reasons
+for leaving to a cloud account, possibly a work-managed one.
+
+**`/career-lint` audits for all of this**, and ranks anything it finds above every other kind of problem.
+
+---
+
 ## Honest limits
 
 - **It cannot update your LinkedIn or Indeed profile.** Those require logging in. It writes the text and
@@ -444,6 +476,7 @@ years ago. `/career-lint` surfaces them.
   the first call rather than guess.
 - **The search ranking is triage, not judgement.** A keyword tally decides what is worth reading, nothing
   more. Good roles do land low in it, which is why the shortlist gets read rather than trusted.
+- **It cannot make anything private from the model.** See above. Local storage is not concealment.
 - **It will not invent anything.** No metric, title or achievement you did not provide. Ask it to
   embellish and it will decline and explain why the claim would not survive a follow-up question.
 - **It is not a lawyer, a doctor or an HR professional.** Redundancy rights, notice periods and
