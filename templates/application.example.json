@@ -1,0 +1,15 @@
+{
+  "_comment": "Copy into each application folder as application.json. The hook finds it by walking up from the artefact, so the deterministic layer runs with no arguments and cannot be skipped.",
+
+  "employer": "Acme Corp",
+  "requisition": "R-12345",
+  "posting": "posting.txt",
+  "wiki": "../../../wiki",
+
+  "past_employers": ["Employer One", "Employer Two", "Employer Three"],
+
+  "do_not_claim": ["react", "graphql"],
+  "_do_not_claim_note": "Anything the cover letter concedes. A CV claiming what the letter concedes is worse than either alone.",
+
+  "spelling": "uk"
+}

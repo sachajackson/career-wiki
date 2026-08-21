@@ -25,7 +25,7 @@ means "nothing provably wrong", not "good".
 
 Exit status is 1 if anything is flagged, so it can gate a build.
 """
-import argparse, os, re, sys, glob, datetime
+import argparse, json, os, re, sys, glob, datetime
 from collections import defaultdict
 
 # A number worth tracing: percentages, money, counts of 3+ digits or with
@@ -87,10 +87,20 @@ def load_wiki(wiki_dir, employers):
     for path in glob.glob(os.path.join(wiki_dir, "**", "*.md"), recursive=True):
         if os.path.basename(path) in ("log.md", "index.md"):
             continue
+        # Deliverables are NOT sources. An application folder living under the
+        # wiki would otherwise index the CV as evidence for itself: a fabricated
+        # figure "exists in the wiki" because it exists in the document being
+        # checked, and the UNSOURCED check silently becomes circular. Found by
+        # running the hook against a CV stored beside its own wiki.
+        rel = os.path.relpath(path, wiki_dir).replace(os.sep, "/")
+        if "applications/" in rel.lower():
+            continue
         try:
             raw = open(path, encoding="utf-8").read()
         except Exception:
             continue
+        if not FRONTMATTER.match(raw):
+            continue        # no frontmatter, not a wiki page -- see the schema
         pages += 1
         fm, body = parse_frontmatter(raw)
         lines = body.splitlines()
@@ -199,6 +209,9 @@ def main():
     ap.add_argument("--wiki", default="wiki")
     ap.add_argument("--ban", default="", help="comma-separated terms that must not appear")
     ap.add_argument("--spelling", choices=["uk", "us"], help="employer's convention for program(me)")
+    ap.add_argument("--config", help="an application.json holding employer, employers, posting, ban and "
+                                     "spelling for this application, so a hook can run without arguments")
+    ap.add_argument("--json", action="store_true", help="machine-readable findings")
     ap.add_argument("--posting", help="the job spec as text. With --coverage, ranks what is missing by "
                                       "relevance to what this employer actually asked for")
     ap.add_argument("--coverage", action="store_true",
@@ -211,7 +224,24 @@ def main():
                          "appear in the wiki. Required for the attribution check")
     args = ap.parse_args()
 
+    if args.config:
+        c = json.load(open(args.config, encoding="utf-8"))
+        base = os.path.dirname(os.path.abspath(args.config))
+        args.employer = args.employer or c.get("employer")
+        args.employers = args.employers or ",".join(c.get("past_employers", []))
+        args.ban = args.ban or ",".join(c.get("do_not_claim", []))
+        args.spelling = args.spelling or c.get("spelling")
+        if not args.posting and c.get("posting"):
+            pth = c["posting"] if os.path.isabs(c["posting"]) else os.path.join(base, c["posting"])
+            if os.path.exists(pth):
+                args.posting = pth
+        if not os.path.isdir(args.wiki) and c.get("wiki"):
+            args.wiki = c["wiki"] if os.path.isabs(c["wiki"]) else os.path.join(base, c["wiki"])
+
     doc = sys.stdin.read() if args.document == "-" else open(args.document, encoding="utf-8").read()
+    if args.document.endswith((".html", ".htm")):
+        doc = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", doc, flags=re.S | re.I)
+        doc = re.sub(r"<[^>]+>", " ", doc)
     if not os.path.isdir(args.wiki):
         sys.exit(f"no wiki at {args.wiki}")
 
@@ -278,6 +308,11 @@ def main():
     for sev, msg in F:
         if (sev, msg) not in seen:
             seen.add((sev, msg)); uniq.append((sev, msg))
+
+    if args.json:
+        print(json.dumps({"findings": [{"kind": k, "message": m} for k, m in uniq],
+                          "clean": not uniq, "wiki_pages": pages}, indent=1))
+        sys.exit(1 if uniq else 0)
 
     print(f"verify: {len(uniq)} finding(s) against {pages} wiki pages, "
           f"{len(index)} distinct figures indexed\n")

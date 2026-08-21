@@ -186,6 +186,22 @@ say nothing about how to answer it.
 different format, accessibility at interview — **that is a separate request to the recruiter, not this
 section**, and it is normal to make it.
 
+## Step 5.9 — create `application.json` before writing any artefact
+
+**Do this first, or the deterministic layer cannot run on anything you write.** Copy
+`templates/application.example.json` into the application folder as `application.json`:
+
+```json
+{ "employer": "Acme Corp", "requisition": "R-12345", "posting": "posting.txt",
+  "past_employers": ["...", "..."], "do_not_claim": ["react", "graphql"], "spelling": "uk" }
+```
+
+**Save the posting as `posting.txt` beside it** — coverage needs it to rank what is missing by what this
+employer actually asked for, and the role page needs it anyway.
+
+**`do_not_claim` is whatever the cover letter concedes.** A CV claiming what the letter concedes is worse
+than either document alone.
+
 ## Step 6 — produce the actual document
 
 **Write the CV as HTML using `templates/cv.html`**, then have the user print it to PDF from their browser
@@ -204,8 +220,12 @@ it** — a CV that silently runs to three pages is a real failure.
 ## Step 7 — the pre-release check
 
 **Two passes, and they catch different things.** `tools/cv_lint.py` checks how it reads — characters,
-vocabulary, cadence. `tools/verify.py` checks whether it is *true* — every figure traced to the wiki, on
-the right employer, human-confirmed. **Run both.** See `/pre-submit` for the invocation.
+vocabulary, cadence. `tools/verify.py` checks whether it is *true*.
+
+🔴 **`verify.py` runs automatically on every write** via the hook, and its findings land in your context
+whether you asked for them or not. **Fix them by the rules in `CLAUDE.md`, and after three failed rounds
+stop and ask the user rather than continuing to satisfy the checker.** `cv_lint.py` is the one you have to
+remember to run.
 
 
 **Two passes, and they catch different things.**

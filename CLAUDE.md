@@ -285,6 +285,52 @@ not just be noted.
 
 **If the user asks why nothing is landing, you should already have the data to answer.**
 
+## The verification loop — not optional, and not on your honour
+
+🔴 **Every creation or update of a CV, cover letter, résumé or form-answer artefact must be followed by a
+deterministic check.** Not at the end of the session. Not before delivery. **On every write.**
+
+```bash
+python3 tools/verify.py "<artefact>" --config "<its application.json>" --wiki wiki --coverage
+```
+
+**A hook enforces this.** `.claude/hooks/verify-artefact.sh` fires on every `Write` or `Edit` inside an
+application folder and puts the findings straight into your context by exiting 2. **You do not get to
+decide whether to check your own work**, and you cannot quietly skip the re-check after a fix — the fix is
+itself a write, so it fires the hook again.
+
+**This is the point of the design.** A model that invented a figure while writing finds that figure
+plausible while reviewing. Self-checking by the thing that produced the work is worth very little; the
+check has to be something that has no opinion.
+
+### The loop
+
+1. **Write the artefact.**
+2. **The hook runs and reports.** Findings arrive on stderr; you will see them.
+3. **Fix, by the rules below.**
+4. **The fix re-triggers the hook.** Repeat.
+5. 🔴 **After three failed rounds, stop and ask the user.** A model that keeps trying to satisfy a checker
+   starts deleting evidence or inventing provenance. **Three attempts, then escalate with what is failing
+   and why.**
+
+### How each finding gets fixed
+
+| Finding | The only acceptable fixes |
+|---|---|
+| 🔴 **UNSOURCED** | The figure is in the document and nowhere in the wiki. **Remove it from the document**, or ask the user to confirm it and record it properly. **Never add it to the wiki to make the check pass** — that launders a fabrication into a source and is worse than the original error, because the next application will treat it as evidence |
+| 🔴 **ATTRIBUTION** | Move the figure to the role the wiki attributes it to — **or** correct the wiki if the wiki is wrong. **Say which you did and why.** Do not silently pick whichever is less work |
+| **UNVERIFIED** | Ask the user to confirm it before it goes in an external document. If they confirm, mark the page `verified` in the same turn |
+| **STALE** | Ask whether it still holds. If yes, extend `stale_after`. If no, the claim comes out |
+| **BANNED** | Remove it. It is on the do-not list because the cover letter concedes it |
+| **COVERAGE** | **Not errors.** Decide, and **say what you decided** — an omission the user never heard about is indistinguishable from an oversight |
+
+### What a clean run means
+
+**That nothing is provably wrong.** Not that the document is good, not that it is honest about things the
+wiki never recorded, and not that it should be sent. **Never report a clean verify as approval.**
+
+## Sensitive data
+
 ## Sensitive data — what to record and what to refuse
 
 **Full reasoning and the user-facing version are in `PRIVACY.md`. These are the operative rules.**
