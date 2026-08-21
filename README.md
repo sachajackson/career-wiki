@@ -170,8 +170,9 @@ position. No API key needed to use it: `--dry-run` prints the prompt for you to 
 **Where the two disagree, the deterministic layer wins.** It checks facts; the reviewer checks
 impressions.
 
-**And a third question neither of those asks: what did you leave out?** `verify.py --coverage` lists the
-achievements in your wiki that a document does not carry. Most omissions are correct — a two-page CV
+**And a third question neither of those asks: what did you leave out?** `verify.py --coverage --posting`
+reads all three — your CV, your wiki and the job spec — and reports the achievements this employer's own
+language points at that your CV does not carry. Most omissions are correct — a two-page CV
 cannot hold everything. But it forces the question **decision or oversight**, and the second kind is how
 the best thing you have done stays invisible for years because no single application happened to call for
 it. Anything marked `exclude_from_cv: true` stays excluded permanently.

@@ -88,11 +88,19 @@ Ask: what is the first bullet of the current role? That single choice is the app
 ## Step 2.5 — check what you are about to leave out
 
 ```bash
-python3 tools/verify.py <last similar CV>.txt --wiki wiki --coverage
+python3 tools/verify.py <a recent CV>.txt --wiki wiki --coverage --posting <this posting>.txt
 ```
 
-**Run this while choosing the angle, not after writing.** It lists the achievements in the wiki that a
-given document does not carry.
+**Run this while choosing the angle, not after writing.** With `--posting` it reads three things — the
+document, the wiki and the job spec — and reports **wiki achievements that this employer's own language
+points at and the document does not carry.** Without `--posting` it is only a list of everything absent,
+which is mostly noise.
+
+🔴 **The script matches words; you match meaning.** It cannot tell that *"shipping cadence"* in the
+posting and *"release management"* in the wiki are the same idea. **So read its output, then do the same
+pass yourself against the requirements it missed** — you have all three documents and it only has string
+matching. Its job is to catch the blunt case, which is common: the posting names something four times, the
+wiki has real evidence for it, and the CV never mentions it.
 
 **Most omissions are correct** — the angle decides what belongs, and a CV that included everything would
 be a list. But read the verified items in that list once and ask, for each: *was leaving this out a

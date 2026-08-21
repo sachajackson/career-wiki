@@ -118,6 +118,7 @@ def load_wiki(wiki_dir, employers):
                 "stale_after": fm.get("stale_after"),
                 "exclude": fm.get("exclude", False),
                 "figures": figs,
+                "text": re.sub(r"\s+", " ", body)[:4000],
             })
     return index, pages, records
 
@@ -154,12 +155,52 @@ def sections(doc_text, employers):
     return out
 
 
+
+STOP = set("""a an the and or but if then than that this these those of in on at to for with from by as is
+are was were be been being it its it's you your we our they their he she his her have has had do does did
+will would can could should may might must not no yes we're role job work working team teams company
+about which who what when where how all any more most other some such only own same so too very s t just
+now here there into over under out up down off again further once each few both""".split())
+
+
+def salient_terms(text, top=60):
+    """Terms the posting actually leans on. Frequency-weighted, stopwords out.
+
+    Crude on purpose: this is the deterministic layer. It cannot tell you that
+    'shipping cadence' and 'release management' are the same idea -- a model
+    can, and the skill asks one to. What this does is catch the blunt case,
+    which is common: the posting says a word nine times, the wiki has a page
+    about it, and the CV never mentions it.
+    """
+    words = re.findall(r"[a-z][a-z+#.-]{2,}", text.lower())
+    freq = defaultdict(int)
+    for w in words:
+        if w not in STOP and len(w) > 3:
+            freq[w] += 1
+    # Keep single-occurrence terms too, weighted lower. Dropping them was tried
+    # and lost "experience of migration programmes is useful" -- mentioned once,
+    # and still the reason to put a migration achievement on the CV. A term the
+    # posting bothers to name at all is a term worth matching.
+    return dict(sorted(freq.items(), key=lambda x: -x[1])[:top])
+
+
+def relevance(record, terms):
+    """Weighted by how often the posting uses the term, so a word it leans on
+    outranks one it mentions in passing -- but both count."""
+    if not terms:
+        return 0
+    hay = (record["title"] + " " + record["text"]).lower()
+    return sum(n for t, n in terms.items() if t in hay)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("document", help="outgoing text, or - for stdin")
     ap.add_argument("--wiki", default="wiki")
     ap.add_argument("--ban", default="", help="comma-separated terms that must not appear")
     ap.add_argument("--spelling", choices=["uk", "us"], help="employer's convention for program(me)")
+    ap.add_argument("--posting", help="the job spec as text. With --coverage, ranks what is missing by "
+                                      "relevance to what this employer actually asked for")
     ap.add_argument("--coverage", action="store_true",
                     help="also list wiki achievements absent from this document. Not errors -- a "
                          "two-page CV cannot carry everything. It asks whether the omission was a "
@@ -266,19 +307,34 @@ def main():
                 continue
             score = (2 if r["verified"] else 0) + (1 if r["figures"] else 0)
             missing.append((score, r))
+        terms = salient_terms(open(args.posting, encoding="utf-8").read()) if args.posting else set()
+        missing = [(relevance(r, terms) * 10 + score, relevance(r, terms), r) for score, r in missing]
         missing.sort(key=lambda x: -x[0])
         excluded = [r for r in records if r["exclude"]]
         print("\n" + "-" * 78)
         print(f"COVERAGE -- {len(missing)} wiki item(s) not represented in this document\n")
         if not missing:
             print("  every eligible achievement in the wiki appears here.")
-        for score, r in missing[:20]:
+        if not terms:
+            print("  [no --posting given] Ranked by verification only. Pass --posting to rank by what\n"
+                  "  this employer actually asked for, which is the difference between a list and a\n"
+                  "  recommendation.\n")
+        hot = [m for m in missing if m[1] > 0]
+        cold = [m for m in missing if m[1] == 0]
+        if terms and hot:
+            print("  RELEVANT TO THIS POSTING AND ABSENT -- look at these properly:\n")
+        for _, rel, r in (hot if terms else missing)[:12]:
             mark = "verified" if r["verified"] else "unverified"
             emp = f", {r['employer']}" if r["employer"] else ""
             figs = f"  [{', '.join(r['figures'][:3])}]" if r["figures"] else ""
-            print(f"  - {r['title']} ({mark}{emp}){figs}")
-        if len(missing) > 20:
-            print(f"  ... and {len(missing) - 20} more")
+            hits = f"  <- posting-relevance {rel}" if rel else ""
+            print(f"  - {r['title']} ({mark}{emp}){figs}{hits}")
+        if terms and cold:
+            print(f"\n  Also absent, but nothing in the posting points at them ({len(cold)}):")
+            for _, _, r in cold[:8]:
+                print(f"    - {r['title']}")
+            if len(cold) > 8:
+                print(f"    ... and {len(cold) - 8} more")
         if excluded:
             print(f"\n  {len(excluded)} page(s) skipped as exclude_from_cv. Those stay excluded.")
         print("\n  These are NOT findings. A two-page CV cannot carry everything, and leaving\n"
