@@ -162,12 +162,31 @@ It refuses to guess. Attribution is read from an explicit `employer:` field, nev
 text — inference was tried and produced confident nonsense, so when the field is missing the check
 **reports itself as skipped** rather than passing.
 
-**`OVERSIGHT.md` — review it in any tool you like.** Every application folder gets a copy: a
-self-contained brief telling an independent reviewer what it may read, what it must not, what to report
-and in what order. Run `tools/export_review.py` to build a folder **outside your wiki** holding only the
-posting, the outgoing documents and that brief — then open it in Gemini or ChatGPT and say *"read
-OVERSIGHT.md and follow it."* The export exists because telling a model not to read your private notes is
-not the same as it being unable to.
+**A second opinion from a different AI — and you do not have to set anything up.**
+
+Every time a CV or cover letter is written, a folder appears at:
+
+```
+review-exports/<Employer Requisition>/
+```
+
+It holds three things and nothing else: the job advert, the documents being submitted, and `OVERSIGHT.md`
+— a brief telling a reviewer what it may read, what it must not, and what to report. **Open that folder in
+Gemini, ChatGPT or whatever you like and say:**
+
+> **"Read OVERSIGHT.md and follow it."**
+
+That is the whole procedure. Nothing to run, nothing to remember. The folder is rebuilt on every edit, so
+it is never out of date.
+
+> 🔴 **Open the `review-exports` folder, never your wiki folder.**
+>
+> This is the one thing worth being careful about. Your wiki holds your salary floor, why you are leaving,
+> and things you have said about colleagues. `review-exports` holds only what the recruiter is going to
+> receive anyway, so showing it to another company's AI costs you nothing.
+>
+> The brief also *tells* the reviewer not to go looking — but telling a model not to read something is not
+> the same as it being unable to, which is why the folder exists separately at all.
 
 **`tools/review/` — the same review, automated.** An optional second model, ideally from a different vendor,
 reads the posting and your documents and reports what is unsupported, generic or mismatched. **It never

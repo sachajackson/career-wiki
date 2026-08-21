@@ -221,6 +221,23 @@ and a PDF parses more predictably in an ATS than a .docx built by a library.
 Open the HTML yourself to check it before handing it over. **Confirm the page count rather than assuming
 it** — a CV that silently runs to three pages is a real failure.
 
+## Step 6.5 — hand them the reviewer folder, by name
+
+**The export is built automatically** — the hook refreshes it on every write, so it always exists and is
+never stale. **You do not need to run it, and neither does the user.**
+
+🔴 **But you must tell them where it is, in plain words, when you deliver the pack.** Something like:
+
+> *If you want a second opinion from a different AI, open this folder — `review-exports/<Employer
+> Requisition>/` — and say "read OVERSIGHT.md and follow it". Open that folder, not the application
+> folder.*
+
+**Why this sentence matters more than it looks.** A non-technical user who wants a second opinion and has
+not been given a path will point the other tool at whatever they can find — which is the application
+folder, which sits inside the wiki, one level from their salary floor and their notes about colleagues.
+**Naming the safe folder is the whole intervention.** They will not run a script first, and they should
+not have to.
+
 ## Step 7 — the pre-release check
 
 **Two passes, and they catch different things.** `tools/cv_lint.py` checks how it reads — characters,

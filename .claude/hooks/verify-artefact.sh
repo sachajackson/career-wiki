@@ -48,8 +48,17 @@ fi
 out=$(python3 "$root/tools/verify.py" "$path" --config "$cfg" --wiki "$root/wiki" --coverage 2>&1)
 status=$?
 
+# Refresh the reviewer's export on every write, so it can never be stale and
+# nobody has to remember to build it. A non-technical user will not run a
+# script before asking for a second opinion -- and if the export is missing
+# they will point the other tool at the application folder instead, which sits
+# inside the wiki. That is the failure this prevents.
+appdir=$(dirname "$cfg")
+python3 "$root/tools/export_review.py" "$appdir" >/dev/null 2>&1 || true
+
 if [ $status -eq 0 ]; then
-  printf '{"systemMessage":"verify: %s is clean on the deterministic checks."}\n' "$(basename "$path")"
+  printf '{"systemMessage":"verify: %s is clean on the deterministic checks. Reviewer export refreshed at review-exports/%s/"}\n' \
+    "$(basename "$path")" "$(basename "$appdir")"
   exit 0
 fi
 

@@ -104,18 +104,17 @@ and sending the wiki to a third-party API would be a serious privacy escalation 
 
 ### Reviewing in another vendor's tool
 
-**The portable route, and the one to prefer** — no API key, and the applicant sees the review happen:
+**The portable route, and the one to prefer** — no API key, and the applicant sees the review happen.
 
-```bash
-python3 tools/export_review.py "<the application folder>"
-```
+**The folder already exists.** `review-exports/<Employer Requisition>/` is rebuilt on every write by the
+hook, so it is always current. It sits **outside the wiki** and holds only the posting, the outgoing
+documents and `OVERSIGHT.md`.
 
-That builds a folder **outside the wiki** containing only the posting, the outgoing documents and
-`OVERSIGHT.md`. Open **that folder** in Gemini, ChatGPT or anything else and say:
+**Tell them the path and the sentence.** Open that folder in Gemini, ChatGPT or anything else and say:
 
 > *Read OVERSIGHT.md and follow it.*
 
-🔴 **Export rather than pointing the other tool at the application folder directly.** `OVERSIGHT.md` tells
+🔴 **Never tell them to open the application folder.** `OVERSIGHT.md` tells
 the reviewer not to read the wiki, but **an instruction to a model is not a boundary** — an application
 folder inside the wiki is one `cd ..` away from the applicant's salary floor and their notes about
 colleagues. The export makes containment a property of the filesystem instead. `application.json` is
