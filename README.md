@@ -211,6 +211,14 @@ ones:
 - **You are holding a review of an old draft.** The ID on the review will not match the one in the folder,
   so you can tell at a glance that its approval was of something you are no longer sending.
 
+**And if you edit anything after a review, you are told.** Hand the review back here, it gets filed, and
+the next time you touch that CV the system notices the fingerprint has moved and says so by name: *your
+oversight review for this application was of the previous version, and its verdict no longer applies.*
+
+That is the failure most worth catching, because it is the comfortable one. A genuine SEND verdict, from a
+real review, of a document you have since changed — **a pass you believe you have is more dangerous than
+no pass at all**, because you will act on it.
+
 The brief also makes it ask which application if you do not name one. **All of this is a backstop — the
 mechanism is still you opening a new chat.** But now, when that goes wrong, you find out.
 

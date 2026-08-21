@@ -54,12 +54,25 @@ status=$?
 # they will point the other tool at the application folder instead, which sits
 # inside the wiki. That is the failure this prevents.
 appdir=$(dirname "$cfg")
-python3 "$root/tools/export_review.py" "$appdir" >/dev/null 2>&1 || true
+export_out=$(python3 "$root/tools/export_review.py" "$appdir" 2>&1) || true
+stale=$(printf '%s' "$export_out" | grep -A5 "REVIEW-ID CHANGED" || true)
 
-if [ $status -eq 0 ]; then
+if [ $status -eq 0 ] && [ -z "$stale" ]; then
   printf '{"systemMessage":"verify: %s is clean on the deterministic checks. oversight/%s/ refreshed"}\n' \
     "$(basename "$path")" "$(basename "$appdir")"
   exit 0
+fi
+
+# A changed REVIEW-ID is not a verification failure, but the user must hear about
+# it: they may be holding a SEND verdict for a document that no longer exists.
+if [ $status -eq 0 ] && [ -n "$stale" ]; then
+  {
+    echo "The documents changed, so any oversight review already obtained for this application"
+    echo "is now void. TELL THE USER THIS EXPLICITLY -- do not let a stale verdict stand."
+    echo
+    echo "$stale"
+  } >&2
+  exit 2
 fi
 
 {
@@ -76,6 +89,11 @@ fi
   echo " - UNVERIFIED: ask the user to confirm it before it goes in an external document."
   echo " - COVERAGE items are not errors. Decide, and say what you decided."
   echo
+  if [ -n "$stale" ]; then
+    echo "Also:"
+    echo "$stale"
+    echo
+  fi
   echo "This hook re-runs on your next write, so the fix is re-checked automatically."
 } >&2
 exit 2

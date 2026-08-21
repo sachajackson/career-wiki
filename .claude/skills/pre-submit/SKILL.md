@@ -123,7 +123,20 @@ withheld deliberately: `do_not_claim` is a list of their gaps.
 
 **Bring the review back here. Do not let the other tool edit anything.**
 
-### If they bring back a review, check it was of this version
+### File every review they bring back
+
+🔴 **Save it into the application folder**, not the oversight folder — the oversight folder is rebuilt
+from scratch on every write and anything left there is destroyed:
+
+```
+<application folder>/reviews/review-<REVIEW-ID>.md
+```
+
+**Filing it is what makes the alert possible.** With the review on disk, the export can tell the user that
+a specific verdict they are holding has just been invalidated. Without it, the system can only say
+"something changed" and hope they remember what.
+
+### Then check it was a review of this version
 
 **Every review starts with a `REVIEW-ID` line.** Compare it against
 `oversight/<Employer Requisition>/REVIEW-ID.txt`.

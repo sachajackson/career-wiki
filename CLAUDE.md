@@ -324,6 +324,20 @@ check has to be something that has no opinion.
 | **BANNED** | Remove it. It is on the do-not list because the cover letter concedes it |
 | **COVERAGE** | **Not errors.** Decide, and **say what you decided** — an omission the user never heard about is indistinguishable from an oversight |
 
+### When the hook says a REVIEW-ID changed
+
+**This is not a verification failure and there is nothing to fix.** It means the documents were edited
+after an oversight review was obtained.
+
+🔴 **Tell the user, explicitly and in its own sentence**, naming the application:
+
+> *Your oversight review for \<application\> was of the previous version. Editing the CV has voided it —
+> the verdict no longer applies to what you would be submitting. If you want that second opinion to count,
+> it needs a fresh review, in a new chat.*
+
+**Do not fold this into a list of other updates**, and do not let a stale SEND verdict stand unmentioned.
+A pass they believe they have is more dangerous than no pass at all, because they will act on it.
+
 ### What a clean run means
 
 **That nothing is provably wrong.** Not that the document is good, not that it is honest about things the

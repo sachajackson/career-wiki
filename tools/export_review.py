@@ -53,6 +53,11 @@ def main():
 
     out_root = sys.argv[2] if len(sys.argv) > 2 else OVERSIGHT_DIR
     dst = os.path.join(out_root, os.path.basename(src))
+    previous_id = None
+    prev_path = os.path.join(dst, "REVIEW-ID.txt")
+    if os.path.exists(prev_path):
+        m = re.search(r"REVIEW-ID:\s*(\S+)", open(prev_path, encoding="utf-8").read())
+        previous_id = m.group(1) if m else None
     if os.path.exists(dst):
         shutil.rmtree(dst)
     os.makedirs(dst)
@@ -105,6 +110,21 @@ def main():
         print(f"WARNING: {TEMPLATE} missing -- the reviewer will have no brief", file=sys.stderr)
 
     print(f"\nexport -> {dst}\n\n  REVIEW-ID {review_id}\n")
+
+    if previous_id and previous_id != review_id:
+        held = []
+        rdir = os.path.join(src, "reviews")
+        if os.path.isdir(rdir):
+            held = [f for f in sorted(os.listdir(rdir)) if previous_id in f]
+        print(f"  !! REVIEW-ID CHANGED: {previous_id} -> {review_id}")
+        print(f"  !! The documents have been edited since the last export.")
+        if held:
+            print(f"  !! A review of {previous_id} is on file ({held[-1]}).")
+            print(f"  !! ITS VERDICT NO LONGER APPLIES. Tell the user, and get a fresh review")
+            print(f"  !! in a NEW conversation before submitting.")
+        else:
+            print(f"  !! Any oversight review already obtained for this application is now void.")
+        print()
     for n, w in copied:
         print(f"  copied   {n}  ({w})")
     for n, w in skipped:
