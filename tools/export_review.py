@@ -78,6 +78,12 @@ def main():
     if os.path.exists(TEMPLATE):
         shutil.copy2(TEMPLATE, os.path.join(dst, "OVERSIGHT.md"))
         copied.append(("OVERSIGHT.md", "the reviewer's instructions"))
+        # Also at the root, so the whole export directory can be opened once and
+        # left open across several applications. Someone with four live
+        # applications will not open a new folder for each; they will stop
+        # bothering. The brief handles both layouts, and both copies come from
+        # the same template on every run, so they cannot drift.
+        shutil.copy2(TEMPLATE, os.path.join(out_root, "OVERSIGHT.md"))
     else:
         print(f"WARNING: {TEMPLATE} missing -- the reviewer will have no brief", file=sys.stderr)
 
@@ -93,13 +99,17 @@ def main():
     if not any(re.search(r"\bcv\b|resume", n, re.I) for n, _ in copied):
         print("\n  WARNING: no CV found in a readable format.")
 
+    others = sorted(d for d in os.listdir(out_root)
+                    if os.path.isdir(os.path.join(out_root, d)))
     print(f"""
-Open ONLY that folder in the other tool, and say:
+Open {out_root}/ in the other tool -- once, and leave it open -- then say:
 
-    Read OVERSIGHT.md and follow it.
+    Read OVERSIGHT.md and follow it. Review {os.path.basename(src)}.
 
-It sits outside the wiki, so there is nothing above it to wander into. Bring the
-review back here; do not let the other tool edit anything.""")
+It holds {len(others)} application(s) and sits outside the wiki, so there is nothing
+above it to wander into. The brief makes the reviewer work on one application at a
+time and refuse to read the others. Bring the review back here; do not let the
+other tool edit anything.""")
 
 
 if __name__ == "__main__":

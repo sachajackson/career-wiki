@@ -228,9 +228,12 @@ never stale. **You do not need to run it, and neither does the user.**
 
 🔴 **But you must tell them where it is, in plain words, when you deliver the pack.** Something like:
 
-> *If you want a second opinion from a different AI, open this folder — `review-exports/<Employer
-> Requisition>/` — and say "read OVERSIGHT.md and follow it". Open that folder, not the application
-> folder.*
+> *If you want a second opinion from a different AI, open the `review-exports` folder — it has all your
+> applications in it — and say "read OVERSIGHT.md and follow it. Review \<Employer Requisition\>". Open
+> that folder, not your wiki.*
+
+**Name the application in the sentence.** The folder holds every application they have built; the brief
+makes the reviewer ask which one if not told, but telling it saves a round trip.
 
 **Why this sentence matters more than it looks.** A non-technical user who wants a second opinion and has
 not been given a path will point the other tool at whatever they can find — which is the application

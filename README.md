@@ -164,20 +164,28 @@ text — inference was tried and produced confident nonsense, so when the field 
 
 **A second opinion from a different AI — and you do not have to set anything up.**
 
-Every time a CV or cover letter is written, a folder appears at:
+Every time a CV or cover letter is written, it appears in **one folder that holds all your applications**:
 
 ```
-review-exports/<Employer Requisition>/
+review-exports/
+    OVERSIGHT.md
+    Acme R-12345/     posting, CV, cover letter
+    Globex R-4471/    posting, CV, cover letter
 ```
 
-It holds three things and nothing else: the job advert, the documents being submitted, and `OVERSIGHT.md`
-— a brief telling a reviewer what it may read, what it must not, and what to report. **Open that folder in
-Gemini, ChatGPT or whatever you like and say:**
+**Open `review-exports` once, in Gemini or ChatGPT or whatever you like, and leave it open.** For each
+application, say:
 
-> **"Read OVERSIGHT.md and follow it."**
+> **"Read OVERSIGHT.md and follow it. Review Acme R-12345."**
 
-That is the whole procedure. Nothing to run, nothing to remember. The folder is rebuilt on every edit, so
-it is never out of date.
+That is the whole procedure. Nothing to run, nothing to remember, and no reopening a new folder for every
+job — because with four applications running at once, that is the step people quietly stop doing.
+
+**The brief makes the reviewer take one application at a time** and refuse to read the others: four
+postings held in mind at once means a CV judged against the wrong requirements, which is an error that is
+invisible in the output and sounds authoritative. If you do not name one, it will ask.
+
+The folders rebuild on every edit, so they are never out of date.
 
 > 🔴 **Open the `review-exports` folder, never your wiki folder.**
 >
