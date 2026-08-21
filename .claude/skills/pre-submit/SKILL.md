@@ -82,6 +82,11 @@ pass.**
 
 **A clean run is not approval.** It means nothing is provably wrong. Judgement is still yours.
 
+**Add `--coverage`** to also list wiki achievements absent from the document. **These are not findings** —
+a two-page CV cannot carry everything and leaving things out is usually correct. The question it forces is
+whether each omission was **a decision or an oversight**, and the second kind is how good material stays
+invisible for years. It respects `exclude_from_cv: true` and skips anything past its `stale_after`.
+
 ## 3.6 Optional: an independent second opinion
 
 ```bash

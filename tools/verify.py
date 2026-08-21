@@ -59,7 +59,14 @@ def parse_frontmatter(text):
     if not m:
         return {}, text
     fm, body = m.group(1), text[m.end():]
-    out = {"verified": "verified:" in fm, "status": None, "stale_after": None, "employer": None}
+    out = {"verified": "verified:" in fm, "status": None, "stale_after": None, "employer": None,
+           "type": None, "title": None, "exclude": False}
+    for k in ("type", "title"):
+        m2 = re.search(rf"^{k}:\s*(.+?)\s*$", fm, re.M)
+        if m2:
+            out[k] = m2.group(1).strip().strip('"\'')
+    if re.search(r"^exclude_from_cv:\s*true", fm, re.M | re.I):
+        out["exclude"] = True
     e = re.search(r"^employer:\s*(.+?)\s*$", fm, re.M)
     if e:
         out["employer"] = e.group(1).strip().strip('"\'')
@@ -73,8 +80,9 @@ def parse_frontmatter(text):
 
 
 def load_wiki(wiki_dir, employers):
-    """number -> list of {page, verified, stale_after, employers_nearby}"""
+    """Returns (figure index, page records). A page record is what --coverage reads."""
     index = defaultdict(list)
+    records = []
     pages = 0
     for path in glob.glob(os.path.join(wiki_dir, "**", "*.md"), recursive=True):
         if os.path.basename(path) in ("log.md", "index.md"):
@@ -98,7 +106,20 @@ def load_wiki(wiki_dir, employers):
                     # attribution "passed". Silence beats a false pass.
                     "employer": fm.get("employer"),
                 })
-    return index, pages
+        figs = [m.group(0) for line in lines for m in NUM.finditer(line)
+                if not YEARS.fullmatch(m.group(0).strip())]
+        if figs or fm.get("type") == "achievement":
+            records.append({
+                "page": os.path.relpath(path, wiki_dir),
+                "title": fm.get("title") or os.path.basename(path)[:-3],
+                "type": fm.get("type"),
+                "employer": fm.get("employer"),
+                "verified": fm.get("verified", False),
+                "stale_after": fm.get("stale_after"),
+                "exclude": fm.get("exclude", False),
+                "figures": figs,
+            })
+    return index, pages, records
 
 
 def employers_from_list(arg):
@@ -139,6 +160,10 @@ def main():
     ap.add_argument("--wiki", default="wiki")
     ap.add_argument("--ban", default="", help="comma-separated terms that must not appear")
     ap.add_argument("--spelling", choices=["uk", "us"], help="employer's convention for program(me)")
+    ap.add_argument("--coverage", action="store_true",
+                    help="also list wiki achievements absent from this document. Not errors -- a "
+                         "two-page CV cannot carry everything. It asks whether the omission was a "
+                         "decision or an oversight")
     ap.add_argument("--employer", help="employer this application is for")
     ap.add_argument("--employers", default="",
                     help="comma-separated list of the applicant's past employers, exactly as they "
@@ -150,7 +175,7 @@ def main():
         sys.exit(f"no wiki at {args.wiki}")
 
     employers = employers_from_list(args.employers)
-    index, pages = load_wiki(args.wiki, employers)
+    index, pages, records = load_wiki(args.wiki, employers)
     any_verified = any(h["verified"] for hits in index.values() for h in hits)
     any_employer = any(h["employer"] for hits in index.values() for h in hits)
     today = datetime.date.today().isoformat()
@@ -229,6 +254,38 @@ def main():
         print(f"  [{sev}] {msg}")
     if not uniq:
         print("  nothing provably wrong.")
+    if args.coverage:
+        doc_figs = {norm(m.group(0)) for m in NUM.finditer(doc)}
+        missing = []
+        for r in records:
+            if r["exclude"] or r["stale_after"] and r["stale_after"] < today:
+                continue
+            if r["figures"] and any(norm(f) in doc_figs for f in r["figures"]):
+                continue
+            if not r["figures"] and r["type"] != "achievement":
+                continue
+            score = (2 if r["verified"] else 0) + (1 if r["figures"] else 0)
+            missing.append((score, r))
+        missing.sort(key=lambda x: -x[0])
+        excluded = [r for r in records if r["exclude"]]
+        print("\n" + "-" * 78)
+        print(f"COVERAGE -- {len(missing)} wiki item(s) not represented in this document\n")
+        if not missing:
+            print("  every eligible achievement in the wiki appears here.")
+        for score, r in missing[:20]:
+            mark = "verified" if r["verified"] else "unverified"
+            emp = f", {r['employer']}" if r["employer"] else ""
+            figs = f"  [{', '.join(r['figures'][:3])}]" if r["figures"] else ""
+            print(f"  - {r['title']} ({mark}{emp}){figs}")
+        if len(missing) > 20:
+            print(f"  ... and {len(missing) - 20} more")
+        if excluded:
+            print(f"\n  {len(excluded)} page(s) skipped as exclude_from_cv. Those stay excluded.")
+        print("\n  These are NOT findings. A two-page CV cannot carry everything, and leaving\n"
+              "  something out is usually correct. The question is whether each omission was a\n"
+              "  decision or an oversight -- the second kind is how good material stays invisible\n"
+              "  for years. Coverage does not affect the exit status.")
+
     print("\nDeterministic checks only. This proves nothing about whether the document is any"
           "\ngood -- only that its figures trace to the wiki, sit on the right employer, and"
           "\nhave been confirmed by a human. Judgement is still a separate pass.")

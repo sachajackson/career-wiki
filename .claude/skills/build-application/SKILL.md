@@ -85,6 +85,23 @@ Ask: what is the first bullet of the current role? That single choice is the app
 | Building | What they made themselves, and what it returned |
 | Teaching or enablement | What they can transmit, not what they own |
 
+## Step 2.5 — check what you are about to leave out
+
+```bash
+python3 tools/verify.py <last similar CV>.txt --wiki wiki --coverage
+```
+
+**Run this while choosing the angle, not after writing.** It lists the achievements in the wiki that a
+given document does not carry.
+
+**Most omissions are correct** — the angle decides what belongs, and a CV that included everything would
+be a list. But read the verified items in that list once and ask, for each: *was leaving this out a
+decision?*
+
+🔴 **The failure this exists to prevent**: strong material sitting in the wiki, never appearing on any CV,
+because no single application ever happened to call for it and nobody looked at the set. That is how the
+best thing someone has done stays invisible for years.
+
 ## Step 3 — write it
 
 🔴 **Read `WRITING.md` in this skill's folder first.** It carries the content rules, the cadence rules

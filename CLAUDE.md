@@ -100,6 +100,16 @@ job title. Twelve months is a sensible default. `/career-lint` surfaces expired 
 **This exists because profiles rot invisibly.** A profile describing a team in a country the user left two
 years ago is worse than one that says nothing, and nobody notices until an interviewer does.
 
+### `exclude_from_cv` — a permanent decision, not a preference
+
+```yaml
+exclude_from_cv: true
+```
+
+Set it when the user decides a piece of their history stays off external documents. **Record the history
+if it is genuinely theirs, but never propose re-including it.** The coverage check honours the flag and
+will not raise it as a gap. The exclusion stands until the user raises it themselves.
+
 ### `sources[]` — provenance
 
 ```yaml
