@@ -107,6 +107,42 @@ board shows everything, immediately, so a role at a watched employer can no long
 **Completeness is the point, not hit rate.** But the noise makes the shortlist harder to read, and a
 board-specific prefilter would help.
 
+### 🟢 Email alerts as a universal source — designed, not built
+
+**The best idea for source coverage so far, and it comes from a user rather than the design.**
+
+**The problem it solves.** Several boards cannot be read programmatically — Indeed blocks it outright,
+IrishJobs and Jobs.ie have no feed, Adzuna does not cover every country. Every one of them will happily
+**email a saved-search alert**.
+
+**The design.** A dedicated mail account, saved searches on every board that offers them, and the radar
+reading that mailbox over **IMAP** — `imaplib` is in the Python standard library, so there is no
+dependency and no connector required. *(Checked 2026-08-23: no email connector is available in the MCP
+registry from any provider, which is why IMAP rather than a connector.)*
+
+🟢 **It is not a workaround for one site. It inverts the problem.** *"We cannot scrape X"* becomes
+*"anything that will email us is a source"* — Indeed, IrishJobs, Jobs.ie, LinkedIn's own alerts (which
+reach further than the guest endpoint's ~40 per query), employer career sites not on Greenhouse, and
+recruiter mailshots. **And it works with the sites' cooperation rather than against their terms**, which
+makes it strictly better than a scraper rather than merely safer.
+
+**Design decisions to carry into the build:**
+
+- **Triage from the email body, not by following links.** Digests carry title, company, location and
+  usually a snippet — enough to filter. Follow through to the posting only for the shortlist. Faster, and
+  it keeps the volume of requests to any one site in ordinary-use territory.
+- **The user sets the app password themselves.** A job-board API key is a lookup; a mail app password is
+  access to a mailbox. Ship a config template with a placeholder.
+- **Dedup will do four times the work.** The same role arrives via LinkedIn, Greenhouse and two alerts.
+  Title-plus-location should hold, but it is now load-bearing.
+- **Start with five or six searches, not fifty.** Same lesson as query breadth: volume is not the
+  constraint and it makes the output unreadable.
+- **Provider**: any IMAP host. Gmail or Zoho free, Fastmail cleanest. **Avoid Outlook.com** — Microsoft is
+  squeezing basic auth toward OAuth-only and it would need rebuilding.
+
+**A dedicated account is part of the design, not an optional nicety**: it holds job alerts and nothing
+else, so it carries no personal correspondence and nothing tied to the user's identity.
+
 ### No application tracker
 
 Status lives in the scoring table with no dates, no next action, and no follow-up cadence. **A user with
@@ -142,5 +178,10 @@ untested.
 - **Adopting this repo's directory layout in an existing wiki.** Measured on a real vault: it would break
   94 wikilinks and bend two unrelated sections around a career-only schema, for no gain. **Adopt the
   mechanisms, not the format.**
+- 🔴 **Driving a browser to search sites that block automated access.** Considered 2026-08-23 for Indeed.
+  **Technically possible and declined.** Using a browser changes whether the access is detected, not
+  whether the terms permit it. It would also stall on a CAPTCHA within a few pages — which cannot be
+  solved — and the account risk lands on the user mid-search. **The email-alert design above solves the
+  same problem with the site's own mechanism**, which is why this stays declined rather than parked.
 - **Backfilling `verified:` wholesale.** A claim marked verified for convenience is worse than one honestly
   marked unverified. It accumulates as the user confirms things, or not at all.
