@@ -614,7 +614,7 @@ fill in what you have. `config.json` is ignored by git, so your settings stay on
 
 | Adapter | What it needs | Notes |
 |---|---|---|
-| **adzuna** | A free API key from [developer.adzuna.com](https://developer.adzuna.com/) | Documented and supported, with good UK/Ireland/US coverage. **Start here** |
+| **adzuna** | A free API key from [developer.adzuna.com](https://developer.adzuna.com/) | Documented and supported. 🔴 **Check your country is covered before relying on it** — GB, US, NL, DE and others work; **Ireland is not covered and returns 404** |
 | **greenhouse** | Employer board names | Public data, no key. Best for watching specific target employers |
 | **lever** | Employer handles | Public data, no key. Same idea |
 | **linkedin** | Nothing | **Off by default.** Uses an undocumented endpoint, is against LinkedIn's terms of service, and will break without warning. Enable knowingly or not at all |

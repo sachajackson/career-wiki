@@ -8,6 +8,27 @@ written down is a decision; a gap that is remembered is a risk.
 
 Newest first within each section. Delete an item when it is done — the log of what changed lives in git.
 
+## 🔴 What belongs here, and what does not
+
+**This file is public. It records problems with the *system*, never anything about the *person* using it.**
+
+| Belongs here | Belongs in the user's own wiki |
+|---|---|
+| A tool behaves wrongly | A question about their salary, notice, or references |
+| A workflow has a gap | A role they have not assessed |
+| A source turned out not to work | Anything they said about their employer or colleagues |
+| A rule that has failed once and needs a structural fix | Anything with a name, a number, or a date attached to them |
+
+**The test: could this be read by a stranger who does not know the user?** If not, it goes in the relevant
+wiki page's *Open questions* section instead.
+
+**Write findings generically.** *"A user obtained an Adzuna key and discovered Ireland is not covered"* is
+a system finding. *"Sacha's key does not work"* is the same fact with a person attached to it, and it does
+not belong in a public repository.
+
+**Personal follow-ups are not less important — they are differently located.** Losing them is a real risk,
+which is why every wiki page carries an *Open questions* section for exactly this purpose.
+
 ---
 
 ## 🔴 Defects — things that behave wrongly
@@ -51,6 +72,40 @@ veto distinction, so **comparing two offers is a scoring problem it can already 
 The adapter architecture exists and Adzuna, Greenhouse and Lever are written. **Only LinkedIn has been
 exercised.** Indeed is confirmed unavailable — `401` on job pages, `403` on search, tested 2026-08-23.
 **Adzuna needs a real key and a real run before the adapter can be called working.**
+
+### Source coverage is geography-dependent and nothing says so up front
+
+**Found the hard way 2026-08-23.** A user obtained an Adzuna key, and it turned out **Adzuna does not
+cover Ireland** — `404` on the `ie` endpoint while `gb`, `us`, `nl` and `de` all returned results. The
+README had claimed *"good UK/Ireland/US coverage"*, which was simply wrong. **Corrected**, and the adapter
+now carries the check to run before wiring anything up.
+
+**The general problem remains**: a user picks an adapter, spends time on a key, and discovers the coverage
+gap afterwards. **Nothing in the repo states which adapter covers which country.**
+
+Tested for Ireland, and recorded so nobody repeats it:
+
+| Source | Status |
+|---|---|
+| LinkedIn guest endpoint | 🟢 Works |
+| Greenhouse employer boards | 🟢 Works, no key, whole boards with descriptions |
+| **Adzuna** | 🔴 **No Ireland coverage** |
+| **Indeed** | 🔴 Blocked — `401` on job pages, `403` on search |
+| **IrishJobs.ie, Jobs.ie** | 🔴 HTML only, no feed. Same territory as Indeed, not pursued |
+| **Careerjet** | 🔴 Connection refused |
+
+**Worth building**: a `sources check` command that probes every configured adapter for the user's country
+and reports what actually works, before they invest in any of it.
+
+### Greenhouse yield is low, and the filter is the wrong shape
+
+**Eleven boards produced 756 roles in one country and one role worth reading.** These employers post
+everything — sales, support, legal — and the relevance filter is tuned for the LinkedIn corpus.
+
+🟢 **This is not an argument against the source.** LinkedIn shows what an employer chose to syndicate; the
+board shows everything, immediately, so a role at a watched employer can no longer be missed.
+**Completeness is the point, not hit rate.** But the noise makes the shortlist harder to read, and a
+board-specific prefilter would help.
 
 ### No application tracker
 

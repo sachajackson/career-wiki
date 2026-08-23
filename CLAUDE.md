@@ -425,6 +425,16 @@ week.**
 than fixing it in passing or trusting it to memory. A gap that is written down is a decision; a gap that is
 remembered is a risk.
 
+🔴 **`BACKLOG.md` is public and is only ever about the system, never about the person.** Write findings
+generically — *"a user found that source X does not cover country Y"*, never the user's name, their
+figures, their employer or their circumstances. **The test: could a stranger who does not know them read
+this?**
+
+**Anything about the person goes in the relevant wiki page's *Open questions* section instead** — the
+salary question, the unassessed role, the thing they need to check. **Those are not less important, they
+are differently located**, and putting them in the public backlog is how personal material ends up in a
+git history that cannot be edited.
+
 **Especially record anything that went wrong despite an instruction telling you not to.** An instruction
 that has already failed once needs a structural fix, not a stronger instruction.
 

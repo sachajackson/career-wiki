@@ -1,7 +1,18 @@
-"""Adzuna — the default. A documented, supported, free-tier API.
+"""Adzuna — a documented, supported, free-tier API.
 
 Register at https://developer.adzuna.com/ for an app_id and app_key.
 Docs: https://developer.adzuna.com/overview
+
+*** COVERAGE IS NOT GLOBAL. CHECK YOUR COUNTRY FIRST. ***
+
+Tested 2026-08-23 with a valid key: gb, us, nl and de all return results.
+`ie` returns 404 -- Adzuna does not cover Ireland. A 404 here means the
+country is unsupported, NOT that the key is wrong, and the difference costs an
+hour if you assume the latter.
+
+    curl "https://api.adzuna.com/v1/api/jobs/<cc>/search/1?app_id=X&app_key=Y&results_per_page=1"
+
+Run that before wiring anything up.
 """
 import urllib.parse, re
 from ._http import get_json
