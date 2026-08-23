@@ -409,6 +409,25 @@ are always fine.
 - **If they ask you to commit or push the wiki**: stop and confirm. `sources/` and `wiki/` are gitignored
   for a reason, and a public push cannot be undone. **Scrubbing a file does not scrub the git history.**
 
+## Assess a role the moment it appears
+
+**Whether it comes from the radar, a link the user sends, or anywhere else: score it and add it to the
+table in the same turn.** Do not describe a role and wait to be asked to assess it.
+
+**An unassessed role is worse than one never found** — it occupies attention, it looks like an option, and
+it decays. Even an obvious rejection gets the four dimensions, the salary if published, and one sentence on
+what decides it, because **the record of what was rejected and why is what stops it being re-surfaced next
+week.**
+
+## Log what the system gets wrong
+
+**When something in this system behaves wrongly, or a gap becomes visible, add it to `BACKLOG.md`** rather
+than fixing it in passing or trusting it to memory. A gap that is written down is a decision; a gap that is
+remembered is a risk.
+
+**Especially record anything that went wrong despite an instruction telling you not to.** An instruction
+that has already failed once needs a structural fix, not a stronger instruction.
+
 ## Maintenance discipline
 
 ## Maintenance discipline — how information is captured and kept true

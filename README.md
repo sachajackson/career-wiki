@@ -700,6 +700,12 @@ for leaving to a cloud account, possibly a work-managed one.
 
 ---
 
+## Known gaps
+
+**[`BACKLOG.md`](BACKLOG.md) records what does not work yet, what has gone wrong once, and what was
+deliberately not done.** Worth reading before you rely on something: the largest gap is that **the system
+stops at the submit button** — interview preparation, offers and negotiation are not covered.
+
 ## Using it and developing it at the same time
 
 **Do not do both in the same directory.** The repo is public and holds only scaffolding; your vault is
