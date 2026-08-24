@@ -187,6 +187,54 @@ depth-and-rigour machinery and drops the breadth machinery.**
 **So the build is: a fixed question set, executed with Layer 3 depth, red-teamed, and confidence-marked.**
 Roughly a page of skill instructions rather than a research methodology.
 
+### 🟢 Employer preference and exclusion lists — designed, not built
+
+**A user's idea, 2026-08-24, and it makes two existing features work better rather than adding a third.**
+
+**The system currently evaluates every role on its own merits.** But candidates have standing positions
+about employers that no scoring framework captures: **"I will not work for that company because they do
+not pay for sick leave"** is not a NEED, DELIVER, EDGE or WANT score — it is a prior, and it should never
+have to be re-derived.
+
+**Two lists, and they do different jobs:**
+
+| | What it does |
+|---|---|
+| 🔴 **Will not work for** | **Filters the radar before scoring.** An excluded employer's roles get dropped with a one-line note rather than assessed. Without it, the *assess-every-role-immediately* rule burns effort on something already decided |
+| 🟢 **Would like to work for** | **Becomes the employer-board watchlist.** Greenhouse and Lever adapters watch whole boards, which gives complete and immediate coverage of an employer rather than whatever they syndicate. **That is only worth doing for employers the user actually cares about** |
+
+**The second one is the more valuable half** and it is easy to miss. In the proving case the board
+watchlist had been chosen by the agent, essentially arbitrarily. **It should be the user's list.**
+
+#### Design points that need to be in the build
+
+- **Each exclusion needs a reason AND a basis.** *"Their published policy says X"* and *"someone who
+  worked there told me X"* are both legitimate reasons to decline an employer and **completely different
+  kinds of claim.** The basis decides how durable the exclusion is.
+- **Category exclusions matter more than name lists**, because a category catches employers the user has
+  never heard of. Gambling, tobacco, arms, payday lending, or a documented employment-practices record.
+  **Ask whether the objection is to the company or to the sector** — in the proving case a single bookmaker
+  was named and it was genuinely unclear which.
+- **Separate hard exclusions from "assessed and declined".** A principled exclusion is permanent; a role
+  declined on commute or timing can return. **Recording both, differently, means a re-appearance is
+  decided in seconds rather than researched again.**
+- **Exclusions go stale.** Companies change ownership, policy and management. Date them.
+
+#### 🔴 The safety rule this needs, and it is not optional
+
+**This list contains factual assertions about named companies, some from word of mouth.** That is entirely
+legitimate as a private note and **completely unusable anywhere else.**
+
+**It must never reach a CV, a cover letter, an oversight export, or anything a third party reads.** The
+`export_review.py` allowlist already prevents this by construction — the exclusion list is not one of the
+four reviewable file kinds — **but the rule should be stated explicitly rather than left to the file
+filter.**
+
+**And the agent should never suggest the user repeat it.** If asked why they are not interested in an
+employer, the answer is *"it is not the right fit for me"* and nothing further. **Nothing is gained by
+explaining, and a repeated second-hand allegation about a named employer is a real risk to the person
+repeating it.**
+
 ### Source coverage is geography-dependent and nothing says so up front
 
 **Found the hard way 2026-08-23.** A user obtained an Adzuna key, and it turned out **Adzuna does not
