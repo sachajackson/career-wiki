@@ -85,9 +85,18 @@ requires it.
 ## Before every push
 
 ```bash
+python3 tools/tests/run.py      # 65 checks, stdlib only, under a second
 git status --porcelain          # anything unexpected staged?
 git log --oneline origin/main..HEAD
 ```
+
+🔴 **Treat `main` as published, because for some users it is.** People who run their search through this
+may reference the repository in an application, so **a stranger can arrive at `main` at any moment** —
+including mid-repair. Local edits are private; **the push is the publication.**
+
+**Two habits follow.** Run the tests before pushing, not after. And **if something is half-finished at the
+end of a session, leave it uncommitted or on a branch** rather than pushing a broken `main` and fixing it
+in the morning.
 
 The hook covers the commit. **Nothing covers a repository you make public later**, so if this ever becomes
 a private repo that you flip to public, audit the whole history first — not the working tree.
