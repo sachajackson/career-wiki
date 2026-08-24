@@ -33,6 +33,9 @@ while IFS= read -r f; do
     */application.json|application.json)
       blocked+="  $f  (per-application config, may name a real employer)"$'\n' ;;
     tools/radar/*.json|tools/radar/shortlist.md|config.json)
+      # The example config must ship, or a fresh clone cannot run the radar.
+      # Same carve-out as .gitignore. Added 2026-08-24 after this rule blocked it.
+      case "$f" in */config.example.json) continue ;; esac
       blocked+="  $f  (search results and history)"$'\n' ;;
   esac
 done <<< "$staged"

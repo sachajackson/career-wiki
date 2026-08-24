@@ -1,0 +1,46 @@
+{
+  "_README": [
+    "Copy this to config.json, then REPLACE EVERY PLACEHOLDER. config.json is gitignored.",
+    "The angle-bracket values below are placeholders, not defaults. Left as they are,",
+    "the location filter matches nothing and the radar returns nothing.",
+    "Nothing in this file should describe a real person until you fill it in yourself."
+  ],
+
+  "queries": [
+    "<a job title you would take>",
+    "<another job title you would take>",
+    "<a third — 10 to 40 queries is a sensible range>"
+  ],
+
+  "location": {
+    "_comment": [
+      "Plain substrings, matched case-insensitively against the posting's location.",
+      "'ok' alone wins nothing; 'bad' and 'edge' both exclude. Add 'remote' to ok if",
+      "you want remote roles — but note that most boards scope remote to one country."
+    ],
+    "ok":   ["<your city>", "<your region>", "<your country>", "remote"],
+    "bad":  ["<somewhere you will not commute to>"],
+    "edge": ["<somewhere you would consider only for the right role>"]
+  },
+
+  "adzuna": {
+    "_comment": "Free key from https://developer.adzuna.com/ . country is an ISO-2 code. Coverage varies by country — check yours is supported before relying on it.",
+    "app_id": "", "app_key": "",
+    "country": "<iso-2, e.g. gb>", "where": "<your city>", "distance": 40, "pages": 2
+  },
+
+  "greenhouse": {
+    "_comment": "Board tokens of employers you want watched directly. Find one in their careers URL: boards.greenhouse.io/<token>",
+    "boards": []
+  },
+  "lever": {
+    "_comment": "Company slugs, from jobs.lever.co/<slug>",
+    "companies": []
+  },
+
+  "linkedin": {
+    "_comment": "OFF by default. Undocumented endpoint, against LinkedIn's terms of service. Read adapters/linkedin.py and decide for yourself.",
+    "enabled": false,
+    "location": "<your country>", "pages": 4, "delay": 0.8
+  }
+}

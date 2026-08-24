@@ -23,6 +23,11 @@ tools/radar/*.json
 tools/radar/shortlist.md
 config.json
 
+# ...but the example config MUST ship, or a fresh clone cannot run the radar
+# at all. README, radar.py and the role-radar skill all tell the user to copy
+# it. Caught 2026-08-24 by checking what a clone would actually contain.
+!tools/radar/config.example.json
+
 .DS_Store
 __pycache__/
 *.pyc
