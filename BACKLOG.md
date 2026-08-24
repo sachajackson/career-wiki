@@ -67,6 +67,20 @@ will fill gaps unconsciously, and will read ambiguous instructions correctly bec
 **Use a CV that is not theirs, answer only what is asked, and keep a note of every point where they had to
 help it. That note is the real backlog.**
 
+### 🔴 Audited 2026-08-24 before handover. Two entries were stale; both corrected
+
+**Worth knowing that this was checked, and worth knowing what it found**, because a backlog that has
+drifted is worse than a long one — it sends work at problems that no longer exist and leaves real ones
+looking handled.
+
+| Entry | Was | Actually |
+|---|---|---|
+| **The radar's SIGNAL number** | *"Done: the column is now `SIGNAL`"* | 🔴 **Never true of this repository.** That rename happened in a private copy. `radar.py` still writes `\| Score \|` — **the exact word that caused the confusion.** Corrected, and it is still the fix to make |
+| **Employer research** | *"designed, not built"* | 🟢 **Built** as `build-application` Step 0.4. Retitled, with the two details that genuinely did not make it |
+
+**Nothing else claims to be done that is not.** The nine rules listed above are documented rather than
+mechanical, and say so.
+
 ### 3. Then, in this order
 
 | | Why first |
@@ -91,13 +105,19 @@ help it. That note is the real backlog.**
 **Both were called "score", and a radar output of 21 was reported to the user as though it were a
 framework score of 21 — which is impossible, and the user rightly caught it.**
 
-Done: the column is now `SIGNAL`, and every shortlist carries a header explaining it is not the framework
-score.
+🔴 **Corrected 2026-08-24: "the column is now `SIGNAL`" was never true of this repository.** That rename
+happened in a private copy and the claim was written here as though it applied to both. **`radar.py` still
+writes `| Score |`** — the exact word that caused the confusion.
+
+**What is actually done:** every shortlist carries a header line saying the number is a keyword tally
+rather than an assessment, and the module docstring says the same.
 
 **Still to do:**
-- The `role-radar` skill says the two must never be conflated, and it happened anyway. **An instruction
-  that has already failed once needs a structural fix**, not a stronger instruction. Consider a
-  non-numeric signal — `HIGH`/`MED`/`LOW` — so the two cannot be confused even by accident.
+- 🔴 **Rename the column.** `tools/radar/radar.py`, the header written around line 161 and the row written
+  around line 164. **Two lines.**
+- **Better, and the reason this is still open: make it non-numeric.** `HIGH`/`MED`/`LOW` cannot be
+  confused with a score out of 15 even by accident. **An instruction that has already failed once needs a
+  structural fix**, not a stronger instruction — and the `role-radar` skill's warning is that instruction.
 - `verify.py` and `cv_lint.py` also print counts. Check nothing else looks like a score.
 
 ### ✅ Line-wrapped wikilinks silently do not resolve — CHECK BUILT
@@ -430,7 +450,7 @@ commit from the branch, not from the server.** For anything genuinely sensitive 
 
 ### ✅ The deterministic layer had no tests — BUILT, and it found three live bugs
 
-**Status: ✅ 2026-08-24. [`tools/tests/`](tools/tests/) — 64 tests, stdlib only, under a second.**
+**Status: ✅ 2026-08-24. [`tools/tests/`](tools/tests/) — 85 tests, stdlib only, under a second.**
 
 **`verify.py` and `cv_lint.py` are the safety-critical parts of this repo and had zero tests.** They are
 pure functions over text, so they are trivially testable, and everything else leans on them.
@@ -648,7 +668,23 @@ The adapter architecture exists and Adzuna, Greenhouse and Lever are written. **
 exercised.** Indeed is confirmed unavailable — `401` on job pages, `403` on search, tested 2026-08-23.
 **Adzuna needs a real key and a real run before the adapter can be called working.**
 
-### 🟢 Employer research should be a step, not an afterthought — designed, not built
+### 🟡 Employer research — BUILT as `build-application` Step 0.4, two details outstanding
+
+🟢 **Delivered 2026-08-24.** Company and division as separate questions, the two triggers, what to cover,
+the read-the-transaction and what-is-the-local-office habits, rescoring if the research moves the number,
+and both extra sections — the three "why this employer" drafts and the values-with-three-examples. **All of
+it is in the skill.**
+
+🔴 **Two things from the design below did not make it and are still worth adding:**
+
+- **`stale_after` on a company page.** Financial results age in months, and a reused company page is
+  exactly the artefact that rots invisibly. **Twelve weeks is the sensible default.**
+- **A scope rule.** Employer due diligence has a natural size and **padding it produces noise that gets
+  skimmed**, which is worse than a shorter page that gets read.
+
+**The original design follows, because the reasoning is what generalises.**
+
+#### The design
 
 **Proven valuable in use 2026-08-24, and it changed a decision.** A user ran deep research on an employer
 before applying. It moved the role's score down by a point and surfaced an **acquisition agreed three
