@@ -111,6 +111,50 @@ what a company has done with money.**
 earlier, which explained its size, its suburban address, and why engineering sat elsewhere. **A question
 about an office is often really a question about an acquisition.**
 
+#### The research output should also answer the two questions every process asks
+
+**Added 2026-08-24, proven on a second employer.** The research produces the facts. **Two more sections
+turn those facts into things the user can say**, and both are nearly free once the research exists.
+
+**1. "Why do you want to work for X?"** — three drafted answers.
+
+**The constraint is what makes this hard and what makes it worth automating.** The honest reasons are
+usually money, security and location, and **none of those can be said out loud.** So the answers have to
+be specific, checkable, and true of that employer alone.
+
+> **The test: could this sentence be said about a different company?** If yes, it is flattery, and it is
+> what the other forty candidates said. *"I admire your commitment to innovation"* is the failure mode.
+
+**What produced a good one in practice:**
+
+- **Name something specific and non-obvious from the research** — proves the user looked without
+  announcing it. *(In the proving case: a platform the local practice built that the global firm then
+  adopted. Nobody puts that in a cover letter because nobody finds it.)*
+- **Connect it to something the user has actually done**, with a number
+- **End on what they want from the employer**, not what they admire about it
+- **Concede something true.** It makes the rest credible
+- **Draft three, use one** — a second interviewer asks the same question
+
+**2. The employer's published values, with three examples each.**
+
+Most large firms publish values or behaviours, and **in a values-led firm the competency questions come
+straight from them.** The wiki already holds the evidence; this maps it.
+
+**Three per value, not one** — the same story cannot be reused across two interviewers, and the third
+forces a search of the wiki rather than reaching for the obvious.
+
+🟢 **The design note worth encoding: prefer the awkward examples.** *"I brought in the vendor because my
+team did not have the expertise"* beats any success story for a collaboration value, and *"testing is not
+my expertise"* beats a testimonial for a respect value. **Values questions reward candour that costs
+something**, and a wiki that records limitations honestly has more of that material than a CV ever does.
+
+🔴 **Store them as raw material, not as answers.** In the room they need situation, action and outcome —
+the value is what is scored, the story is what is remembered.
+
+**Note on scope**: this looks like interview preparation, which is out of scope. **It is not** — *"why do
+you want to work here"* appears in cover letters and application form free-text boxes, so it is needed
+before submission. The values examples are the part that also serves an interview later.
+
 #### Open question for the build: what to lift from a general-purpose research skill
 
 **The proving run used Anthropic's `deep-research` skill.** It works, but it is built for open-ended
