@@ -68,6 +68,17 @@ silence, and silence is exactly what a knowledge base cannot afford.
 
 **Rule:** never wrap inside `[[ ]]`. Break the line before the link or after it, and let the line run long.
 
+🔴 **A third variant, found the same day and worse: links to a heading that has since been renamed.** Those
+do not look broken at all — **the page still opens, the reader just silently lands at the top** instead of
+the section being cited. **40 were found in one vault. 31 were repairable mechanically** (most had only
+gained a date suffix), **5 pointed at a section lost in an earlier rewrite**, and **7 were self-inflicted by
+the un-wrapping fix above**, which pulled blockquote `>` markers into the link text. **A repair pass needs
+its own verification pass.**
+
+🔴 **And the rule failed three times in one session** — 83 links in the first sweep, 7 in the repair, 2
+while writing the fix up. **An instruction that depends on remembering it mid-sentence is not a control.**
+**Build the check.**
+
 **To do:**
 - Add a wikilink check to the deterministic layer: **flag every `[[ ]]` containing a newline, and every
   link whose target file does not exist.** Both are one regex and neither needs a model.
@@ -262,9 +273,96 @@ line instead of a number to take on faith.
 and **mark it TBC where no full posting was ingested.** Most rows will be TBC, which usefully flags which
 scores came from a summary.
 
+### 🔴 "Remote" is country-scoped almost everywhere, and reading it as location-free widens the search wrongly
+
+**Status: found 2026-08-24 against a real employer board.**
+
+An employer advertising 354 roles listed **11 as remote — and every one was bounded to a country or a US
+state**: *Remote - UK*, *Remote - Luxembourg*, *Remote - Texas*, *Remote - Arizona*, *Remote, Australia*.
+**None was globally open, and there was no remote posting for the user's own country.**
+
+🔴 **The failure this invites is expensive rather than merely wrong.** A user asking *"does remote mean I
+can stop limiting myself to my own country?"* gets a yes, the search geography widens, and **a batch of
+roles gets assessed that were never open to them.** Right-to-work, tax residency and payroll entity all sit
+behind that word and none of them appear in the listing.
+
+**Fix:**
+
+- **Parse the location string, do not just match on "remote".** *Remote - X* means *X*, and the suffix is
+  the whole meaning.
+- **Treat an unqualified "Remote" as `TBC`, not as global.** It usually means "remote within the country
+  the requisition is raised in".
+- 🔴 **Never widen the search geography on the strength of the word alone.** Confirm against the
+  requisition's country, and flag right-to-work as an open question rather than assuming it.
+
 ---
 
 ## 🟡 Gaps — things the system does not do yet
+
+### 🔴 The system models "leave" and "stay" and misses the third option entirely
+
+**Status: raised by the user 2026-08-24. The system had never considered it.**
+
+Every role was being scored against *staying put*, as though those were the only two outcomes. **There is a
+third: moving within the current employer** — and on the dimensions this user actually cares about it is
+structurally advantaged, before any specific role is compared:
+
+| | External move | Internal move |
+|---|---|---|
+| **Unvested equity** | Forfeited on resignation | **Retained** |
+| **Vesting-date timing** | Governs the whole search timeline | **Dissolves as a constraint** |
+| **Notice period** | The binding constraint on every plan | **Does not apply** |
+| **Continuous service** | Resets to zero | **Preserved** |
+| **Probation, reference risk** | Both real | **Neither** |
+| 🔴 **Pay** | The user's stated floor | 🔴 **Will not reach it. Internal moves pay less** |
+
+🔴 **The consequence is a scoring one, not just a missing feature.** An external role in the middle of the
+table is not competing against nothing — **it is competing against an option that costs none of the above.**
+**Every external score should be read against that baseline**, which means the internal option has to be in
+the table rather than in the user's head.
+
+**To do:**
+
+1. **Model "internal move" as a first-class option**, scored like any other, with the retained-value items
+   computed rather than described.
+2. 🔴 **Fetch the employer's *internal* board, not just its external careers site.** Most large employers
+   run a separate internal job site carrying **internal-only requisitions** and a different application
+   route. **The external site is a floor, not the picture** — and the agent should say so rather than
+   presenting external listings as the employer's full hiring.
+3. **Prompt for it.** A user in a stable job will not raise this unprompted; this one did, and the system
+   had nothing to say.
+
+---
+
+### 🔴 Scores have no personal baseline, so "good" gets confused with "better than what I have"
+
+**Status: found 2026-08-24 after a top-ranked role was scored wrongly for three days.**
+
+A role offering **two office days a week at a rail-accessible office** was scored **5/5 on lifestyle** and
+described as *"the best lifestyle position available anywhere."*
+
+🔴 **The user is contractually fully remote.** Two days a week is a **downgrade**. The score was measuring
+*best of the options assessed* and reporting it as *best available* — and the user's own knowledge base had
+recorded the remote arrangement months earlier.
+
+🔴 **It was not one bad row. Every lifestyle score in a 41-role table had been set against no reference
+point at all.**
+
+**Fix:**
+
+1. **Record the user's current position explicitly as a scored baseline** — work pattern, commute, pay,
+   stability, notice — and **put it in the table as a row.** A comparison table without the status quo in
+   it cannot show a downgrade.
+2. **Anchor each scale to that baseline**: top of the scale means *no worse than today*, not *best of what
+   we found*.
+3. 🔴 **Distinguish "contractual" from "current practice"** on anything that forms a baseline. A remote
+   arrangement in writing is a floor; a custom the employer could reverse is not, **and the difference
+   changes what every alternative is worth.**
+4. 🟢 **Where the baseline makes a factor near-constant across all options** — this user is unlikely to
+   match a contractual remote arrangement anywhere — **that factor belongs outside the total**, per the
+   score-splitting entry above. **It is a price, not a differentiator.**
+
+---
 
 ### Everything after the submit button
 
@@ -449,8 +547,25 @@ POST https://<tenant>.wd1.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs
 ```
 
 **Verified working against a large financial employer.** Note the `wd1`/`wd5` numbering varies by tenant —
-a `422` usually means the wrong shard, not a wrong request. **A Workday adapter would cover a large share
-of enterprise employers** and is probably the highest-value adapter still unbuilt.
+a `422` usually means the wrong shard, not a wrong request.
+
+🔴 **There is a second hosting style and an adapter that assumes the first will silently miss employers:**
+
+```
+POST https://wd1.myworkdaysite.com/wday/cxs/<tenant>/<site>/jobs      # shared host
+POST https://<tenant>.wd1.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs   # per-tenant subdomain
+```
+
+🟢 **Both resolve to the same API shape, so one adapter covers both — provided it takes host, tenant and
+site as three separate inputs** rather than deriving the host from the tenant. **Verified against two
+different employers, one on each style.**
+
+🟢 **And there is a detail endpoint worth having**: `GET /wday/cxs/<tenant>/<site><externalPath>` returns
+the full description, requisition id, posting date and — **the part the listing hides — the additional
+locations.** A role advertised as one city is often open in four.
+
+**A Workday adapter would cover a large share of enterprise employers** and is probably the highest-value
+adapter still unbuilt.
 
 **2. 🔴 Exclusions have to work at division level, not just company level.**
 
