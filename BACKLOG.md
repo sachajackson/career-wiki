@@ -31,6 +31,56 @@ which is why every wiki page carries an *Open questions* section for exactly thi
 
 ---
 
+## 🟢 Picking this up cold? Read this first
+
+**Twenty-five items is not a plan.** Three things about their state, then an order.
+
+### 1. Nine of these are already fixed as *documented behaviour*, not as code
+
+**Ported into `CLAUDE.md`, `templates/` and the skills on 2026-08-24.** The entry stays because the
+reasoning is worth keeping — **but do not re-implement them:**
+
+| Now a documented rule | Where |
+|---|---|
+| Fetch the employer's own posting, never the aggregator's | `build-application` Step 1 |
+| Score the journey, not the address; a transit stop is not a commute | `templates/Role Scoring Framework.md` |
+| Standing-gaps list; *not recorded* ≠ *recorded as absent* | `CLAUDE.md` |
+| Three scores instead of one total; the requirement count | `templates/Role Scoring Framework.md` |
+| Do not answer a tie by lengthening the ruler | same |
+| Score against the user's baseline, not the field | same, plus `career-init` |
+| The internal move as a third option | `CLAUDE.md` |
+| "Remote" is country-scoped | `role-radar` |
+| The why-X answers and values-with-three-examples | `build-application` Step 0.4 |
+
+🔴 **A rule is not a control.** Several of these are the same class of thing as *"never wrap inside
+`[[ ]]`"*, which failed three times in one session before it became a check. **Where a rule can be made
+mechanical, that is still work outstanding** — it just is not *starting* work.
+
+### 2. Do the cold-start run before building anything else
+
+**It is the last item in this file and it should be the first thing done.** Half of what follows is
+speculative — *designed, not built* — and a real run from a clean clone will re-rank it and add items that
+are not here.
+
+🔴 **And whoever wrote this system is the worst possible person to run that test.** They know every answer,
+will fill gaps unconsciously, and will read ambiguous instructions correctly because they wrote them.
+**Use a CV that is not theirs, answer only what is asked, and keep a note of every point where they had to
+help it. That note is the real backlog.**
+
+### 3. Then, in this order
+
+| | Why first |
+|---|---|
+| 🔴 **The radar's seven-day window** | **`radar.py` still defaults to `--days 7` and has no way to ask for everything currently open.** In real use this hid 51 live roles, including the one that ended up top of the table. **It is a few lines, and everything else about search quality is downstream of it** |
+| 🔴 **The SIGNAL number** | Still a bare integer that reads like a framework score. **The instruction not to confuse them has already failed once**, so it needs a structural fix — `HIGH`/`MED`/`LOW` — not a stronger warning |
+| **Workday and Oracle adapters** | The endpoints are written up in the aggregator entry. **They return the real posting date, the requisition number and hidden secondary locations**, none of which an aggregator carries |
+| **The employer watchlist as data** | Preference and exclusion lists exist as a design. They are what turn *"watch these employers"* into something the radar does |
+| **Everything after the submit button** | The system stops at submission and the process does not |
+
+🟢 **Leave the rest until the cold run says which of them matter.**
+
+---
+
 ## 🔴 Defects — things that behave wrongly
 
 ### The radar's SIGNAL number reads like a framework score
