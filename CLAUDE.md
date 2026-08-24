@@ -300,6 +300,19 @@ not just be noted.
 
 **If the user asks why nothing is landing, you should already have the data to answer.**
 
+🔴 **This instruction has been shipped and ignored before, so it needs a trigger rather than emphasis.**
+Nothing inside the system happens when an employer replies or fails to, **so `/career-lint` checks for
+submitted applications with no recorded outcome and asks about each by name.** An instruction that depends
+on someone volunteering information they have no prompt to volunteer is not a process.
+
+🔴 **And log the outcome under its own prefix.** In real use one was recorded correctly and filed under
+`data`, which made it invisible to every later question about outcomes — **the record existed and could not
+be found**, which for this purpose is the same as not existing.
+
+🔴 **Distinguish who decided.** *"Rejected"* is ambiguous between *the employer turned them down* and *they
+chose not to apply*, and both appear in a scoring table. Use a closed set: **Submitted · Rejected by
+employer · Withdrew · Declined · Closed · Vetoed · Not applied.**
+
 ## The verification loop — not optional, and not on your honour
 
 🔴 **Every creation or update of a CV, cover letter, résumé or form-answer artefact must be followed by a

@@ -509,6 +509,47 @@ point at all.**
 
 ---
 
+### 🔴 "Track outcomes" was shipped as an instruction and ignored for six weeks
+
+**Status: rule added 2026-08-24 with a trigger. The instruction alone had already failed.**
+
+`CLAUDE.md` said *"record what happened to every application"* and *"if the user asks why nothing is
+landing, you should already have the data to answer."* **Across seven applications and six weeks, one
+outcome was recorded.**
+
+🔴 **The reason is structural, not carelessness. Nothing inside the system happens when an employer
+replies, or fails to.** Every other operation has a trigger — a document arrives, a role is found, a
+document is written. **An outcome arrives in somebody's inbox and the system never hears about it.**
+
+**Two failures, and the second is worse:**
+
+1. **Six of seven applications have no outcome recorded** — which is indistinguishable from *"nothing has
+   come back"*, and those mean different things.
+2. 🔴 **The one outcome that *was* captured was filed under the wrong prefix**, so a later search for
+   outcomes found nothing and concluded none existed. **The record existed and could not be found**, which
+   for every practical purpose is the same as not existing. **This is the "not recorded versus recorded as
+   absent" defect again, in a third form.**
+
+**Fixed by giving it a trigger:** `/career-lint` now checks for submitted applications with no recorded
+outcome and **asks about each by name** — over 7 days, ask; over 21 days, **record `no response`, because
+silence is data and a blank field looks unasked rather than unanswered.**
+
+### 🔴 "Rejected" meant both directions at once
+
+**Status: fixed 2026-08-24 by closing the vocabulary.**
+
+A scoring table used **"Rejected"** for both *the employer turned them down* and *they assessed it and
+chose not to apply*. **Two rows four days apart carried the same word for opposite facts.**
+
+🔴 **It makes the table unable to answer the single most important question about a search** — how many
+applications has an employer turned down? — **and that number is the one that tells you whether the level
+is right.**
+
+**Closed set:** `Submitted` · `Rejected by employer` · `Withdrew` · `Declined` · `Closed` · `Vetoed` ·
+`Not applied`.
+
+---
+
 ### 🟡 Offer the repo link in the cover letter — ask, never assume
 
 **Status: raised by a user 2026-08-24. Not built.**

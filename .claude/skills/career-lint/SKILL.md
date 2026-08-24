@@ -30,6 +30,30 @@ python3 tools/tests/run.py
 **If those fail, stop.** The checks being tested are the ones that catch a fabricated figure and a real
 achievement attached to the wrong job.
 
+## 🔴 Check the outcomes first, because nothing else in the system will
+
+**Every application with a `Submitted` status and no recorded outcome. Ask about each one by name.**
+
+🔴 **This is the check most likely to be skipped, because nothing triggers it.** An employer replying, or
+not replying, happens outside the system. Nobody logs it unless asked, and **an instruction to "track
+outcomes" has been shipped and ignored before** — the applications get recorded, the results do not.
+
+| Submitted | Then |
+|---|---|
+| **Over 7 days ago, nothing recorded** | Ask: any acknowledgement, rejection, or silence? |
+| **Over 21 days, still nothing** | **Record `no response` as an outcome.** Silence is data, and leaving it blank makes it look unasked rather than unanswered |
+| **Any outcome at all** | Log it with the `outcome` prefix, and put the reason on the role page if one was given |
+
+🔴 **Use a status vocabulary that distinguishes who decided.** *"Rejected"* meaning both *the employer
+turned them down* and *they chose not to apply* makes the table unable to answer the single most important
+question about the search:
+
+**Submitted · Rejected by employer · Withdrew · Declined · Closed · Vetoed · Not applied**
+
+🟢 **A rejection with a reason is worth more than a silent success**, and **patterns only appear across
+several.** If three applications sharing one weakness all fail at screening, that changes the framework
+rather than being three separate disappointments.
+
 ## What to check
 
 **1. Expired claims.** Every page whose `stale_after` has passed. Report them; do not silently refresh a
