@@ -486,6 +486,40 @@ point at all.**
 
 ---
 
+### 🟡 Offer the repo link in the cover letter — ask, never assume
+
+**Status: raised by a user 2026-08-24. Not built.**
+
+**A user who has run their search through this asked whether to reference it in the cover letter** — a
+one-line pointer at the repository, so a hiring manager can see the process rather than just its output.
+
+🟢 **For a technical or AI-adjacent role it is a strong differentiator.** The hard thing to prove in that
+market is having *built and governed* something rather than talked about it, and a public system with a
+deterministic verification layer, cross-vendor review and an honest defect log is exactly that.
+
+🔴 **But it must be offered, never added silently, and the reasoning has to travel with the offer:**
+
+| | |
+|---|---|
+| 🔴 **Never publish the score** | A bare number means nothing to a reader, and *"DELIVER 4/5"* invites *"so what is the missing 1?"* before they have read the CV |
+| 🔴 **The framework also scores the employer** | A manager who follows the link and reads how it works will reasonably wonder what *their* company scored on stability. **Some readers find that impressive and some presumptuous, and the applicant cannot control which** |
+| 🟢 **The requirement count works as prose** | *"Nine of your twelve outright, two partially, one not at all"* proves they read the posting, gives a concrete number, and **sets up the concession the letter needs anyway.** The concession is what makes it disarming rather than boastful |
+| 🟡 **The first reader is usually a recruiter or an ATS** | Links do not get clicked at that stage. **It belongs in the closing line, where it costs nothing if ignored** |
+| 🔴 **It advertises that the application is AI-assisted** | For most technical roles that is a positive — **but only if the framing leads with what they built, not with what it produced** |
+
+**To do:**
+
+- **`build-application` should ask once**, at the point the cover letter's closing is written, and record
+  the answer so it is not asked again every application.
+- **Never for a role where it would read as odd** — the decision is the user's, but the prompt should say
+  which way it leans and why.
+- 🟢 **The README already carries an *"if you have arrived here from a job application"* section** for the
+  reader who follows the link. **Anything that changes what that section claims has to keep it true for
+  every user of the repo, not just the author** — it describes the tool, deliberately, and not the
+  applicant.
+
+---
+
 ### Everything after the submit button
 
 **Deliberate scope decision, recorded in `CLAUDE.md`.** Not covered: interview preparation, offer
