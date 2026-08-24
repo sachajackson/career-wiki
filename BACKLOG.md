@@ -50,6 +50,48 @@ score.
   non-numeric signal — `HIGH`/`MED`/`LOW` — so the two cannot be confused even by accident.
 - `verify.py` and `cv_lint.py` also print counts. Check nothing else looks like a score.
 
+### 🔴 Line-wrapped wikilinks silently do not resolve
+
+**Status: found and fixed once, 2026-08-24. Needs a check, because it will happen again.**
+
+**A wikilink broken across two lines is not a link.** Obsidian's parser does not match `[[ ]]` across a
+newline, so `[[Some Page\nName]]` renders as literal text and resolves to nothing.
+
+**In one vault this had broken 83 links across 26 files** — including the most-linked pages in the whole
+knowledge base. It was introduced by a wrapping convention (keep prose under ~100 characters) applied
+mechanically to lines that happened to contain a link.
+
+🔴 **The reason it matters more than it sounds: it is invisible.** The prose still reads correctly. Nothing
+errors. It shows only in graph view, or on hover, or when a link that should exist does not. **It was found
+by accident while checking two new pages, not by looking for it** — which means the failure mode is
+silence, and silence is exactly what a knowledge base cannot afford.
+
+**Rule:** never wrap inside `[[ ]]`. Break the line before the link or after it, and let the line run long.
+
+**To do:**
+- Add a wikilink check to the deterministic layer: **flag every `[[ ]]` containing a newline, and every
+  link whose target file does not exist.** Both are one regex and neither needs a model.
+- The link-target check must ignore deliverables (`.pdf`, `.docx`) and paths outside the wiki, or it
+  produces noise that gets ignored — which is how a check dies.
+
+---
+
+### 🟢 A total that does not move can still be a total that lied
+
+**Status: not a defect in the code. A defect in how results get reported. 2026-08-24.**
+
+An employer research pass produced a score of **15 before and 15 after** — while all four components moved:
+NEED 4→5, DELIVER 4→3, EDGE 4→5, WANT 3→2.
+
+🔴 **The naive report is "research complete, no change", and it is worse than useless** — it says the
+research was not worth running, when in fact it rebuilt the entire basis of the decision.
+
+**The framework already has a rule for this** (*read the row, not the sum*), and the rule was not enough,
+because the reporting habit is to lead with the number.
+
+**To do:** when re-scoring after research, **diff the components and lead with the diff**, not the total.
+If any component moved by 2 or more, say so in the first line even when the total is unchanged.
+
 ---
 
 ## 🟡 Gaps — things the system does not do yet
