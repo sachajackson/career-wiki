@@ -65,11 +65,16 @@ class Normalisation(unittest.TestCase):
     def test_currency_is_stripped(self):
         self.assertEqual(verify.norm("€94,000"), verify.norm("94000"))
 
-    def test_percent_is_stripped(self):
-        self.assertEqual(verify.norm("30%"), verify.norm("30"))
+    def test_a_percentage_and_a_count_are_not_the_same_claim(self):
+        """'100% of fixes within SLA' and 'over 100 staff' used to collide,
+        producing a confident ATTRIBUTION finding against a correct document."""
+        self.assertNotEqual(verify.norm("100%"), verify.norm("100"))
 
-    def test_multiplier_is_stripped(self):
-        self.assertEqual(verify.norm("3x"), verify.norm("3"))
+    def test_a_multiplier_and_a_count_are_not_the_same_claim(self):
+        self.assertNotEqual(verify.norm("3x"), verify.norm("3"))
+
+    def test_the_same_percentage_written_differently_still_matches(self):
+        self.assertEqual(verify.norm("63%"), verify.norm("63 %"))
 
 
 class WhatCountsAsAFigure(unittest.TestCase):

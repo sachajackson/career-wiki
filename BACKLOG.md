@@ -192,6 +192,29 @@ so invisibly, because the truncated text is perfectly coherent.
 
 ---
 
+### ✅ The verifier conflated a percentage with a count — FIXED
+
+**Status: ✅ fixed 2026-08-24, with a test. Found by building a real application pack.**
+
+`norm()` stripped the unit before comparing, so **`100%` and `100` became the same key.** A CV saying
+*"over 100 staff consume the output"* under one employer was flagged against *"100% of emergency fixes
+within SLA"* recorded under a different one — **a confident, specific, wrong ATTRIBUTION finding on a
+correct document.**
+
+🔴 **This is the failure mode that matters most in a deterministic layer.** A missed error is bad; **a
+false positive is worse, because a check that cries wolf gets switched off**, and the attribution check is
+the one that catches a real achievement attached to the wrong job.
+
+**Fixed by keeping the unit in the key** — `100%`, `3x` and `100` are three different claims. **The same
+percentage written two ways still matches.** Two tests added: one that a percentage and a count no longer
+collide, one that the intended equivalences still do.
+
+🟡 **A related gap, not fixed.** The figure regex matches `30%` but not `30 per cent`, so a claim spelled
+out in words is invisible to the check. **Silent, and the writing standard actively prefers words in some
+positions.**
+
+---
+
 ### 🔴 A nearby transit stop is not a commute
 
 **Status: found 2026-08-24, after the system made this exact error and the user corrected it.**

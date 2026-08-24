@@ -45,13 +45,20 @@ FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 
 
 def norm(n):
-    """50,000 / 50000 / 50k all compare equal."""
+    """50,000 / 50000 / 50k all compare equal.
+
+    The unit is kept, because a percentage and a count are not the same claim.
+    Stripping it made "100% of fixes within SLA" and "over 100 staff" collide,
+    which produced a confident ATTRIBUTION finding against a correct document --
+    and a check that cries wolf gets switched off.
+    """
     s = n.lower().replace(",", "").replace(" ", "").lstrip("€£$")
+    unit = "%" if s.endswith("%") else ("x" if s.endswith("x") else "")
+    s = s.rstrip("%x")
     m = re.match(r"^(\d+(?:\.\d+)?)k$", s)
     if m:
-        return str(int(float(m.group(1)) * 1000))
-    s = s.rstrip("%x")
-    return s.rstrip(".0") if "." in s else s
+        return str(int(float(m.group(1)) * 1000)) + unit
+    return (s.rstrip(".0") if "." in s else s) + unit
 
 
 def parse_frontmatter(text):
