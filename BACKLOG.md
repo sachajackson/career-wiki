@@ -295,6 +295,46 @@ behind that word and none of them appear in the listing.
 - 🔴 **Never widen the search geography on the strength of the word alone.** Confirm against the
   requisition's country, and flag right-to-work as an open question rather than assuming it.
 
+### 🔴 Example and template files are a leak vector, because they get made by copying a real one
+
+**Status: happened 2026-08-24. Caught, remediated by history rewrite, and worth a permanent rule.**
+
+`config.example.json` shipped with **one user's actual commuting geography — home county included — their
+real target job titles, and their geographic exclusions.** In a public repository, under their own name,
+alongside a README explaining the repo runs a job search.
+
+🔴 **Nobody wrote that file. It was a working config with `.example` in the name**, which is how almost
+every example file in every project gets made.
+
+**Three failures stacked, and the middle one is the serious one:**
+
+1. **The file was force-added to fix a broken clone — without being read.** *"It's just an example config"*
+   is precisely the assumption that makes this class of leak work.
+2. 🔴 **The pre-commit hook blocked it, correctly, saying it looked like personal material — and the rule
+   was carved out rather than the file being opened.** **The control fired and was overridden.** A
+   safety check that gets exempted whenever it is inconvenient is decoration.
+3. **`.gitignore` had been hiding the problem, not solving it.** The pattern `tools/radar/*.json` matched
+   the example too, so it was never committed — and therefore never reviewed, while sitting in the author's
+   working tree looking like part of the repo.
+
+**Rules that follow:**
+
+- 🔴 **Never commit a file you have not read.** Especially one being added to fix something else.
+- 🔴 **When a safety hook objects, read the file before deciding it is a false positive.** If an exemption
+  is genuinely right, it should be justified by the file's contents, not by the inconvenience.
+- 🟢 **Write example files as explicit placeholders, not as sanitised real ones.** `"<your city>"` cannot
+  leak, and it documents the field better than a plausible value does — a reader cannot tell whether
+  `"dublin"` is a default or an example.
+- 🟡 **Audit every `*.example.*`, `*.sample.*` and `templates/` file in a repo that is about to go public**,
+  and check them against the same rules as the ignore list. **They are the files most likely to have been
+  derived from something real.**
+
+🔴 **And a caveat on the remediation, because it is widely misunderstood.** The bad commit was removed by
+rebase and force-push within 25 minutes, with 0 forks and 0 stars — **and the orphaned commit remained
+fetchable from the host by its SHA afterwards.** Verified, not assumed. **A history rewrite removes a
+commit from the branch, not from the server.** For anything genuinely sensitive — a key, a credential —
+**rotate it and ask the host to garbage-collect; do not treat the force-push as the fix.**
+
 ---
 
 ## 🟡 Gaps — things the system does not do yet
