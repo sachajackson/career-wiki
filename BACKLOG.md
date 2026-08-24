@@ -92,6 +92,69 @@ because the reporting habit is to lead with the number.
 **To do:** when re-scoring after research, **diff the components and lead with the diff**, not the total.
 If any component moved by 2 or more, say so in the first line even when the total is unchanged.
 
+### 🔴 Aggregator postings are truncated, and the system reads them as if they were the job
+
+**Status: found 2026-08-24. This one changed a real score and should be fixed before the next pack.**
+
+A role had been assessed from a LinkedIn posting and carried a red-flagged capability gap for three days.
+Reading **the employer's own careers page** for the same requisition dissolved it:
+
+| The aggregator carried | The employer actually wrote |
+|---|---|
+| *"Proficiency in SQL, Python, Power BI, Power Automate, Power Apps, Azure, Microsoft Fabric"* | *"Proficiency in **at least one**..."* — of **eleven** tools |
+| *"Consulting or professional services experience preferred"* | *"...**or internal product delivery, or regulated, data-intensive environments**"* |
+| *(absent)* | The **business driver** for the role — the single strongest match in the whole posting |
+| A posting date | **Three weeks later than the real one** |
+
+🔴 **The failure is asymmetric and that is what makes it dangerous.** Truncation removes qualifiers
+(*"at least one"*), alternatives (*"or..."*), and context — all of which tend to be the parts that make a
+candidate *more* eligible. **A system reading aggregators systematically under-scores its user**, and does
+so invisibly, because the truncated text is perfectly coherent.
+
+**Fix, in order of value:**
+
+1. **Make "fetch the employer's own posting" a required step before assessment**, not before packaging.
+   By packaging time the score has already been used to decide.
+2. **Prefer the ATS JSON endpoint over the rendered page.** Every major ATS exposes one and the JSON
+   carries fields the page does not — real posting date, requisition number, secondary locations, study
+   level, requisition type:
+   - **Oracle Cloud CX**: `GET /hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails?expand=all&finder=ById;Id="<jobId>",siteNumber="CX_1"` — the `jobId` is in the careers URL. Quotes around the values are required; without them it 400s.
+   - **Workday CXS**: `POST /wday/cxs/<tenant>/<site>/jobs`
+   - **Greenhouse**: `/v1/boards/<token>/jobs?content=true`
+   - **Lever**: `/v0/postings/<company>?mode=json`
+3. **Capture the requisition number at ingest.** It is usually only on the employer's site, and any
+   sensible output-filename convention needs it.
+4. 🔴 **Trust the employer's posting date over the aggregator's.** Aggregators re-date reposts, which makes
+   an ageing requisition look fresh. A six-week-old senior role may already be at offer stage — **that is a
+   prioritisation input, and the system currently cannot see it.**
+
+---
+
+### 🔴 A nearby transit stop is not a commute
+
+**Status: found 2026-08-24, after the system made this exact error and the user corrected it.**
+
+An employer research pass found the office was a four-minute walk from a light-rail stop, concluded that a
+previous "this is a drive" note had been wrong, and **raised the score.** The user corrected it: from where
+he lives, that journey is **two hours each way across three legs.** It is a drive.
+
+🔴 **The system had reasoned from a map rather than from a journey.** Distance from the office to a station
+is trivially checkable and almost irrelevant. **What matters is the number of legs and the total door-to-
+door time from one specific home address** — and a metro or tram network is intra-city, so for anyone
+commuting *into* a city it usually adds a leg rather than removing one.
+
+**Fix:**
+
+- **Location scoring needs the user's origin, not just the office's postcode.** Store it once.
+- **Score the journey, not the address**: legs, total time, and whether the time is usable (a train where
+  you can work) or lost (driving).
+- 🔴 **Never raise a location score on the existence of a transit stop without a door-to-door time.** Mark
+  it `TBC` and ask.
+- 🟢 **Employment clusters are worth storing as first-class entities.** One postcode in this case held four
+  major employers, so the finding was not about one job — it was a standing filter that will apply to
+  dozens. **A "known locations" table, scored once and reused, beats re-deriving it per role and getting
+  it wrong differently each time.**
+
 ---
 
 ## 🟡 Gaps — things the system does not do yet
