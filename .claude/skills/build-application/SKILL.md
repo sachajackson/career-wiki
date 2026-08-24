@@ -43,6 +43,41 @@ actually is**; a question about an office is often really a question about an ac
 
 **If the research changes the score, say so and rescore before continuing.**
 
+### 🟢 Two more sections on every company page, because both get asked in every process
+
+**Both are cheap once the research exists, and neither can be written without it.**
+
+**1. "Why do you want to work for X?" — draft three answers, use one.**
+
+🔴 **The constraint is what makes it hard.** They cannot say salary, security or location — usually the
+three things actually driving the decision. **So the answer must be specific, checkable, and true of that
+employer alone.**
+
+> 🔴 **The test: could this sentence be said about a different company?** If yes, it is flattery, and it is
+> what the other forty candidates wrote. *"I admire your commitment to innovation"* is the failure mode.
+
+**What works:** name something **specific and non-obvious from the research** — it proves they looked
+without announcing that they looked; **connect it to something they have actually done**, with a number;
+**end on what they want from the employer**, not what they admire about them; and **concede something**
+where it is true, which is what makes the rest credible.
+
+**Draft three. Keep the other two for the second interviewer asking the same question.**
+
+**2. The employer's values or behaviours, with three examples each.**
+
+**Most large firms publish them, and in a values-led organisation the competency questions come straight
+from that list.** Find them, then map **three stories per value from the user's own record.**
+
+🔴 **Three, not one** — the same story cannot be reused across two interviewers, and **the third forces a
+search of the wiki rather than reaching for the obvious.**
+
+🔴 **Record them as raw material, not as finished answers.** In the room they need situation, action and
+outcome. **The value is what is being scored; the story is what is remembered.**
+
+🟢 **Prefer the awkward examples.** *"I brought the vendor in because my team did not have the expertise"*
+is a better collaboration answer than any success story, and *"testing is not my strength"* is a better
+one on candour than a testimonial. **Values questions reward candour that costs something.**
+
 ## Step 0.5 — how are they applying? Decide the route before writing anything
 
 **The route matters more than the document, and it is decided once, before any work.**
@@ -87,13 +122,53 @@ already speaking to, not through the front door again.
 
 ## Step 1 — read the posting properly, then write it down
 
+🔴 **Fetch the employer's own posting. Never assess from the aggregator's copy.**
+
+**Aggregators truncate, and the truncation is asymmetric** — it removes qualifiers, alternatives and
+context, **which are the parts that tend to make a candidate more eligible.** In real use, reading the
+employer's own version of a posting that had already been assessed:
+
+| The aggregator carried | The employer actually wrote |
+|---|---|
+| *"Proficiency in [eight named tools]"* | *"Proficiency in **at least one**..."* — of eleven |
+| *"Consulting experience preferred"* | *"...**or internal product delivery, or regulated environments**"* |
+| *(absent)* | **The business driver for the role** — the single strongest match in the posting |
+| A posting date | **Three weeks later than the real one** |
+
+**Two flagged capability gaps dissolved on one line of the employer's own text.** A system reading
+aggregators **systematically under-scores its own user**, invisibly, because the truncated version reads
+perfectly coherently.
+
+🟢 **Most large employers expose the posting as JSON**, which is faster and carries fields the rendered
+page hides — the real posting date, the requisition number, secondary locations, study level:
+
+| ATS | Endpoint |
+|---|---|
+| **Workday** | `POST https://<host>/wday/cxs/<tenant>/<site>/jobs` — **two hosting styles**: `<tenant>.wd<N>.myworkdayjobs.com` and the shared `wd<N>.myworkdaysite.com/recruiting/<tenant>/<site>`. **Take host, tenant and site as three inputs.** Detail: `GET /wday/cxs/<tenant>/<site><externalPath>` |
+| **Oracle Cloud** | `GET /hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails?expand=all&finder=ById;Id="<jobId>",siteNumber="CX_1"` — **the quotes are required** |
+| **Greenhouse** | `GET /v1/boards/<token>/jobs?content=true` |
+| **Lever** | `GET /v0/postings/<company>?mode=json` |
+
+🔴 **Trust the employer's posting date over the aggregator's.** Aggregators re-date reposts, so an ageing
+requisition looks fresh — **and a six-week-old senior role may already be at offer stage**, which is a
+prioritisation input.
+
 Create a role page in `wiki/roles/`. Capture the **requisition number and posting URL** — both are often
-only on the employer's own site, and the aggregator listing will vanish.
+only on the employer's own site, and the aggregator listing will vanish. **The requisition number is also
+what makes an output filename unique.**
 
 Then work out what they are actually anxious about. A job description is a wish list; the role exists
 because something is going wrong. Name it, then check what the wiki has against it.
 
 **Score it** on the framework and place it in the table.
+
+🟢 **And count the requirements while the posting is open.** List the employer's named requirements, mark
+each **🟢 cleared / 🟡 partial / 🔴 gap**, and put the tally on the role page. **It is the evidence behind
+the DELIVER score, it is checkable line by line, and it is the raw material for the cover letter's
+concession** — which is the paragraph that has to exist anyway.
+
+🔴 **If the tally lands far from the DELIVER score already given, one of them is wrong. Find out which
+before writing anything.**
 
 ## Step 2 — pick the angle
 

@@ -106,3 +106,20 @@ Append to `log.md`. Then tell them:
 
 **Do not offer to write a CV yet.** There is not enough in the wiki, and a CV written from a
 single interview round is a formatted version of the document they already had.
+
+## 🔴 Capture the baseline — the step most easily skipped
+
+**Before any role can be scored, record what the user has now.** Every LIFE and SEC score is measured
+against it, and without it the framework reports *"best of what we found"* as *"best available"*.
+
+| Ask | Why it matters |
+|---|---|
+| **Days in an office now, and is that contractual or custom?** | 🔴 **A pattern in writing is a floor. A custom the employer could reverse is not** — and the difference changes what every alternative is worth |
+| **The commute today** — door to door, and is the time usable? | The unit every other commute is compared against |
+| **Notice period** | The binding constraint on every timeline. **Volunteer it early in a process, never at offer stage** |
+| **Unvested equity, and what leaving forfeits** | This is the price of an external move, and **it is what an internal move does not cost** |
+| **Length of service** | Redundancy entitlement and notice reset on a move |
+| **How exposed is the current function?** | The SEC score of staying put |
+
+🟢 **Put the current job in the table as a row.** A comparison table without the status quo in it cannot
+show a downgrade.

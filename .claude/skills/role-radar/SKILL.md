@@ -64,3 +64,15 @@ Real defects, found by running it. Two of them silently discarded good roles.
 - **Salary.** Rarely in the feed. The script checks the *title* for a figure, which does catch some.
   Otherwise PAY stays TBC until a screening call.
 - **Roles posted only on employer sites** not covered by an enabled adapter.
+- 🔴 **"Remote" is country-scoped almost everywhere.** *Remote - UK*, *Remote - Texas*, *Remote -
+  Luxembourg*. **Parse the suffix; it is the whole meaning.** Treat an unqualified *"Remote"* as `TBC`, not
+  as global, and **never widen the search geography on the word alone** — right to work and tax residency
+  sit behind it and appear in no listing.
+- 🔴 **A shortlist is not an assessment.** Whatever the radar surfaces, **score it in the same turn it is
+  found.** An unassessed role occupies attention, looks like an option, and decays. **Even an obvious no
+  gets the dimensions and one sentence on what decided it** — the record of what was rejected and why is
+  what stops it being re-surfaced next week.
+- 🟢 **Watch preferred employers everywhere, by whatever route each one offers** — their own ATS endpoint
+  if they have one, a named query if not. **The point is complete coverage of that employer**, not one
+  adapter. And **filter exclusions at division level**: a preferred employer can contain a division the
+  user will not work for, and it is usually named in the job title.

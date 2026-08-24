@@ -88,6 +88,16 @@ sentence is true.
 nonsense: a discursive page mentions four employers within six lines of any number, so every attribution
 "passed". If the field is absent, the check reports itself as skipped rather than guessing.
 
+🔴 **But `employer:` goes only on a page that is about one employer and mentions no others.** Tried the
+other way and reverted the same day: adding it to the discursive pages — the operating model, the
+capability pages, the ones that discuss several jobs — **produced six false attributions immediately**,
+because a page-level tag told the verifier that every figure on that page belonged to one place.
+
+🟢 **So the estate splits in two.** **Discursive pages hold the reasoning and carry no `employer:`.**
+Figures live on narrow `Achievements - <Employer> <Years>` pages that exist for exactly this and mention
+nobody else. **If a page needs the tag but discusses more than one employer, the fix is to split the page,
+not to guess.**
+
 ### `stale_after` — claims expire on a date, not silently
 
 ```yaml
@@ -205,6 +215,11 @@ is better material.
 
 **Do not batch these into an interrogation.** One or two follow-ups in the flow of a conversation, then
 file the answers. See `/interview` for structured rounds.
+
+🔴 **Ask *why* twice.** The first answer is the official reason — the one they would give in a meeting.
+**The second is usually the real one, and it is better material.** *"We consolidated the reporting"* becomes
+*"nobody trusted the old numbers and two people had quietly built their own"* — and the second version is
+the one an interviewer remembers.
 
 ## When the user sends a role link
 
@@ -498,6 +513,51 @@ material the difference is. **Do not bury this in a list of other updates.**
 New information almost always opens something. **Add it to the interview backlog** on
 `Operating Model.md` rather than either asking immediately or losing it. The backlog should never be
 empty.
+
+### 🔴 Keep a standing-gaps list — "not recorded" and "recorded as absent" are not the same
+
+**Searching for evidence of a capability and finding nothing returns the same empty result whether it was
+never investigated or investigated and found not to hold.** One is a question. **The other is a scored
+input, and asking it again costs credibility.**
+
+**In real use the system asked a user about a capability its own wiki had closed three days earlier — with
+the words *"stop asking"* written on the page.**
+
+**So keep an explicit table**, on the framework page, of every capability found to be absent:
+
+| Column | Why |
+|---|---|
+| **The gap** | |
+| **Status** | *confirmed absent* / *unknown* / *present* |
+| **Resolved on** | |
+| **Where it has been demanded** | 🟢 **Count the postings.** Two is a coincidence; **three is a decision to put to the user once** — *is this worth going and acquiring?* — rather than conceded repeatedly in cover letters |
+| 🟢 **The substitute** | What to say instead. For a missing budget figure it might be operational scale; there is usually something |
+
+🔴 **Before asking the user anything, search for the resolution, not the evidence.** The answer is usually
+phrased as a negation — *none*, *does not*, *confirmed*, *resolved* — which is exactly what an
+evidence-search misses.
+
+### 🟢 Remember the third option: a move inside the current employer
+
+**Most systems model "leave" and "stay" and stop there.** There is a third, and on the anchors it is
+structurally advantaged before any specific role is compared:
+
+| | External move | Internal move |
+|---|---|---|
+| **Unvested equity** | Forfeited | **Retained** |
+| **Notice period** | The binding constraint on every plan | **Does not apply** |
+| **Continuous service** | Resets | **Preserved** |
+| **Probation, reference risk** | Both real | **Neither** |
+| 🔴 **Pay** | Where the floor applies | 🔴 **Usually will not reach it. Internal moves pay less** |
+
+🔴 **Score it as a row in the table**, not as a thought. **An external role in the middle of the table is
+competing against an option that costs none of the above**, and that should be visible.
+
+🔴 **And fetch the employer's *internal* board, not just their public careers site.** Large employers run a
+separate internal job site carrying **internal-only requisitions**. **The public site is a floor, not the
+picture** — say so rather than presenting it as the employer's full hiring.
+
+**A user in a stable job will not raise this unprompted. Prompt for it.**
 
 ### 6. Close the loop
 
