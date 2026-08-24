@@ -155,6 +155,59 @@ commuting *into* a city it usually adds a leg rather than removing one.
   dozens. **A "known locations" table, scored once and reused, beats re-deriving it per role and getting
   it wrong differently each time.**
 
+### 🔴 "Not recorded" and "recorded as absent" are indistinguishable to a search
+
+**Status: found 2026-08-24, after the system asked the user a question its own knowledge base had already
+closed with the words "stop asking."**
+
+A role's requirements named a capability. The system searched the knowledge base for evidence of it, found
+none, marked it **"unknown rather than absent"**, and put the question to the user.
+
+🔴 **The knowledge base had resolved it three days earlier, in two separate places, as a confirmed
+absence** — with an explicit instruction not to raise it again.
+
+**The mechanism is general and will recur in any wiki-backed system.** Searching for *evidence of X* and
+finding nothing returns the same empty result whether X was never investigated or X was investigated and
+found not to hold. **They mean opposite things**: one is a question, the other is an input.
+
+🔴 **The cost is not just a wasted question.** A confirmed absence is a *scored fact* — it should lower a
+capability score at assessment time. Treating it as unknown leaves the score optimistic and defers the
+correction to whenever someone happens to ask.
+
+**Fix:**
+
+1. **Maintain an explicit standing-gaps list**: capability, status (confirmed absent / unknown / present),
+   the date it was resolved, where it has been demanded, and **the substitute claim if one exists**.
+   Cheap to maintain, and it is the only structure that makes "confirmed absent" searchable.
+2. **Before asking the user anything, search for the resolution, not the evidence.** Terms like *"stop
+   asking"*, *"resolved"*, *"confirmed"*, *"none"*, *"does not"* — the answer is usually phrased as a
+   negation, which is exactly what an evidence search misses.
+3. 🔴 **Never surface a question the knowledge base has marked closed.** If a page says stop asking, that is
+   a hard instruction, and re-asking costs credibility that the whole system depends on.
+4. 🟢 **Count how many times each gap has been demanded across postings.** Two is a coincidence, three is a
+   decision to put to the user — *is this worth going and acquiring?* — asked **once**, rather than
+   conceded repeatedly in cover letters.
+
+---
+
+### 🟡 Near-miss facts need an explicit "does not apply" note
+
+**Status: found 2026-08-24. Related to the above but a distinct failure.**
+
+The user was asked whether he had ever commercialised internal tooling. He said no — **and the knowledge
+base contains a page about six years spent selling custom software to enterprise clients.**
+
+🔴 **On a keyword search that page looks like a direct contradiction.** It is not: that software was built
+to sell from the outset, and the requirement was about productising something built for internal use.
+**Adjacent, and different.**
+
+🔴 **Left unmarked, a future pass will "discover" that page and either re-ask the question or, worse, write
+the stretched claim into an application** — where it dies at the first follow-up question.
+
+**Fix:** when a user's answer conflicts on its face with existing content, **write the distinction onto the
+near-miss page itself**, not only onto the page where the question arose. The correction has to live where
+the next search will land.
+
 ---
 
 ## 🟡 Gaps — things the system does not do yet
