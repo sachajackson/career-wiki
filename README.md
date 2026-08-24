@@ -2,56 +2,110 @@
 
 **An AI-maintained knowledge base for running a job search properly.**
 
-*If you came here to **use** this software rather than to evaluate the person who wrote it, skip to
+*If you came here to **use** this software rather than to evaluate an application made with it, skip to
 [the warning below](#-read-this-before-you-use-anything-here) first — it is not optional reading.*
 
 ## If you have arrived here from a job application
 
-**Sixty seconds, then you can stop reading.**
+**Two minutes, then you can stop reading.** Someone has linked you here because their application was
+built using this. It is open source and anyone may use it for any purpose, so **this page describes the
+tool, not the applicant** — what it does, what it checks, and therefore what an application that came
+through it has been put through.
 
-This is a working system, not a portfolio piece. It was built to solve an actual problem — running a job
-search well — and it has been in daily use since. **The applicant you are considering is the person who
-built it and the person who uses it.**
+### It is a knowledge base first, and a document generator only at the end
 
-**Three parts of it are worth a look if you are evaluating someone for AI or engineering-leadership work,
-because they are the parts most AI projects skip:**
+The applicant does not fill in a template. An agent **interviews them** about what they actually did,
+files each answer as a page with its source, and the CV for your role is assembled from those pages on
+demand. **There is deliberately no master CV** — a standing document drifts, and every claim in it stops
+being traceable to anything.
+
+**Which means each figure in the document you received can be traced back to a specific page, and to who
+confirmed it.** Pages carry a trust tier: **generated** (a model wrote it and nobody has checked),
+**machine-confirmed** (cross-checked against a second source), or **human-reviewed** — the applicant
+confirmed it personally. 🔴 **Only the last tier is treated as safe to assert to you without a check.**
+
+### Three checking layers, and the first one contains no AI
+
+**This is the part worth two minutes if any of it is.** Large language models write fluent, confident,
+wrong text. Every layer here exists because of that.
 
 | | |
 |---|---|
-| **A deterministic verification layer** — [`tools/verify.py`](tools/verify.py) | Every figure in an outgoing document is traced back to a sourced page, checked against the right employer, and flagged if unsourced. **It contains no AI.** The reasoning: a model is probabilistic, so the check on it should not be |
-| **An independent oversight layer** — [`oversight/OVERSIGHT.md`](oversight/) | Documents are reviewed by **a different vendor's model**, in a separate session, working from a restricted export that cannot reach the private material. Cross-model review rather than self-review |
-| **[`BACKLOG.md`](BACKLOG.md)** | **The system's own defects, written up honestly** — what broke, what it cost, and what would prevent it. Including the times the system was wrong about the person using it |
+| **[`tools/verify.py`](tools/verify.py)** — deterministic | Extracts **every number** from an outgoing CV or letter, traces it back to a sourced page, **checks it is attributed to the right employer**, and fails on anything unsourced. **No model is involved.** The reasoning: a model is probabilistic, so the check on it must not be. It also runs a `--coverage` pass against the job posting itself |
+| **[`tools/cv_lint.py`](tools/cv_lint.py)** — mechanical | Catches the tells: **banned AI vocabulary, participial tails, suspiciously round numbers, repetitive cadence,** non-ASCII punctuation that breaks applicant tracking systems |
+| **[`oversight/`](oversight/)** — independent | The document is reviewed by **a different vendor's model**, in a fresh session, working from a restricted export. **Cross-model review rather than self-review** — and the export is allow-listed, so the reviewer only ever sees what you would see |
 
-**The scoring is the other half.** Roles are assessed on capability, lifestyle and employer stability as
-three separate scores rather than one total, and each role's page carries a **count of the employer's own
-stated requirements** — cleared, partial, or gap — so a claim about fit can be checked line by line
-instead of taken on trust.
+🔴 **None of it runs on memory.** An [agent hook](.claude/hooks/verify-artefact.sh) fires the verifier
+**every time a CV or cover letter is written or edited**, and puts the findings straight back into the
+agent's context so they have to be dealt with. **A control that depends on someone remembering to run it
+is not a control.**
 
-### "How do I know you built this rather than forked it?"
+### Roles are scored against four named frameworks, not a vibe
 
-**A fair question, and the honest answers are:**
+Each posting is assessed on four dimensions, each drawn from an established method rather than invented:
 
-- 🟢 **GitHub says so.** A forked repository carries a *"forked from…"* line under its name. This one does
-  not, and the commit history is from the author's own account.
-- 🟢 **The backlog cannot be forked.** Anyone can copy a codebase. **A defect log written in first-person
-  operational detail — dated, with consequences — is a record of running the thing**, not of possessing it.
-  Read a few entries and judge for yourself.
-- 🟢 **Ask about it.** The real test is a conversation. *Why is the score split into three? What broke, and
-  what did you change? Why is the verifier not an AI?* **Someone who forked this cannot answer those, and
-  the answers are more interesting than the code.**
+| | Framework | The question |
+|---|---|---|
+| **NEED** | **Jobs-to-be-Done** | Is the thing this employer is most anxious about the thing the applicant is best at? *Read the spec for its underlying worry, not its requirements list* |
+| **DELIVER** | **Topgrading Scorecard** | Reverse-engineer the outcomes the hiring manager should have written, then assess against those |
+| **EDGE** | **Value Proposition Canvas** | Differentiated, or one of many? A capability every applicant has scores low |
+| **WANT** | **Schein's Career Anchors** | Does it match what they will not trade away? |
 
-### It was built with AI, and that is the point rather than the caveat
+**Reported as three separate scores rather than one total** — capability, lifestyle and employer stability
+— because a single number lets a good commute hide a weak match, or the reverse. **The sub-scores stay
+visible**, since *would deliver it well but so would others* and *brings something rare, with real gaps*
+can sum to the same figure and are not the same candidate.
 
-**Every commit records it.** The system was written using Claude Code over a few days, by someone whose
-day job is designing an AI-native software development lifecycle in regulated financial services.
-**Building it quickly with AI, then wrapping it in deterministic checks and independent review because the
-AI cannot be trusted unexamined, is the demonstration** — not an admission.
+🟢 **And every assessed posting carries a requirement count**: the employer's own stated requirements, each
+marked **cleared, partial or gap**, with the tally. *"Nine of your twelve outright, two partially, one not
+at all."* **You can check that line by line instead of taking a claim about fit on trust.**
 
-🔴 **And the same discipline applies to the data.** Nothing personal is in this repository. There is a
-[`PRIVACY.md`](PRIVACY.md), a [pre-commit hook](githooks/pre-commit) that blocks personal paths and content
-**even when someone forces the add**, and a rule that the oversight export may only ever contain what a
-recruiter would receive anyway. **The private wiki and the public tool are two different things by
-construction, not by care.**
+### It researches the employer before it writes anything
+
+**Not the posting — the company.** Financial trend and profitability, revenue by division, whether the core
+business is under structural threat, acquisitions, restructuring and headcount, leadership changes,
+employee sentiment, and what the local office actually is. **Company-level and division-level separately**,
+because a group can be struggling while the division hiring is growing, or the reverse. Research pages
+carry an expiry date and are flagged when stale.
+
+**A practical consequence you may notice:** the applicant will have read your last set of results, and
+their questions will be about your division rather than your homepage.
+
+### The rest of it
+
+- **Job search across multiple sources** — [adapters](tools/radar/adapters/) for Greenhouse, Lever, Adzuna
+  and LinkedIn, plus direct Workday and Oracle recruiting endpoints, which return more than the aggregators
+  do — the real posting date, the requisition number, and the additional locations a listing hides
+- **The employer's own posting is fetched in preference to any job board's copy**, because aggregators
+  truncate — and they truncate the qualifiers, which is the half that decides eligibility
+- **[`BACKLOG.md`](BACKLOG.md)** — the system's own defects, written up honestly: what broke, what it cost,
+  what would prevent it. **Including the occasions it was wrong about the person using it**
+- 🔴 **Nothing personal is in this repository.** A [`PRIVACY.md`](PRIVACY.md), a
+  [pre-commit hook](githooks/pre-commit) that blocks personal paths and content **even when someone forces
+  the add**, and an allow-listed oversight export. **The private knowledge base and the public tool are
+  separate by construction, not by care**
+
+### "Did the applicant build this, or just use it?"
+
+**A fair question, and this page cannot answer it — which is the point of saying so.** The repository is
+public and anyone may use it. **If they claim to have written it, they should say so themselves, and you
+can check:**
+
+- **The commit history** shows who wrote what and when, and GitHub marks a forked repository as a fork.
+- 🟢 **[`BACKLOG.md`](BACKLOG.md) is the part that cannot be copied.** Anyone can clone a codebase. **A
+  defect log written in first-person operational detail — dated, with what it cost — is a record of
+  running the thing rather than possessing it.**
+- 🟢 **Or just ask.** *Why are the scores split into three? What broke, and what changed as a result? Why
+  is the verifier deliberately not an AI?* **The answers are more interesting than the code, and only
+  someone who has actually used this has them.**
+
+### It was built with AI, and says so
+
+**Every commit records it.** The system is written and maintained by an AI coding agent. 🟢 **That is the
+demonstration rather than the admission:** building quickly with a model, then wrapping its output in
+deterministic verification, mechanical linting and independent cross-vendor review **because the model
+cannot be trusted unexamined**, is the whole design. **The warning immediately below this section is not
+boilerplate — it is the premise the rest of the repository is built on.**
 
 ---
 
