@@ -220,6 +220,35 @@ watchlist had been chosen by the agent, essentially arbitrarily. **It should be 
   decided in seconds rather than researched again.**
 - **Exclusions go stale.** Companies change ownership, policy and management. Date them.
 
+#### Two refinements from first use, 2026-08-24
+
+**1. "Watch everywhere", not "add to one adapter."** The first draft said a preferred employer joins the
+Greenhouse watchlist. **That was too narrow and the user corrected it.** The point is complete coverage of
+that employer, and which route achieves it varies: Greenhouse or Lever if they use one, **their own
+careers API if not**, a named query as the fallback. **The list says who to watch; the adapter is an
+implementation detail.**
+
+🟢 **Worth knowing for the build: Workday careers sites are machine-readable.** Many large employers front
+Workday on a custom domain, and the underlying endpoint takes a POST and returns JSON with no key:
+
+```
+POST https://<tenant>.wd1.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs
+     {"appliedFacets":{},"limit":20,"offset":0,"searchText":"Dublin"}
+```
+
+**Verified working against a large financial employer.** Note the `wd1`/`wd5` numbering varies by tenant —
+a `422` usually means the wrong shard, not a wrong request. **A Workday adapter would cover a large share
+of enterprise employers** and is probably the highest-value adapter still unbuilt.
+
+**2. 🔴 Exclusions have to work at division level, not just company level.**
+
+**Found immediately in real use.** A user named a preferred employer *and* a division inside it he would
+not work for. **Roughly a third of that employer's local postings turned out to belong to the excluded
+division** — so a company-level filter would have surfaced them all, every run, forever.
+
+**So the exclusion list needs entries at both levels**, and the filter has to read the division out of the
+job title, since that is usually where it appears (*"Full Stack Engineer, <Division>, Vice President"*).
+
 #### 🔴 The safety rule this needs, and it is not optional
 
 **This list contains factual assertions about named companies, some from word of mouth.** That is entirely
