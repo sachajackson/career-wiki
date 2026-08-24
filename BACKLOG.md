@@ -341,6 +341,57 @@ Tested for Ireland, and recorded so nobody repeats it:
 **Worth building**: a `sources check` command that probes every configured adapter for the user's country
 and reports what actually works, before they invest in any of it.
 
+### 🔴 The search only ever covered the last seven days, and nobody noticed
+
+**Found 2026-08-24 because a user asked. The most consequential defect found so far.**
+
+Every radar run passed a posted-within filter of seven days. **Roles still open but posted earlier were
+never looked at.** Tested on a single query:
+
+| Window | Results | Oldest posting |
+|---|---|---|
+| **7 days** | 100 (capped) | **17 August** |
+| **No filter** | 100 (capped) | **21 May** |
+
+🔴 **What it cost, concretely.** The highest-scoring unapplied role in that user's table had been posted
+**fourteen days** before the run. **The radar never saw it — the user found it by hand and sent the link.**
+The tool built to find roles was structurally incapable of finding the best one available.
+
+#### The fix is not "drop the filter"
+
+**The endpoint caps every query at roughly 100 results regardless of window**, so no-filter is **not a
+superset** of a windowed run. It is a different trade:
+
+| | |
+|---|---|
+| **Windowed** | Dense recent coverage — 100 results from one week |
+| **No filter** | Sparse historical sweep — 100 results across three months |
+
+**Both are needed.** A frequent windowed run for freshness, and a periodic unfiltered sweep for the
+standing backlog of still-open roles. **Dedup handles the overlap and already works.**
+
+**Implemented as an `--all-open` flag in the proving instance. The generalisable fixes:**
+
+- **Any adapter with a recency parameter needs the same treatment.** Employer boards return everything
+  open by default and are unaffected; a search API with a `posted_within` filter has this bug latent.
+- 🔴 **Where a source caps results, the cap is the real constraint and the tool should say so.** A run
+  reporting "100 results" when the true match count is higher is silently truncating. **Detect it — a page
+  returning exactly the cap means there is more — and report it rather than presenting a truncated set as
+  complete.**
+- **A first unfiltered sweep produces a backlog, not a shortlist.** In the proving case, **51 roles scoring
+  above the read-threshold that no previous run could have surfaced.** The *assess-every-role-immediately*
+  rule assumes a handful arriving continuously and **does not survive a fifty-one item catch-up**. Either
+  the rule needs a batch exemption or the first sweep needs its own triage step.
+
+#### 🟢 The wider lesson, which is worth more than the fix
+
+**This is the second time a search-quality problem turned out not to be about search terms.** Doubling the
+query list from 20 to 40 produced **one** additional strong result. **Fixing the time window produced
+fifty-one.**
+
+**When coverage feels thin, check the filters before adding queries.** Breadth is the intuitive lever and
+it was the wrong one twice.
+
 ### Greenhouse yield is low, and the filter is the wrong shape
 
 **Eleven boards produced 756 roles in one country and one role worth reading.** These employers post
