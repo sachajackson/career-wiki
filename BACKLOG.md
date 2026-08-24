@@ -264,6 +264,59 @@ employer, the answer is *"it is not the right fit for me"* and nothing further. 
 explaining, and a repeated second-hand allegation about a named employer is a real risk to the person
 repeating it.**
 
+### 🟢 The system treats every employer as a stranger, and often they are not
+
+**Three related gaps, all surfaced in one conversation 2026-08-24.** The scoring framework and the
+research step both assume no prior relationship with the employer. **In practice a candidate frequently
+has one, and it is worth more than anything research can find.**
+
+#### 1. Record the relationship, and use it
+
+**A field on every employer page**: *worked there* · *works with them now* · *interviewed there before* ·
+*knows people there* · *no relationship*.
+
+**Why it changes things:**
+
+- 🟢 **Pay becomes known rather than TBC.** In the proving case the user could state the employer's band
+  for the grade he would target, from having worked there. **PAY is currently scored only where a band is
+  published — personal knowledge of an employer's bands is a legitimate high-confidence source and the
+  framework has no slot for it.**
+- 🟢 **Research is partly redundant**, and the parts that remain are different. Culture, management and
+  pay structure are already known; what is worth researching is what has changed since.
+- 🟢 **It is the strongest possible answer to "why do you want to work here"**, and the honest one.
+- 🔴 **A previous rejection is the same data structure.** The proving case included an employer the user
+  interviewed with, was offered a job by, and declined over a contract term. **That belongs in the same
+  field, not in a separate memory.**
+
+#### 2. 🔴 Check for contractual restrictions on applying — nobody thinks of this
+
+**If the user works for a supplier, consultancy, agency or outsourcer, their employer's contract with a
+client may restrict them from being hired by that client.** Non-solicitation and non-hire clauses between
+the parties are ordinary in vendor agreements.
+
+**The proving case: a user who is customer-facing to a client every day, considering applying to that
+client.** Their prior employment there and existing relationship make it an unusually strong application
+— **and none of that matters if a clause blocks it.**
+
+🔴 **This is discovered at offer stage or not at all**, which is the worst possible time. **A one-line
+prompt when a target employer is a current client, customer or partner of the user's employer** would
+catch it. **The system should flag it and say to read the contract — never assess the clause itself,
+which is a solicitor's job.**
+
+#### 3. The advertised location may not be the only option
+
+**Large employers have satellite offices.** A role advertised for the head office may be workable from a
+site much closer to the candidate — and **the posting will never say so, because it is advertising the
+main location.**
+
+**In the proving case an employer has an office in the user's own town, twenty-five miles from the
+advertised location, and none of their postings mention it.**
+
+**The scoring currently reads Lifestyle off the advertised location alone.** It should ask: *does this
+employer have a site nearer than the one advertised, and can the role be worked from it?* **Treat the
+answer as a question to ask, not an assumption** — but the upside is the difference between a two-hour
+round trip and none.
+
 ### Source coverage is geography-dependent and nothing says so up front
 
 **Found the hard way 2026-08-23.** A user obtained an Adzuna key, and it turned out **Adzuna does not
