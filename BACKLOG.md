@@ -111,9 +111,37 @@ what a company has done with money.**
 earlier, which explained its size, its suburban address, and why engineering sat elsewhere. **A question
 about an office is often really a question about an acquisition.**
 
-**Open question for the build**: this currently depends on a general-purpose research skill being
-available. **Whether to ship a dedicated `/research-employer` skill, or document the pattern and depend on
-whatever research tooling the user has, is undecided.**
+#### Open question for the build: what to lift from a general-purpose research skill
+
+**The proving run used Anthropic's `deep-research` skill.** It works, but it is built for open-ended
+research and employer due diligence is not open-ended — **the questions are the same every time, and the
+scope has a natural edge.** So the answer is probably a dedicated `/research-employer` that **borrows the
+depth-and-rigour machinery and drops the breadth machinery.**
+
+**Worth lifting, because each of these produced something the run would otherwise have missed:**
+
+| From `deep-research` | Why it earned its place |
+|---|---|
+| 🟢 **The Layer 3 "depth dive" discipline** | Layers 1-2 give financials and stop. **Every finding that changed the decision came from Layer 3** — employee reviews, an industry blog relaying insider testimony, the acquisition nobody had connected to the role |
+| 🟢 **Its Layer 3 source list** | Explicitly points at negative reviews, forums, job postings and enforcement records. **That is what sent the run to Glassdoor and to a critical industry blog** rather than to more press releases |
+| 🟢 **The red-team protocol, especially "steel man the opposition"** | Forced a section arguing the employer is *fine* — audited profit growth, a doubled share price, the role sitting in the growing division. **Without it the output would have been a one-sided bear case that read as authoritative** |
+| 🟢 **Confidence calibration** | The most useful single element. One source was detailed, specific and hostile. **Marking it LOW-MEDIUM against HIGH-confidence audited figures is what makes the whole document usable** rather than something to be argued with |
+| 🟢 **The absence test** | *"What should be here and is not?"* — surfaced that no Irish redundancy filings and no local pay data could be found, which is itself a finding |
+| 🟢 **Fact → insight elevation** | *"They paid £22.4m for £182m of revenue"* is a fact. *"The acquisition price is the disruption evidence"* is the insight, and it is what the reader needs |
+
+**Worth dropping:**
+
+- **The 7x-15x delivery rule.** Employer due diligence has a natural scope. **Padding it produces noise
+  that buries the three findings that matter.**
+- **Layers 4 and 5 — adjacent opportunities and horizon pointers.** Largely irrelevant here. *(The one
+  genuine adjacency is "what else is this employer hiring for", which the scoring table already handles.)*
+- **Framework selection.** PESTEL and Porter's are overkill for a single employer. **A fixed checklist
+  replaces them, because the questions really are the same every time** — financials, divisions,
+  structural threat, acquisitions, restructuring, leadership, reviews, pay signal, local office.
+- **Mode detection and clarifying questions.** The brief is always the same shape.
+
+**So the build is: a fixed question set, executed with Layer 3 depth, red-teamed, and confidence-marked.**
+Roughly a page of skill instructions rather than a research methodology.
 
 ### Source coverage is geography-dependent and nothing says so up front
 
