@@ -73,6 +73,48 @@ The adapter architecture exists and Adzuna, Greenhouse and Lever are written. **
 exercised.** Indeed is confirmed unavailable — `401` on job pages, `403` on search, tested 2026-08-23.
 **Adzuna needs a real key and a real run before the adapter can be called working.**
 
+### 🟢 Employer research should be a step, not an afterthought — designed, not built
+
+**Proven valuable in use 2026-08-24, and it changed a decision.** A user ran deep research on an employer
+before applying. It moved the role's score down by a point and surfaced an **acquisition agreed three
+weeks earlier** — 1,200 people at 0.12x revenue — that no reading of the job description would have found.
+
+**Nothing in the system currently requires this.** `/build-application` checks the posting is live and
+goes straight to writing.
+
+**The design, as it worked in practice:**
+
+- **Two artefacts, because employers recur and divisions differ.** A company page written once and reused
+  for every role at that employer, and division-level research per division. **In the case that proved it,
+  the group was mid-turnaround with a declining core business while the division doing the hiring grew
+  52%.** Judging either by the other would have been wrong, and applicants routinely apply to the same
+  company twice.
+- **Two triggers**: before building a pack — **it must run while it can still change the decision**, not
+  after — and before an interview, refreshing anything stale.
+- **Staleness matters here more than elsewhere.** Financial results age in months. A company page wants
+  `stale_after` about twelve weeks out.
+- **Do not run it below the build threshold.** Research is expensive and the initial assessment has
+  already rejected those roles.
+- **What to cover**: financial trend, revenue by division, share price direction, whether the core
+  business is structurally threatened and the response, what the division actually is and how it performs,
+  **acquisitions**, restructuring and headcount, leadership changes, employee reviews on management and
+  job security, **the pay signal**, and the local office — size, history, and whether it came via
+  acquisition.
+
+🟢 **Two findings worth encoding in whatever gets built, because they generalise:**
+
+**Read the transaction, not the statement.** The CEO said AI was growing the industry; the company then
+paid £22.4m for a business with £182m of revenue. **The price said what the commentary would not. Look for
+what a company has done with money.**
+
+**Find out what the local office actually is.** It turned out to be a company acquired three years
+earlier, which explained its size, its suburban address, and why engineering sat elsewhere. **A question
+about an office is often really a question about an acquisition.**
+
+**Open question for the build**: this currently depends on a general-purpose research skill being
+available. **Whether to ship a dedicated `/research-employer` skill, or document the pattern and depend on
+whatever research tooling the user has, is undecided.**
+
 ### Source coverage is geography-dependent and nothing says so up front
 
 **Found the hard way 2026-08-23.** A user obtained an Adzuna key, and it turned out **Adzuna does not

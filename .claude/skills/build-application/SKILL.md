@@ -18,6 +18,31 @@ If a fetch fails, say what failed rather than concluding. **A 403 is not evidenc
 careers site that will not render for an automated browser tells you nothing about the role. If you cannot
 resolve it, ask the user to check while logged in.
 
+## Step 0.4 — research the employer, and the division separately
+
+🔴 **Before writing anything, and before the route decision.** The posting tells you what the employer
+says about itself. It does not tell you that they cut 500 roles last year, agreed to buy 1,200 people
+three weeks ago, or pay below market — **all of which were true of one employer whose posting mentioned
+none of it.**
+
+**Research the company and the division as separate questions.** A group can be in decline while the
+division hiring is the growth engine, or the reverse. **Applicants also apply to the same employer more
+than once**, so a company page is written once and reused; division findings are per division.
+
+**It must run while it can still change the decision** — which means before the pack, not after. **Skip it
+for roles below the build threshold**; the assessment has already rejected those.
+
+**Cover**: financial trend and profitability, revenue by division, whether the core business is
+structurally threatened and how they are responding, what the division actually is and how it performs,
+acquisitions, restructuring and headcount, leadership changes, employee reviews on management and job
+security, the pay signal, and what the local office actually is.
+
+🟢 **Two habits worth having.** **Read the transaction, not the statement** — what a company has done with
+money is more reliable than what its CEO says about the market. And **find out what the local office
+actually is**; a question about an office is often really a question about an acquisition.
+
+**If the research changes the score, say so and rescore before continuing.**
+
 ## Step 0.5 — how are they applying? Decide the route before writing anything
 
 **The route matters more than the document, and it is decided once, before any work.**
