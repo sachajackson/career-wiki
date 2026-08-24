@@ -240,7 +240,24 @@ commuting *into* a city it usually adds a leg rather than removing one.
   dozens. **A "known locations" table, scored once and reused, beats re-deriving it per role and getting
   it wrong differently each time.**
 
-### 🔴 "Not recorded" and "recorded as absent" are indistinguishable to a search
+### ✅ "Not recorded" and "recorded as absent" are indistinguishable to a search — TOOL BUILT
+
+**Status: ✅ [`tools/known.py`](tools/known.py) built 2026-08-24, with 11 tests and a hard rule in
+`CLAUDE.md`. It recurred three times in one session before it was built, which is the argument for it.**
+
+**What it does:** finds every mention of a term and sorts them into settled decisions, negatives and plain
+assertions, then returns **SETTLED / PRESENT / NEGATIVE ONLY / NOT FOUND** — and prints the lines it judged
+on, because a verdict trusted without being read adds confidence to the same mistake.
+
+🟢 **The question it answers is not *"is this true"*, which needs judgement. It is *"should I ask the user
+about this"*, which is decidable — and which is the one that was got wrong.**
+
+**Validated against the three real failures:** the budget question returns SETTLED with *"stop asking"* as
+the first line of evidence; the work pattern returns PRESENT; a genuinely unknown term returns NOT FOUND.
+
+**The original write-up follows, because the reasoning is what generalises.**
+
+### The defect it was built for
 
 **Status: found 2026-08-24, after the system asked the user a question its own knowledge base had already
 closed with the words "stop asking."**

@@ -5,6 +5,19 @@ description: Interview the user about what they actually do at work, and file th
 
 # Interview
 
+## 🔴 Run this before the first question, and before any question you are unsure about
+
+```
+python3 tools/known.py "<the thing>" --wiki wiki
+```
+
+**Every question has a cost. A question the user has already answered has a much larger one** — it tells
+them the system does not retain what they say, which is the one thing it exists to do.
+
+🔴 **`SETTLED` or `PRESENT` means do not ask.** Read the lines, use what is there, and if it needs
+extending, **ask the narrower question the existing record raises** rather than the broad one it already
+answered. See [[CLAUDE.md]] for the verdicts and what each obliges.
+
 **This is the most valuable thing in the repo.** Everything else — the scoring, the CVs, the profiles —
 is downstream of how well this is done.
 

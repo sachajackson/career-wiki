@@ -167,6 +167,58 @@ follow-up cadence or rejection debriefs. If the user asks for one of those, help
 the wiki holds, but **say plainly that it is outside what the skills cover**, so they know they are
 getting a considered answer rather than a documented process.
 
+## 🔴 Before you say "not recorded", or ask the user anything: run `known.py`
+
+**This is not advice. It is a precondition, and it exists because the alternative has failed three times.**
+
+```
+python3 tools/known.py "<the thing>" --wiki wiki
+```
+
+🔴 **Searching for evidence of something and finding nothing returns the same empty result whether it was
+never investigated or investigated and found not to hold.** Those mean opposite things. **One is a question
+worth asking. The other is a settled fact, and re-opening it wastes the user's time and costs their trust
+in everything else the system says.**
+
+**What went wrong, in one real session:**
+
+| The agent said | What the wiki actually held |
+|---|---|
+| *"Does he have budget ownership?"* | Resolved six days earlier, with the words **"stop asking"** on the page |
+| *"Your work pattern isn't recorded"* | It was, and had been for three weeks |
+| *"No outcome has ever been logged"* | One had, filed under a different heading |
+
+**Every one of those was in the wiki. None was found, because the search looked for the assertion and the
+answer was written as a negation.**
+
+### The verdicts, and what each obliges you to do
+
+| | |
+|---|---|
+| 🔴 **SETTLED** | **Do not ask.** The wiki records a decision. **Read the RESOLVED lines — the answer is one of them, and it may be yes or no.** Cite it |
+| 🔴 **PRESENT** | **Do not write "not recorded".** Use what is there. If some mentions are negative the fact is qualified, so read both piles |
+| 🟡 **NEGATIVE ONLY** | An **established absence**, not an open question. It is a scored input. **Say so, with the citation** |
+| 🟢 **NOT FOUND** | **Now it is safe to ask** — and to file the answer when it comes |
+
+### 🔴 Read the lines. The verdict is a summary
+
+**It matches words, so it will sometimes call a sentence a negation for the wrong reason.** The output
+prints every line it judged on **for exactly this reason.** A tool trusted without being read is a worse
+failure than the one it replaced, because it adds confidence to the same mistake.
+
+### When to run it
+
+- 🔴 **Before writing any sentence of the form *"X is not recorded"*, *"there is no evidence of X"*, or
+  *"this wiki does not say"*.**
+- 🔴 **Before putting a question to the user.** Every question has a cost, and a repeat question has a
+  larger one.
+- **Before scoring a requirement as a gap.** A gap the wiki has already established is an input; a gap
+  nobody has checked is a question.
+- **When a page says a thing is missing.** It may have been answered since.
+
+🟢 **And when it says NOT FOUND and the user answers — file the answer in the same turn**, so the next run
+returns PRESENT and nobody asks a third time.
+
 ## The compounding principle — read this before anything else
 
 **This is a wiki, not a CV generator, and the difference decides how you behave in every session.**
