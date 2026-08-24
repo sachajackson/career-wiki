@@ -130,6 +130,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("root", nargs="?", default="wiki", help="folder to scan (default: wiki)")
     ap.add_argument("--fix", action="store_true", help="join links split across lines, then re-check")
+    ap.add_argument("--only", help="report findings in this file only. The scan still reads the whole "
+                                   "folder, because a link's validity depends on every other page -- but "
+                                   "blaming a writer for pre-existing rot on every save makes a check "
+                                   "noisy, and a noisy check gets ignored")
     ap.add_argument("--strict", action="store_true",
                     help="also fail on NO PAGE. Off by default: a link to an unwritten page is a "
                          "valid marker in this schema, not an error")
@@ -143,6 +147,10 @@ def main():
 
     findings = check(args.root)
     total = len(glob.glob(os.path.join(args.root, "**", "*.md"), recursive=True))
+    if args.only:
+        want = os.path.realpath(args.only)
+        findings = [f for f in findings if os.path.realpath(f[1]) == want]
+        total = 1
     hard = [f for f in findings if f[0] != "NO PAGE"]
     soft = [f for f in findings if f[0] == "NO PAGE"]
     print(f"wikilinks: {len(hard)} broken, {len(soft)} pointing at unwritten pages, "

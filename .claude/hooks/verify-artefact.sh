@@ -13,12 +13,38 @@ input=$(cat)
 path=$(printf '%s' "$input" | sed -n 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 [ -z "$path" ] && exit 0
 
-# Only artefacts, and only text we can read. DOCX and PDF are checked from
-# extracted text at the /pre-submit gate instead.
+root="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+
+# --- Wiki pages: check the links in what was just written -------------------
+# A link split across two lines renders as literal text and breaks silently.
+# The rule against wrapping them failed three times in one session before this
+# existed, which is the whole argument for a check over an instruction.
+#
+# Scoped with --only to the file just written: the scan needs the whole folder
+# to resolve targets, but reporting pre-existing rot on every save makes the
+# check noisy, and a noisy check gets switched off.
 case "$path" in
   *applications/*|*Applications/*) ;;
-  *) exit 0 ;;
+  *.md)
+    if [ -f "$root/tools/wikilinks.py" ] && [ -f "$path" ]; then
+      wl=$(cd "$root" && python3 tools/wikilinks.py "$(dirname "$path")" --only "$path" 2>/dev/null \
+           | grep -E "^  \[(WRAPPED|NO HEADING)\]") || true
+      if [ -n "$wl" ]; then
+        echo "BROKEN LINKS in the page you just wrote:" >&2
+        echo "$wl" >&2
+        echo "" >&2
+        echo "WRAPPED means the link is split across two lines. It renders as literal text and" >&2
+        echo "resolves to nothing. Join it onto one line and let the line run long." >&2
+        echo "NO HEADING means the target page exists but that heading does not -- it was" >&2
+        echo "renamed. Repoint the link at whatever replaced it, or fix the heading." >&2
+        exit 2
+      fi
+    fi
+    exit 0 ;;
 esac
+
+# Only artefacts, and only text we can read. DOCX and PDF are checked from
+# extracted text at the /pre-submit gate instead.
 case "$path" in
   *.html|*.htm|*.md|*.txt) ;;
   *) exit 0 ;;
@@ -28,7 +54,6 @@ case "$(basename "$path")" in
   *) exit 0 ;;
 esac
 
-root="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 [ -f "$root/tools/verify.py" ] || exit 0
 
 # Nearest application.json, walking up from the artefact.
