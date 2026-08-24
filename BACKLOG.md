@@ -208,6 +208,60 @@ the stretched claim into an application** — where it dies at the first follow-
 near-miss page itself**, not only onto the page where the question arose. The correction has to live where
 the next search will land.
 
+### 🟢 One total hid the decision — split it, and count requirements instead of stretching the scale
+
+**Status: designed and migrated 2026-08-24. Recommended as the default shape.**
+
+The framework scored four dimensions 1-5 and summed them out of 20. **Two problems surfaced together.**
+
+🔴 **1. A near-constant factor carries no ranking information.** The user's lifestyle constraint (a
+contractual remote arrangement he is unlikely to match elsewhere) meant that dimension scored 2 or 3 for
+almost every option. **Inside a total it depressed everything roughly equally — noise, not signal.**
+
+🔴 **2. The total hid where the decision was actually being made.** **Seven roles tied on capability
+(14/15) while their old totals spread from 15 to 18** — that entire spread was the personal-fit dimension.
+**A role rejected outright scored exactly what the top recommendation scored on capability**, and the
+single number made it look weaker rather than equal-but-worse-anchored.
+
+🟢 **The fix, and it required no re-judging** because the composite dimension was already two things:
+
+| | | |
+|---|---|---|
+| **FIT** | capability + differentiation | /15 |
+| **LIFE** | lifestyle alone | /5 |
+| **SEC** | employer stability alone | /5 |
+
+**Keep the sub-scores visible.** Two roles both at 14 split into 5·5·4 (*would deliver it well, so would
+others*) and 5·4·5 (*brings something rare, with real gaps*) — **a distinction the sum destroys.**
+
+### 🔴 The related trap: do not answer a tie by lengthening the ruler
+
+**The user asked whether scoring each dimension out of 20 — a total out of 100 — would discriminate
+better. It would not, and the reasoning generalises.**
+
+- **The anchors are defined by evidence, not degree.** *Strong and evidenced* vs *good with gaps that do
+  not touch the core* is a defensible distinction. **16 vs 17 is not** — the digit gets generated rather
+  than derived, which is the one thing a knowledge-based system must never do.
+- 🔴 **It produces persuasive noise.** *16 versus 14* reads as a finding. It would be a coin flip.
+- 🟢 **It would not even fix the tie**, which is a *ceiling* effect: the user only assesses roles that
+  already look plausible, so everything clusters at the top of whatever scale exists. **A longer ruler
+  moves the cluster, it does not spread it.**
+
+🟢 **Precision has to come from decomposition.** Add a **requirements count** per role: take the
+employer's own named requirements, mark each **cleared / partial / gap**, half a point for a partial, and
+report the tally.
+
+- One role: **9 cleared, 2 partial, 1 gap of 12 = 83%** → capability 4
+- Another: **3 cleared, 3 partial, 1 gap of 7 = 64%** → capability 3
+
+🟢 **Both landed on the score already assigned by judgment. That is the test** — a decomposition worth
+trusting validates the judgment rather than replacing it, and it gives the user something checkable line by
+line instead of a number to take on faith.
+
+🔴 **Score it from the employer's own posting**, never an aggregator's — see the truncation defect above —
+and **mark it TBC where no full posting was ingested.** Most rows will be TBC, which usefully flags which
+scores came from a summary.
+
 ---
 
 ## 🟡 Gaps — things the system does not do yet
