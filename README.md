@@ -1,5 +1,60 @@
 # Career Wiki
 
+**An AI-maintained knowledge base for running a job search properly.**
+
+*If you came here to **use** this software rather than to evaluate the person who wrote it, skip to
+[the warning below](#-read-this-before-you-use-anything-here) first — it is not optional reading.*
+
+## If you have arrived here from a job application
+
+**Sixty seconds, then you can stop reading.**
+
+This is a working system, not a portfolio piece. It was built to solve an actual problem — running a job
+search well — and it has been in daily use since. **The applicant you are considering is the person who
+built it and the person who uses it.**
+
+**Three parts of it are worth a look if you are evaluating someone for AI or engineering-leadership work,
+because they are the parts most AI projects skip:**
+
+| | |
+|---|---|
+| **A deterministic verification layer** — [`tools/verify.py`](tools/verify.py) | Every figure in an outgoing document is traced back to a sourced page, checked against the right employer, and flagged if unsourced. **It contains no AI.** The reasoning: a model is probabilistic, so the check on it should not be |
+| **An independent oversight layer** — [`oversight/OVERSIGHT.md`](oversight/) | Documents are reviewed by **a different vendor's model**, in a separate session, working from a restricted export that cannot reach the private material. Cross-model review rather than self-review |
+| **[`BACKLOG.md`](BACKLOG.md)** | **The system's own defects, written up honestly** — what broke, what it cost, and what would prevent it. Including the times the system was wrong about the person using it |
+
+**The scoring is the other half.** Roles are assessed on capability, lifestyle and employer stability as
+three separate scores rather than one total, and each role's page carries a **count of the employer's own
+stated requirements** — cleared, partial, or gap — so a claim about fit can be checked line by line
+instead of taken on trust.
+
+### "How do I know you built this rather than forked it?"
+
+**A fair question, and the honest answers are:**
+
+- 🟢 **GitHub says so.** A forked repository carries a *"forked from…"* line under its name. This one does
+  not, and the commit history is from the author's own account.
+- 🟢 **The backlog cannot be forked.** Anyone can copy a codebase. **A defect log written in first-person
+  operational detail — dated, with consequences — is a record of running the thing**, not of possessing it.
+  Read a few entries and judge for yourself.
+- 🟢 **Ask about it.** The real test is a conversation. *Why is the score split into three? What broke, and
+  what did you change? Why is the verifier not an AI?* **Someone who forked this cannot answer those, and
+  the answers are more interesting than the code.**
+
+### It was built with AI, and that is the point rather than the caveat
+
+**Every commit records it.** The system was written using Claude Code over a few days, by someone whose
+day job is designing an AI-native software development lifecycle in regulated financial services.
+**Building it quickly with AI, then wrapping it in deterministic checks and independent review because the
+AI cannot be trusted unexamined, is the demonstration** — not an admission.
+
+🔴 **And the same discipline applies to the data.** Nothing personal is in this repository. There is a
+[`PRIVACY.md`](PRIVACY.md), a [pre-commit hook](githooks/pre-commit) that blocks personal paths and content
+**even when someone forces the add**, and a rule that the oversight export may only ever contain what a
+recruiter would receive anyway. **The private wiki and the public tool are two different things by
+construction, not by care.**
+
+---
+
 > # ⚠️ Read this before you use anything here
 >
 > **This system is built on large language models. They produce fluent, confident, plausible text, and
@@ -59,64 +114,12 @@
 
 ---
 
-**An AI-maintained knowledge base for running a job search properly.**
-
 You put your CV in a folder. An AI agent interviews you about what you actually do, builds a structured
 wiki about your working life, works out what you genuinely want from a job, turns that into a scoring
 system, finds roles, ranks them against *your* values, and writes a bespoke CV for each application worth
 making.
 
 You never write the wiki. You answer questions and make the decisions.
-
----
-
-## If you have arrived here from a job application
-
-**Sixty seconds, then you can stop reading.**
-
-This is a working system, not a portfolio piece. It was built to solve an actual problem — running a job
-search well — and it has been in daily use since. **The applicant you are considering is the person who
-built it and the person who uses it.**
-
-**Three parts of it are worth a look if you are evaluating someone for AI or engineering-leadership work,
-because they are the parts most AI projects skip:**
-
-| | |
-|---|---|
-| **A deterministic verification layer** — [`tools/verify.py`](tools/verify.py) | Every figure in an outgoing document is traced back to a sourced page, checked against the right employer, and flagged if unsourced. **It contains no AI.** The reasoning: a model is probabilistic, so the check on it should not be |
-| **An independent oversight layer** — [`oversight/OVERSIGHT.md`](oversight/) | Documents are reviewed by **a different vendor's model**, in a separate session, working from a restricted export that cannot reach the private material. Cross-model review rather than self-review |
-| **[`BACKLOG.md`](BACKLOG.md)** | **The system's own defects, written up honestly** — what broke, what it cost, and what would prevent it. Including the times the system was wrong about the person using it |
-
-**The scoring is the other half.** Roles are assessed on capability, lifestyle and employer stability as
-three separate scores rather than one total, and each role's page carries a **count of the employer's own
-stated requirements** — cleared, partial, or gap — so a claim about fit can be checked line by line
-instead of taken on trust.
-
-### "How do I know you built this rather than forked it?"
-
-**A fair question, and the honest answers are:**
-
-- 🟢 **GitHub says so.** A forked repository carries a *"forked from…"* line under its name. This one does
-  not, and the commit history is from the author's own account.
-- 🟢 **The backlog cannot be forked.** Anyone can copy a codebase. **A defect log written in first-person
-  operational detail — dated, with consequences — is a record of running the thing**, not of possessing it.
-  Read a few entries and judge for yourself.
-- 🟢 **Ask about it.** The real test is a conversation. *Why is the score split into three? What broke, and
-  what did you change? Why is the verifier not an AI?* **Someone who forked this cannot answer those, and
-  the answers are more interesting than the code.**
-
-### It was built with AI, and that is the point rather than the caveat
-
-**Every commit records it.** The system was written using Claude Code over a few days, by someone whose
-day job is designing an AI-native software development lifecycle in regulated financial services.
-**Building it quickly with AI, then wrapping it in deterministic checks and independent review because the
-AI cannot be trusted unexamined, is the demonstration** — not an admission.
-
-🔴 **And the same discipline applies to the data.** Nothing personal is in this repository. There is a
-[`PRIVACY.md`](PRIVACY.md), a [pre-commit hook](githooks/pre-commit) that blocks personal paths and content
-**even when someone forces the add**, and a rule that the oversight export may only ever contain what a
-recruiter would receive anyway. **The private wiki and the public tool are two different things by
-construction, not by care.**
 
 ---
 
