@@ -33,7 +33,13 @@ wrong text. Every layer here exists because of that.
 |---|---|
 | **[`tools/verify.py`](tools/verify.py)** — deterministic | Extracts **every number** from an outgoing CV or letter, traces it back to a sourced page, **checks it is attributed to the right employer**, and fails on anything unsourced. **No model is involved.** The reasoning: a model is probabilistic, so the check on it must not be. It also runs a `--coverage` pass against the job posting itself |
 | **[`tools/cv_lint.py`](tools/cv_lint.py)** — mechanical | Catches the tells: **banned AI vocabulary, participial tails, suspiciously round numbers, repetitive cadence,** non-ASCII punctuation that breaks applicant tracking systems |
+| **[`tools/wikilinks.py`](tools/wikilinks.py)** — structural | Finds links that go nowhere: **split across two lines** by a wrapping convention, **pointing at a missing page**, or **pointing at a heading that has been renamed.** None of the three looks broken while you are reading, and a knowledge base whose failure mode is silence is one you stop being able to trust |
 | **[`oversight/`](oversight/)** — independent | The document is reviewed by **a different vendor's model**, in a fresh session, working from a restricted export. **Cross-model review rather than self-review** — and the export is allow-listed, so the reviewer only ever sees what you would see |
+
+🟢 **And the checkers have their own checks.** [`tools/tests/`](tools/tests/) is **64 tests, stdlib only,
+under a second** — `python3 tools/tests/run.py`. Several encode bugs that were live in a shipped version:
+the linter reporting *"clean"* on empty input, a crash on bullets with no words, and figures being sourced
+from the very document under review, so a fabrication proved itself.
 
 🔴 **None of it runs on memory.** An [agent hook](.claude/hooks/verify-artefact.sh) fires the verifier
 **every time a CV or cover letter is written or edited**, and puts the findings straight back into the

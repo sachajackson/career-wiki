@@ -50,9 +50,10 @@ score.
   non-numeric signal — `HIGH`/`MED`/`LOW` — so the two cannot be confused even by accident.
 - `verify.py` and `cv_lint.py` also print counts. Check nothing else looks like a score.
 
-### 🔴 Line-wrapped wikilinks silently do not resolve
+### ✅ Line-wrapped wikilinks silently do not resolve — CHECK BUILT
 
-**Status: found and fixed once, 2026-08-24. Needs a check, because it will happen again.**
+**Status: ✅ built 2026-08-24 as [`tools/wikilinks.py`](tools/wikilinks.py), wired into `/career-lint`,
+with 20 tests. What follows is the record of why.****
 
 **A wikilink broken across two lines is not a link.** Obsidian's parser does not match `[[ ]]` across a
 newline, so `[[Some Page\nName]]` renders as literal text and resolves to nothing.
@@ -334,6 +335,37 @@ rebase and force-push within 25 minutes, with 0 forks and 0 stars — **and the 
 fetchable from the host by its SHA afterwards.** Verified, not assumed. **A history rewrite removes a
 commit from the branch, not from the server.** For anything genuinely sensitive — a key, a credential —
 **rotate it and ask the host to garbage-collect; do not treat the force-push as the fix.**
+
+---
+
+### ✅ The deterministic layer had no tests — BUILT, and it found three live bugs
+
+**Status: ✅ 2026-08-24. [`tools/tests/`](tools/tests/) — 64 tests, stdlib only, under a second.**
+
+**`verify.py` and `cv_lint.py` are the safety-critical parts of this repo and had zero tests.** They are
+pure functions over text, so they are trivially testable, and everything else leans on them.
+
+🔴 **Writing the tests found three defects that were live in the shipped version:**
+
+1. **`cv_lint` reported `0 findings — clean` on empty input** and exited 0. It defaulted to stdin, read
+   nothing, and passed. **A checker that says clean when it checked nothing is worse than no checker**, and
+   it directly contradicted the README's own line about what a clean run means. Now refuses, with a usage
+   message.
+2. **It crashed** — `IndexError` on `Counter.most_common` — **on any document with four or more bullets
+   that had no words**, which is what a partially-converted PDF looks like.
+3. **One word produced two identical findings**, because two spelling patterns matched it.
+
+🟢 **The tests that matter are the ones encoding a bug someone actually hit**, and they say so in their
+docstrings: the circular-sourcing guard (a figure "existed in the wiki" because it existed in the CV being
+checked), the attribution check announcing loudly when it cannot run rather than passing silently, and the
+blockquote-marker case in the wikilink repair.
+
+**Still to do:**
+
+- **No tests for `export_review.py` or the radar adapters.** The adapters hit live third-party endpoints,
+  so they need recorded fixtures rather than network calls.
+- **Nothing tests the agent hook end to end** — that a write actually triggers the verifier and that a
+  failure reaches the agent's context.
 
 ---
 

@@ -91,3 +91,16 @@ git log --oneline origin/main..HEAD
 
 The hook covers the commit. **Nothing covers a repository you make public later**, so if this ever becomes
 a private repo that you flip to public, audit the whole history first — not the working tree.
+
+## Before you open a pull request
+
+```
+python3 tools/tests/run.py
+```
+
+**Stdlib only, no install step, under a second.** If you changed `verify.py`, `cv_lint.py` or
+`wikilinks.py`, **add a test for the behaviour you changed** — those three are the layer everything else
+leans on, and a regression in them is silent by construction.
+
+🟢 **A test that encodes a bug someone actually hit is worth three that cover the happy path.** Several of
+the existing ones are exactly that, and they say so in their docstrings.

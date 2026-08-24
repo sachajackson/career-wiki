@@ -7,6 +7,29 @@ description: Health-check the career wiki — contradictions, expired claims, un
 
 Run periodically, and **always before a batch of applications**.
 
+## Run the mechanical half first — it takes seconds and needs no judgement
+
+```
+python3 tools/wikilinks.py wiki
+```
+
+🔴 **Three ways a link fails without looking broken**, and the checker finds all three: **split across two
+lines** by a wrapping convention, so it renders as literal text; **pointing at a page that does not exist**;
+and **pointing at a heading that has since been renamed** — the quietest of the three, because the link
+still opens the right page and silently lands at the top.
+
+**`--fix` repairs the wrapped ones.** The other two need judgement: a missing page usually wants writing,
+and a renamed heading wants repointing at whatever replaced it.
+
+**And once, after any change to the tools:**
+
+```
+python3 tools/tests/run.py
+```
+
+**If those fail, stop.** The checks being tested are the ones that catch a fabricated figure and a real
+achievement attached to the wrong job.
+
 ## What to check
 
 **1. Expired claims.** Every page whose `stale_after` has passed. Report them; do not silently refresh a

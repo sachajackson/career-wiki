@@ -48,8 +48,21 @@ def bullets(text):
 
 
 def main():
-    path = sys.argv[1] if len(sys.argv) > 1 else "-"
+    # A checker that passes when it checked nothing is worse than no checker.
+    # This used to default to stdin and report "clean" on an empty pipe, which
+    # is a green light nobody earned.
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
+    elif not sys.stdin.isatty():
+        path = "-"
+    else:
+        sys.exit("cv_lint: give me a file, or pipe text in.\n"
+                 "    python3 tools/cv_lint.py cv.txt\n"
+                 "    pdftotext -layout cv.pdf - | python3 tools/cv_lint.py -")
     text = sys.stdin.read() if path == "-" else open(path, encoding="utf-8").read()
+    if not text.strip():
+        sys.exit(f"cv_lint: {'stdin' if path == '-' else path} is empty. "
+                 "Nothing was checked, so nothing is clean.")
     lines = text.splitlines()
     findings = []
 
@@ -101,9 +114,18 @@ def main():
         if sd < 4:
             findings.append(f"UNIFORM CADENCE: {stats} -- sd under 4 reads as generated")
         openers = Counter(b.split()[0].lower() for b in bs if b.split())
-        top, n = openers.most_common(1)[0]
-        if n / len(bs) > 0.6:
-            findings.append(f"uniform openings: {n}/{len(bs)} bullets start with {top!r}")
+        if openers:                      # all-empty bullets used to crash here
+            top, n = openers.most_common(1)[0]
+            if n / len(bs) > 0.6:
+                findings.append(f"uniform openings: {n}/{len(bs)} bullets start with {top!r}")
+
+    # Two spelling patterns can match the same word, so the same fact was
+    # reported twice. Dedupe while keeping order.
+    seen, unique = set(), []
+    for f in findings:
+        if f not in seen:
+            seen.add(f); unique.append(f)
+    findings = unique
 
     print(f"cv_lint: {len(findings)} finding(s)" + (f" | {stats}" if stats else ""))
     for f in findings:
