@@ -95,6 +95,13 @@ def main():
     ap.add_argument("--letter")
     ap.add_argument("--answers", help="free-text form answers, if any")
     ap.add_argument("--provider", help="override the configured provider")
+    ap.add_argument("--authored-by", help="vendor whose model wrote these documents. Required: the "
+                                          "reviewer's independence is the only thing this layer "
+                                          "provides, and it cannot be checked without knowing what it "
+                                          "is independent of")
+    ap.add_argument("--same-vendor-anyway", action="store_true",
+                    help="review with the vendor that wrote the documents. Degraded by construction, "
+                         "and the output says so")
     ap.add_argument("--dry-run", action="store_true", help="print the prompt and send nothing")
     args = ap.parse_args()
 
@@ -120,6 +127,26 @@ def main():
                  "Use --dry-run to see the prompt and paste it into any chat interface yourself --\n"
                  "that works just as well and costs nothing.")
 
+    # ---- independence, the only thing this layer actually provides ----------
+    # A model that invented a number while writing will find that number
+    # plausible while reviewing. Until this check existed the guarantee was a
+    # comment in a config file, and the output of a self-review looked
+    # identical to the real thing.
+    authored = (args.authored_by or cfg.get("authored_by") or "").strip().lower()
+    if not authored:
+        sys.exit("Who wrote these documents? Pass --authored-by <vendor>, or set \"authored_by\" in\n"
+                 "config.json or the application's application.json.\n\n"
+                 "This is not bureaucracy. The reviewer being a different model is the entire value of\n"
+                 "this layer, and it cannot be checked against nothing. Refusing rather than assuming,\n"
+                 "because a skipped check that prints nothing reads exactly like a passed one.")
+    if authored == provider and not args.same_vendor_anyway:
+        sys.exit(f"REFUSED: {provider!r} wrote these documents and would now be reviewing them.\n\n"
+                 f"That is self-review with extra steps. A model shares its own blind spots, so the\n"
+                 f"errors most likely to survive are exactly the ones it made.\n\n"
+                 f"Configure a different provider, or use --dry-run and paste the prompt into a tool\n"
+                 f"from another vendor -- that works just as well and costs nothing.\n\n"
+                 f"To proceed anyway: --same-vendor-anyway. The review will be stamped as degraded.")
+
     from adapters import ADAPTERS
     if provider not in ADAPTERS:
         sys.exit(f"unknown provider {provider!r}. Available: {', '.join(ADAPTERS)}")
@@ -131,6 +158,10 @@ def main():
 
     print(f"reviewing with {provider} / {pcfg.get('model', 'default')}...\n", file=sys.stderr)
     out = ADAPTERS[provider].review(prompt, key, pcfg)
+    if authored == provider:
+        print("!! DEGRADED REVIEW -- NOT INDEPENDENT\n"
+              f"!! {provider} wrote these documents and {provider} reviewed them. This is self-review.\n"
+              f"!! Treat every clean finding as unconfirmed. Get a second vendor before submitting.\n")
     print(out)
     print("\n" + "-" * 78)
     print("A second model is still probabilistic. It cannot tell you whether a claim is TRUE --\n"

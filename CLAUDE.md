@@ -383,6 +383,20 @@ itself a write, so it fires the hook again.
 plausible while reviewing. Self-checking by the thing that produced the work is worth very little; the
 check has to be something that has no opinion.
 
+### 🔴 Record who wrote the documents, in `application.json`
+
+```json
+"authored_by": "anthropic"
+```
+
+**Set it when the pack is created.** The oversight layer's whole value is that the reviewer is a different
+model, **and until this field existed nothing recorded what it was independent *of*** — so the authoring
+vendor could review its own work and the output would be indistinguishable from a real review.
+
+🔴 **`export_review.py` stamps it into `AUTHORED-BY.txt` in the export, and `review.py` refuses to run
+when the configured provider matches.** With it missing, both say so loudly rather than going quiet —
+**a skipped check that prints nothing reads exactly like a passed one.**
+
 ### The loop
 
 1. **Write the artefact.**

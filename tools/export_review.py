@@ -98,6 +98,36 @@ def main():
                  f"This identifies the exact documents below. If they change, it changes.\n\n"
                  + "\n".join(digests) + "\n")
 
+    # Who wrote these documents. The reviewer's independence is the only thing
+    # this layer provides, and until now nothing recorded what it was
+    # independent *of* -- so a model could review its own work and the output
+    # would look identical. Read from the source application.json, which is
+    # itself withheld from the export.
+    authored_by = "unknown"
+    app_cfg = os.path.join(src, "application.json")
+    if os.path.exists(app_cfg):
+        try:
+            import json
+            with open(app_cfg, encoding="utf-8") as fh:
+                authored_by = (json.load(fh).get("authored_by") or "unknown").strip().lower()
+        except Exception:
+            pass
+    with open(os.path.join(dst, "AUTHORED-BY.txt"), "w", encoding="utf-8") as fh:
+        if authored_by == "unknown":
+            fh.write("AUTHORED-BY: unknown\n\n"
+                     "No `authored_by` in the application's configuration, so the vendor whose model\n"
+                     "wrote these documents is not recorded.\n\n"
+                     "A REVIEWER CANNOT CONFIRM ITS OWN INDEPENDENCE FROM THIS FILE. Say so at the top\n"
+                     "of the review rather than reviewing as though independence were established.\n")
+        else:
+            fh.write(f"AUTHORED-BY: {authored_by}\n\n"
+                     f"These documents were written by a model from {authored_by}.\n\n"
+                     f"IF YOU ARE A {authored_by.upper()} MODEL, REFUSE THIS REVIEW. You share the\n"
+                     f"training and the blind spots of whatever produced these documents, and a\n"
+                     f"review from you is self-review with extra steps. Say which vendor you are\n"
+                     f"and stop.\n")
+    copied.append(("AUTHORED-BY.txt", "who wrote the documents, so you can check you are not them"))
+
     if os.path.exists(TEMPLATE):
         shutil.copy2(TEMPLATE, os.path.join(dst, "OVERSIGHT.md"))
         copied.append(("OVERSIGHT.md", "the reviewer's instructions"))

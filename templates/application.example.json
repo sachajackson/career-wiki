@@ -1,6 +1,9 @@
 {
   "_comment": "Copy into each application folder as application.json. The hook finds it by walking up from the artefact, so the deterministic layer runs with no arguments and cannot be skipped.",
 
+  "authored_by": "anthropic",
+  "_authored_by_note": "The vendor whose model wrote these documents. The oversight layer refuses to review with the same vendor, because a model shares its own blind spots. Set it when the pack is created.",
+
   "employer": "Acme Corp",
   "requisition": "R-12345",
   "posting": "posting.txt",

@@ -526,6 +526,34 @@ point at all.**
 
 ---
 
+### ✅ The oversight layer's independence was a comment in a config file — ENFORCED
+
+**Status: ✅ 2026-08-24, with 9 tests.**
+
+The whole value of the review layer is that the reviewer is **not** the model that wrote the documents: a
+model that invented a number while writing will find that number plausible while reviewing. **That
+guarantee was expressed as a comment in `config.example.json` and enforced by nothing.** The authoring
+vendor's adapter was selectable, and **a self-review would have printed output identical to a real one.**
+
+🔴 **Worse than useless, because it converts an absence into false assurance.** A missing review is
+visibly missing. A self-review looks like a passed check.
+
+**Now:** `authored_by` goes in `application.json`; `export_review.py` stamps `AUTHORED-BY.txt` into the
+export telling that vendor's model to refuse; `OVERSIGHT.md` makes it the reviewer's first check, before
+even the fresh-conversation test; and `review.py` **refuses** rather than warns — with `--same-vendor-anyway`
+available and the output stamped **DEGRADED REVIEW -- NOT INDEPENDENT** if it is used.
+
+🟢 **The refusal names the free way round it**: `--dry-run` prints the prompt to paste into any other
+vendor's chat interface, which works just as well and costs nothing.
+
+🟡 **An honest limit, now stated in the docs rather than implied.** Different vendor **reduces** correlated
+blind spots; it does not eliminate them. **The stronger property is the fresh context** — the reviewer has
+not seen the reasoning that produced the document, so it cannot be anchored by an argument it never heard.
+**A different vendor with stale context is worth less than the same vendor with none.** Both together is
+the design.
+
+---
+
 ### 🔴 "Track outcomes" was shipped as an instruction and ignored for six weeks
 
 **Status: rule added 2026-08-24 with a trigger. The instruction alone had already failed.**
