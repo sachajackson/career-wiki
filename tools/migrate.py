@@ -50,6 +50,15 @@ import paths  # noqa: E402
 
 PLACED, KEEP, SYSTEM, COLLIDES, UNKNOWN = "PLACED", "DROP", "SYSTEM", "COLLIDES", "UNKNOWN"
 
+# Instruction files, by name, because they carry no frontmatter and are the
+# single most important thing in an incoming vault. A reconciliation run left
+# AGENTS.md sitting in the drop zone as "could be a page, a note or a posting"
+# -- the user's standing instructions, unfiled, looking like a stray note.
+INSTRUCTIONS = "AGENTS.md"
+SUPERSEDED_SCHEMA = {"CLAUDE.md", "SCHEMA.md", "AGENT.md", "GEMINI.md", ".cursorrules"}
+# Core pages that predate the type vocabulary, or never had frontmatter.
+BY_NAME = {"index.md": "WIKI", "log.md": "WIKI", "MEMORY.md": "WIKI"}
+
 # Regenerable. Named exactly rather than by extension: a user's own notes.json
 # is not state, and guessing wrong here deletes something irreplaceable.
 REGENERABLE = {"seen.json", "raw.json", "shortlist.md"}
@@ -96,6 +105,14 @@ def classify(rel, abspath):
     # requisition-style capitals that make an application folder identifiable.
     parts = [p.lower() for p in folders]
 
+    at_root = not folders
+    if name == INSTRUCTIONS and at_root:
+        return PLACED, paths.VAULT, "the user's standing instructions"
+    if name in SUPERSEDED_SCHEMA and at_root:
+        return SYSTEM, None, ("a schema file from the old system -- SCHEMA.md replaces it. "
+                              "Anything in it that is about the PERSON belongs in vault/AGENTS.md")
+    if name in BY_NAME:
+        return PLACED, paths.WIKI, "a core page, filed by name"
     if name in REGENERABLE:
         return KEEP, None, "regenerable -- delete it rather than carrying it"
     if ext in CODE:
@@ -144,7 +161,8 @@ def classify(rel, abspath):
         if t in by_type:
             return PLACED, by_type[t], f"frontmatter type: {t}"
         if t:
-            return UNKNOWN, None, f"frontmatter type '{t}' is not one this system files"
+            return UNKNOWN, None, (f"frontmatter type '{t}' is not one this system files -- "
+                                   "retype it, or say so")
         # 🔴 No frontmatter is NOT enough to call it a wiki page. Notes from
         # another tool, a pasted job ad and a page of someone's history all look
         # identical here, and they belong in three different folders.

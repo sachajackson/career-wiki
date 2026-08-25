@@ -62,18 +62,23 @@ class NoExampleOverlapsTheRealPerson(unittest.TestCase):
     def setUp(self):
         if not os.path.isdir(os.path.join(VAULT, "wiki")):
             self.skipTest("no vault on this machine")
-        self.vault_text = ""
+        # 🔴 Figures on BOTH sides, compared as sets. A substring search was the
+        # first version and it cried wolf on the first real vault it met: the
+        # example's requisition NW-4471 "appeared" inside a LinkedIn job id,
+        # 4447143622. A check that fires on a coincidence is a check somebody
+        # switches off, and then it is not protecting anything.
+        self.vault_figures = set()
         for base, _, files in os.walk(os.path.join(VAULT, "wiki")):
             for f in files:
                 if f.endswith(".md"):
                     with open(os.path.join(base, f), encoding="utf-8", errors="ignore") as fh:
-                        self.vault_text += fh.read()
+                        self.vault_figures |= figures(fh.read())
 
     def test_no_figure_appears_in_both(self):
         shared = set()
         for path in example_files():
             with open(path, encoding="utf-8") as fh:
-                shared |= {f for f in figures(fh.read()) if f in self.vault_text}
+                shared |= figures(fh.read()) & self.vault_figures
         self.assertEqual(sorted(shared), [],
                          f"a figure in examples/ also appears in the vault -- whose career is this? {shared}")
 

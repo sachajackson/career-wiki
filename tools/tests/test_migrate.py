@@ -97,6 +97,38 @@ class ItRefuses(MigrateCase):
         self.assertTrue(os.path.exists(os.path.join(self.drop, "CV.pdf")))
 
 
+class TheImportantFilesByName(MigrateCase):
+    """A reconciliation run against a real vault left AGENTS.md in the drop
+    zone as "could be a page, a note or a posting" -- the user's standing
+    instructions, unfiled, looking like a stray note. These files carry no
+    frontmatter, so nothing else identifies them."""
+
+    def test_their_instructions_land_at_the_vault_root(self):
+        self.drop_file("AGENTS.md", "# my standing instructions\n")
+        v, dest = self.verdicts()["AGENTS.md"]
+        self.assertEqual((v, dest), (self.migrate.PLACED, self.paths.VAULT))
+
+    def test_an_old_schema_file_is_refused_with_the_reason(self):
+        self.drop_file("CLAUDE.md", "# the old schema\n")
+        v, dest, why = next((v, d, w) for r, _, v, d, w in self.migrate.plan(self.drop)
+                            if r == "CLAUDE.md")
+        self.assertEqual(v, self.migrate.SYSTEM)
+        self.assertIn("AGENTS.md", why, "it must say where the personal half goes")
+
+    def test_core_pages_without_a_type_are_still_filed(self):
+        for f in ("index.md", "log.md"):
+            self.drop_file(f, "# no frontmatter here\n")
+        got = self.verdicts()
+        for f in ("index.md", "log.md"):
+            self.assertEqual(got[f], (self.migrate.PLACED, self.paths.WIKI))
+
+    def test_an_agents_file_deeper_in_the_tree_is_not_special(self):
+        """Only the root one is their instructions. A nested AGENTS.md belongs
+        to whatever project it came with."""
+        self.drop_file("some-project/AGENTS.md", "# not theirs\n")
+        self.assertEqual(self.verdicts()["some-project/AGENTS.md"][0], self.migrate.UNKNOWN)
+
+
 class ItPlaces(MigrateCase):
     def test_a_path_hint_from_the_old_vault_wins(self):
         """Somebody who filed it under applications/ knew what it was."""

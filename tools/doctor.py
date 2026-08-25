@@ -99,7 +99,9 @@ def check_wiki():
 
 def _config(path, name, what):
     if not os.path.exists(path):
-        return OPTIONAL, f"no {name}. Copy {os.path.basename(path).replace('.json', '.example.json')} and fill it in — {what}"
+        ex = os.path.join("templates", "settings",
+                          os.path.basename(path).replace(".json", ".example.json"))
+        return OPTIONAL, f"no {name}. Copy {ex} into vault/settings/ and fill it in — {what}"
     try:
         with open(path, encoding="utf-8") as fh:
             cfg = json.load(fh)
@@ -114,7 +116,7 @@ def _config(path, name, what):
 
 
 def check_radar_config():
-    r = _config(paths.SEARCH, "radar config.json",
+    r = _config(paths.SEARCH, "settings/search.json",
                 "without it only the employer-board adapters run")
     if r[0] != OK:
         return r[0], r[1]
@@ -151,7 +153,7 @@ def check_oversight():
         with open(p, encoding="utf-8") as fh:
             cfg = json.load(fh)
     except ValueError as e:
-        return MISSING, f"review config.json is not valid JSON: {e}"
+        return MISSING, f"settings/review.json is not valid JSON: {e}"
     provider = cfg.get("provider")
     if not provider:
         return PLACEHOLDER, "no provider set"
