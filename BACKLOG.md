@@ -103,6 +103,7 @@ how `config.json` behaves:**
 | **`tools/radar/adapters/custom.py`** | A sixth adapter, for employers running their own API. **Registered in `ADAPTERS`.** Driven by a field map in the registry, not by code per employer |
 | **`tools/registry_check.py`** | Calls every entry. Wired into `/career-lint` |
 | **`tools/add_employer.py`** | Verifies an employer, writes the entry, offers it upstream one file at a time |
+| 🔴 **`tools/tests/test_shipped.py`** | **The one most likely to fail on you.** Asserts every file the tools open is *tracked*, every private one is not, **every adapter in `ADAPTERS` has a tracked module**, and every test file is tracked. **Add an adapter and forget to `git add` it and this is what tells you** |
 
 🔴 **Three things that will bite if you do not know them:**
 
@@ -112,6 +113,13 @@ how `config.json` behaves:**
 3. 🔴 **Two of your resolver tests were repointed, not deleted.** They encoded Deel as *"the ATS nothing
    speaks"*, which stopped being true when `custom.py` shipped. **The `NO ADAPTER` branch keeps its
    coverage via a fictional employer** — do not remove the stand-in thinking it is dead weight.
+4. 🔴 **`tools/radar/employers.json` (yours) and `tools/radar/ats_registry.json` (the registry) are one
+   letter apart and have opposite privacy rules.** Yours must never ship; the registry must always ship.
+   **Do not tidy the `.gitignore` carve-outs into a glob and do not rename either to match the other** —
+   see [the note below](#-two-files-one-letter-apart-opposite-privacy-rules--know-which-is-which). The
+   obvious tidy-up publishes a user's private avoid list.
+5. **`python3 tools/radar/registry.py --list`** shows who is in the registry without calling anything.
+   `registry_check.py` shows the same names but makes fifteen requests to do it.
 
 🟢 **Three findings from building it that generalise to the adapters you own:**
 
