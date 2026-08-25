@@ -1113,6 +1113,44 @@ blockquote-marker case in the wikilink repair.
 
 ## 🟡 Gaps — things the system does not do yet
 
+### 🟡 Oracle identifies an employer by `site` alone, and the default site value is not unique
+
+**Found 2026-08-25 while making the radar label rows with employer names instead of ATS slugs.** The
+Oracle adapter carries `host` and `site` per employer, **but everything downstream keys on `site` only**
+— the `names` map, and the company written onto each row. 🔴 **`CX_1001` is Oracle's default site
+identifier and two shipped registry entries already use it.** `host` is what actually distinguishes
+them and it is discarded.
+
+**Three consequences, in increasing severity:**
+
+| | |
+|---|---|
+| **Rows are unhelpfully labelled** | Both employers' roles appear as `CX_1001` |
+| **A `names` label cannot be written for either** | `resolve()` now detects the collision and refuses — see below |
+| 🔴 **Dedup may collapse across employers** | Two roles with the same title at two employers both labelled `CX_1001` look like one role to a `(company, title)` dedup. **Unconfirmed** — it needs a same-title collision to bite, so it would appear as a role silently missing rather than as an error |
+
+🟢 **The labelling half is already handled and is not what this entry asks for.** `registry.resolve()`
+drops the label when two employers share an identifier and says so on the run's report, because **a slug
+is unhelpful but a confidently wrong employer name is worse — it gets believed.** That is a guard, not a
+fix: it makes the collision visible instead of harmful.
+
+**The fix is to key on `host` + `site` throughout** — in the `names` map, in the row's company field,
+and anywhere else an employer is identified — so two tenants on the same default site stay distinct.
+
+🔴 **The false-positive case to test first, and it is not obvious:** a compound key must not break the
+employers that are *correctly* identified by site today. Several registry entries carry a genuinely
+unique site value, and their rows and any hand-written `names` label are keyed on that value alone.
+**Changing the key silently invalidates every existing label** — the map still loads, the lookup misses,
+and rows quietly revert to showing the raw identifier. **Migrate the lookup to accept either form**, or
+the fix for unhelpful labels produces no labels at all.
+
+🟡 **Related, already documented in `adapters/oracle.py` and worth reading with this:** an unrecognised
+site does not fail, it **widens** — Oracle ignores a `siteNumber` it does not know and returns the whole
+tenant. So a wrong site value returns *more* roles, not none, and `sources_check.py` detects it by
+asking for a deliberately nonsense site and comparing counts. **One employer in a real config is
+currently answering with ~7,300 roles for exactly this reason.**
+
+
 ### 🔴 Nothing checks what OTHER tools leave beside the code
 
 **Found 2026-08-25.** `.obsidian/` sat at the repository root, **untracked but not ignored**. Its
