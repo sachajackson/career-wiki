@@ -22,7 +22,7 @@ CLEAN = ("Rebuilt the release process, cutting planning from 11 days to 4.\n"
          "- Ran the migration.\n"
          "- Took the on-call rota from a rota of one to a rota of five, which ended "
          "the single point of failure nobody wanted to name.\n"
-         "sacha@example.com\n")
+         "me@example.com\n")
 
 
 class CleanInput(unittest.TestCase):

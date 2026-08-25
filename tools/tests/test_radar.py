@@ -41,7 +41,7 @@ class FakeAdapter:
 
 
 def posting(**kw):
-    r = {"id": "x1", "title": "Head of Delivery", "company": "Acme", "loc": "Dublin",
+    r = {"id": "x1", "title": "Head of Delivery", "company": "Acme", "loc": "<city>",
          "date": "2026-08-01", "url": "http://e.g/1", "body": "", "pay": "",
          "source": "fake"}
     r.update(kw)
@@ -169,7 +169,7 @@ class TheWindow(unittest.TestCase):
     def test_board_adapters_ignore_days_entirely(self):
         """A board returns everything open, so the defect never applied to them."""
         payload = [{"id": 1, "title": "Delivery Lead", "content": "x",
-                    "location": {"name": "Dublin"}, "updated_at": "2026-08-01",
+                    "location": {"name": "<city>"}, "updated_at": "2026-08-01",
                     "absolute_url": "u"}]
         greenhouse.get_json = lambda url, headers=None: {"jobs": payload}
         self.assertEqual(len(greenhouse.fetch({"greenhouse": {"boards": ["t"]}}, "delivery", 7)),
@@ -236,7 +236,7 @@ class TheCap(unittest.TestCase):
     """
 
     def test_exhausting_the_page_budget_is_truncation(self):
-        page = '<li><a href="https://ie.linkedin.com/jobs/view/a-123"></a>' \
+        page = '<li><a href="https://xx.linkedin.com/jobs/view/a-123"></a>' \
                '<h3 class="base-search-card__title">Head of Delivery</h3>'
         linkedin.get = lambda url, headers=None: page
         linkedin.fetch({"linkedin": {"enabled": True, "pages": 2, "delay": 0}}, "q", 7)
