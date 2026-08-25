@@ -231,15 +231,25 @@ def assess_location(cfg, loc, title):
     # judge, and inventing a geography is what the old code effectively did.
     place = scope if is_remote else (loc or "")
     against = f"{place} {title}".lower()
-    if any(b and b in against for b in L.get("bad", [])):
+    # .lower() BOTH SIDES. The haystack was lowercased and the needle was not,
+    # so a capitalised entry matched nothing -- and
+    # templates/settings/search.example.json both
+    # promises "matched case-insensitively" and ships placeholders (<your city>,
+    # <your country>) that anybody fills in capitalised, because that is how
+    # places are spelled. One real run fetched 4,815 roles and dropped every one
+    # of them on location. The exclusion lists had the same bug pointing the
+    # other way, which is worse: a capitalised `bad` entry excluded NOTHING, so
+    # a role somewhere ruled out as uncommutable sailed through and got scored
+    # with nothing anywhere reporting that the filter had not fired.
+    if any(b and b.lower() in against for b in L.get("bad", [])):
         return False, False
-    if any(e and e in against for e in L.get("edge", [])):
+    if any(e and e.lower() in against for e in L.get("edge", [])):
         return False, False
 
     ok = L.get("ok", [])
     if not ok:
         return True, is_remote and not scope
-    if any(o and o in f"{loc} {title}".lower() for o in ok):
+    if any(o and o.lower() in f"{loc} {title}".lower() for o in ok):
         # An unqualified remote role kept only because "remote" is on the ok
         # list is kept on TRUST, not on evidence. Flagged so nobody reports it
         # as a role in the user's country without checking the requisition.

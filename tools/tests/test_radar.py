@@ -323,6 +323,40 @@ class RemoteIsCountryScoped(unittest.TestCase):
     def test_a_plain_location_is_not_remote(self):
         self.assertEqual(radar.parse_location("<home>"), (False, "<home>"))
 
+    def test_the_ok_list_is_matched_case_insensitively(self):
+        """THE FALSE-POSITIVE CASE, and it silenced a whole run.
+
+        The haystack was lowercased and the needle was not, so a capitalised
+        entry matched nothing. templates/settings/search.example.json both
+        promises "matched case-insensitively" and ships placeholders -- <your
+        city>, <your country> -- which anybody fills in capitalised, because
+        that is how places are spelled. One real run fetched 4,815 roles and
+        dropped every single one of them on location.
+
+        Placeholders here rather than real place names, per this file's own
+        convention: the config values ARE somebody's geography."""
+        cfg = {"location": {"ok": ["<Home>"], "bad": [], "edge": []}}
+        for loc in ("<city>  <home>", "<home> - <city>", "<city>, <HOME>"):
+            self.assertTrue(radar.assess_location(cfg, loc, "Delivery Manager")[0], loc)
+
+    def test_the_exclusion_lists_are_matched_case_insensitively(self):
+        """The same bug on bad/edge, and this direction is the dangerous one.
+
+        A capitalised `ok` entry keeps nothing, which at least shows up as an
+        empty run. A capitalised `bad` entry EXCLUDES nothing -- so a role
+        somewhere ruled out as uncommutable sails through and gets scored, and
+        nothing anywhere reports that the filter did not fire."""
+        cfg = {"location": {"ok": [], "bad": ["<Far>"], "edge": []}}
+        self.assertFalse(radar.assess_location(cfg, "<far>, <country>", "Delivery Manager")[0])
+        cfg = {"location": {"ok": [], "bad": [], "edge": ["<Maybe>"]}}
+        self.assertFalse(radar.assess_location(cfg, "<MAYBE>", "Delivery Manager")[0])
+
+    def test_case_insensitivity_does_not_become_match_everything(self):
+        """The fix must not buy the empty run back by keeping the whole board."""
+        cfg = {"location": {"ok": ["<Home>"], "bad": [], "edge": []}}
+        for loc in ("<elsewhere>, <far>", "<other city> <far region>"):
+            self.assertFalse(radar.assess_location(cfg, loc, "Delivery Manager")[0], loc)
+
     def test_remote_no_longer_waives_an_exclusion(self):
         """The defect. Any "remote" anywhere skipped the exclusion list, so a
         role advertised as remote WITHIN an excluded place survived a filter
