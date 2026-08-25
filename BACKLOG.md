@@ -917,16 +917,19 @@ is right.**
 
 ---
 
-### 🟡 A shared employer registry — SEEDED, not yet wired in
+### ✅ A shared employer registry — BUILT AND WIRED IN
 
-**Status: `tools/radar/ats_registry.json` seeded 2026-08-25 with five verified entries. The adapters do not
-read it yet, and there is no verifier. The design below is unchanged.**
+**Status: complete 2026-08-25.** `ats_registry.json` (15 employers, ~13,000 roles) · `registry.py` (name an
+employer, get the endpoint) · `adapters/custom.py` (employers running their own API) · `registry_check.py`
+(every entry called, canaries checked) · `add_employer.py` (verify, add, contribute one file).
 
-🟢 **Every entry was verified by calling it**, not copied from a page: State Street (1,347 open),
-SS&C (352), JPMorganChase (7,354), Grant Thornton Ireland (152), Deel (300). **Roughly 9,500 roles now
-reachable from one file that previously lived in five places and one person's memory.**
+**What remains is seeding, not building.** Fifteen is a proof, not a starter set — and
+`python3 tools/add_employer.py "Name" <careers-url>` makes each one a line.
 
-🔴 **Still to build, and the second is not optional:**
+🟢 **Every entry was verified by calling it**, not copied from a page. **Roughly 13,000 roles now reachable
+from one file that previously lived in five places and one person's memory.**
+
+**How it was built, in order:**
 
 - ✅ **A resolver — built 2026-08-25** as `tools/radar/registry.py`, 14 tests. `"watch": ["State Street"]`
   expands into the `host`/`tenant`/`site` shape the Workday adapter wants, **merging with hand-written
