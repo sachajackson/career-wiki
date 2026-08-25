@@ -108,6 +108,69 @@ for the reasoning. **What follows is what is next.**
 
 ---
 
+## 🔴 Audited 2026-08-25: the nine "documented rules" checked against their code
+
+**Prompted by finding that one of the nine — *"Remote is country-scoped"* — was listed as handled while
+the code did the reverse. That is a bad enough hit rate to check the rest, and the rest were worse.**
+
+🔴 **All eight remaining rules ARE present where this file says they are.** The claim was not false, which
+is what the previous audit checked for. **That is not the same as the rule being in force**, and this pass
+asked the second question instead: *is there anything that contradicts it, and does the thing it
+prescribes have somewhere to live?*
+
+✅ **All six fixed 2026-08-25, and the audit itself is now a test** —
+[`tools/tests/test_templates.py`](tools/tests/test_templates.py), 8 checks, all six mutants caught. **It
+parses the outcome vocabulary out of both `CLAUDE.md` and the template and asserts they are the same set**,
+so the two copies cannot drift again, and it fails if any prescribed table is removed from the framework
+page. **This is the point: the audit found things no rule-reading could, so the audit became mechanical
+rather than something someone has to remember to repeat.**
+
+| | Rule | Verdict |
+|---|---|---|
+| 1 | Fetch the employer's own posting | ✅ **Fixed.** Was 🔴 **contradicted by another skill.** `role-radar` step 2 says *"read the cached description — already in `raw.json`, no refetch needed"*, then step 3 says score from it. For an aggregator row that cache **is** the truncated posting. **The truncation entry below is explicit that the employer's own posting must be fetched *before assessment*, because by packaging time the score has already been used to decide** |
+| 2 | Score the journey, not the address | ✅ **Fixed** — a *Known locations* table now exists. Was 🟡 **prescribing two things with nowhere to put them.** *"Store employment clusters once and reuse them"* and scoring from where the user actually lives — **no template has a slot for either**, so both get re-derived per role, which is the failure the rule describes |
+| 3 | Standing-gaps list | ✅ **Fixed** — the table is shipped empty. Was 🔴: **`CLAUDE.md` said to keep the table "on the framework page". The framework template has no such table.** A fresh vault starts with the instruction pointing at a section that does not exist — and this is the rule whose entire purpose is that an absence must be *recorded* rather than merely unfound |
+| 4 | Three scores, and the requirement count | 🟢 Present and consistent |
+| 5 | Do not lengthen the ruler | 🟢 Present and consistent |
+| 6 | Score against the baseline | ✅ **Fixed** — the table's first row is the current job. Was 🟡: said *"the first row of the table is the current job"* — **the table has no baseline row and no status value that could describe one** |
+| 7 | The internal move as a third option | ✅ **Fixed** — it is the table's second row, with the prompt. Was 🔴: **`CLAUDE.md` said "score it as a row in the table". The word *internal* does not appear in the framework template at all**, and nothing prompts for it — while `CLAUDE.md` itself says a user in a stable job will never raise it unprompted |
+| 8 | "Remote" is country-scoped | ✅ Fixed in code 2026-08-25. It had been doing the reverse |
+| 9 | Why-X answers, values with three examples | 🟢 Present and consistent |
+
+### 🔴 And one contradiction that was not on the list at all
+
+**The outcome vocabulary exists twice, and the copy the user sees is the broken one.**
+
+| | Values |
+|---|---|
+| `CLAUDE.md` | **Submitted · Rejected by employer · Withdrew · Declined · Closed · Vetoed · Not applied** |
+| `templates/Role Scoring Framework.md` | *submitted, not applied, closed or vetoed* |
+
+🔴 **The template is missing exactly the three values that were added to fix the ambiguity** — *Rejected by
+employer*, *Withdrew*, *Declined* — and merges two that `CLAUDE.md` deliberately separates. **So a fresh
+vault's scoring table cannot express "the employer turned me down"**, which `CLAUDE.md` calls the single
+most important question about a search and the number that says whether the level is right.
+
+**This is the SIGNAL failure in another place: one concept, two vocabularies, and the authoritative one is
+not the one in front of the user.**
+
+✅ **Fixed, and made mechanical.** The template now carries the full closed set, and a test parses both
+files and asserts the two sets are identical — **because writing the same list in two places and hoping is
+what produced this.**
+
+### 🟢 What this audit teaches about auditing
+
+🔴 **"The rule is written where it says" is the wrong question.** The previous audit asked it, passed
+everything, and missed all of the above. **Ask instead: what would contradict this, and does what it
+prescribes have somewhere to live?** Six of nine failed that question. Three ways:
+
+- **Contradicted by another file** (1, and the outcome vocabulary)
+- **Prescribes a structure that does not exist** (2, 3, 7)
+- **Refers to a place that cannot hold it** (6)
+
+🟢 **A rule that tells someone to write something on a page with no section for it is not a rule, it is a
+hope.** Where a rule prescribes a table, **ship the empty table**.
+
 ## 🔴 Defects — things that behave wrongly
 
 ### ✅ The radar's SIGNAL number read like a framework score — MADE NON-NUMERIC
@@ -1444,6 +1507,9 @@ untested.
   minutes found two defects that recorded fixtures could not, because **a fixture asserts the shape the
   code already produces.** The fixtures are still worth having — they are what keeps the fix from
   regressing — but they cannot be the first contact with reality.
+- 🔴 **Ship the empty table.** A rule that says *"keep a table of X on page Y"* is not in force until page
+  Y has an empty table of X on it. Three of the nine documented rules prescribed a structure that existed
+  nowhere, and a fourth pointed at a table with no column that could hold its answer.
 - 🔴 **A documented rule with contradicting code is worse than no rule.** *"Remote is country-scoped"* was
   written down here as handled — and the filter underneath it was waiving every exclusion whenever the
   word appeared, which is the reverse of the rule. **Because the file said it was handled, nobody looked.**

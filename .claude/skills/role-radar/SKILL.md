@@ -140,11 +140,21 @@ Then:
 1. **Drop anything already in the scoring table.** The script only remembers what *it* has seen, not what
    was ingested by hand.
 2. **Read the cached description** of anything promising — already in `raw.json`, no refetch needed.
-3. **Score properly** on the framework's dimensions. 🔴 **`SIGNAL` is a keyword tally rendered as a
+   🔴 **But an aggregator's cached description is not the posting.** LinkedIn and Adzuna truncate, and the
+   truncation is asymmetric: it removes qualifiers (*"at least one of"*), alternatives (*"or internal
+   product delivery"*) and the business driver — **the parts that make a candidate more eligible.** A
+   system scoring from that text systematically under-scores its user, invisibly, because what is left
+   reads perfectly coherently. **Employer-board sources — Workday, Oracle, Greenhouse, Lever — are the
+   employer's own text and need no refetch.**
+3. 🔴 **Fetch the employer's own posting before scoring anything that came from an aggregator** — not
+   before packaging. **By packaging time the score has already been used to decide.** In real use this
+   dissolved a red-flagged capability gap that had stood for three days: the aggregator said *"proficiency
+   in"* eleven tools, the employer had written *"proficiency in **at least one**"*.
+4. **Score properly** on the framework's dimensions. 🔴 **`SIGNAL` is a keyword tally rendered as a
    word and has no relationship to the framework's score. It is a word precisely so it cannot be
    reported as one** — the column used to print the raw tally under the heading *Score*, and a radar
    output of 21 was duly reported to a user as a framework score of 21, which is impossible.
-4. **Report with reasoning**, then update the role pages, the scoring table, and `log.md`.
+5. **Report with reasoning**, then update the role pages, the scoring table, and `log.md`.
 
 **Capture the posting URL and requisition number for anything worth tracking.** A role page without a
 link is a dead end three weeks later.

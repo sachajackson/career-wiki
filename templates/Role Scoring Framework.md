@@ -121,6 +121,41 @@ was not one bad row. **Every lifestyle score in the table had been set against n
 🟢 **Top of each scale means *no worse than today*, not *best of what we found*.** A comparison table
 without the status quo in it cannot show a downgrade.
 
+## 🔴 Standing gaps — capabilities established as ABSENT
+
+🔴 **"Not recorded" and "recorded as absent" are the same empty search result and they mean opposite
+things.** One is a question worth asking. **The other is a scored input, and re-asking it costs
+credibility.** In real use the system asked about a capability its own wiki had closed three days earlier,
+with the words *"stop asking"* on the page.
+
+**Run `python3 tools/known.py "<the thing>" --wiki wiki` before adding a row, and before asking anything.**
+
+| The gap | Status | Resolved on | Demanded by | The substitute |
+|---|---|---|---|---|
+| | *confirmed absent / unknown / present* | | *count the postings* | *what to say instead* |
+
+🟢 **Count the postings that demand it.** Two is a coincidence. **Three is a decision to put to the user
+once** — *is this worth going and acquiring?* — rather than conceded repeatedly in cover letters.
+
+🟢 **Always fill the substitute.** There is usually something: for a missing budget figure, operational
+scale. A gap with a substitute is a sentence; a gap without one is a silence.
+
+## 🔴 Known locations — score a place once, not once per role
+
+🟢 **An employment cluster is a standing filter, not a fact about one job.** One postcode in the case below
+held four major employers, so getting it wrong got dozens of roles wrong — differently each time, because
+it was re-derived per role.
+
+**Record the origin once** (the town they commute *from*, not their address — see `PRIVACY.md`), then each
+destination once.
+
+| Place | Legs from origin | Door to door | Time usable? | Employers there | Verdict |
+|---|---|---|---|---|---|
+| | | | *train they can work on / lost to driving* | | *fine / priced / hard no* |
+
+🔴 **No row goes in without a door-to-door time.** Mark it `TBC` and ask. **A nearby transit stop is not a
+commute** — see below.
+
 ## 🔴 Score the journey, not the address
 
 **"Hybrid, <city>" is not a location.** Two roles described identically can differ by an hour a day and by
@@ -178,14 +213,44 @@ If you cannot resolve it, ask the user to check while logged in.
 
 ## The table
 
+🔴 **The first two rows are not jobs, and the table is wrong without them.**
+
 | Role | N·D·E | **FIT** | **LIFE** | **SEC** | REQS | PAY | **Status** | Posting | Note |
 |---|---|---|---|---|---|---|---|---|---|
+| **Staying put — the current job** | — | — | | | — | | `Not applied` | — | 🔴 **The baseline. Top of each scale means *no worse than this*** |
+| **An internal move** | | | | | | | `Not applied` | | 🔴 **Costs none of: forfeited equity, notice, reset service, probation, reference risk. 🔴 Usually will not reach the pay floor** |
+| | | | | | | | | | |
 
 🔴 **Keep N·D·E visible, not just FIT.** Two roles at 14 split into `5·5·4` — *would deliver it well, but
 so would others* — and `5·4·5` — *brings something rare, with real gaps*. **Same sum, different candidate.**
 
-*Status: 🟢 submitted, ⚪ not applied, 🔴 closed or vetoed. **Capture the posting URL at ingest** — a role
-page without a link is a dead end three weeks later.*
+🔴 **Why the second row exists.** Most searches model *leave* and *stay* and stop there. **There is a
+third option and on these dimensions it is structurally advantaged before any specific role is compared** —
+it keeps unvested equity, dissolves the notice period as a constraint, preserves continuous service, and
+carries no probation or reference risk. **An external role in the middle of this table is competing against
+that**, and it should be visible rather than left in the user's head. **A user in a stable job will not
+raise it unprompted, so ask.** And **fetch the employer's *internal* job site, not just their public
+careers page** — large employers run a separate one carrying internal-only requisitions.
+
+### Status — a closed set
+
+**Use exactly these. `CLAUDE.md` is the authority and this list must match it.**
+
+| | Meaning |
+|---|---|
+| `Submitted` | Sent, no reply yet |
+| 🔴 `Rejected by employer` | **They turned it down.** Never merge this with the two below |
+| `Withdrew` | Applied, then pulled out |
+| `Declined` | They offered, the user said no |
+| `Closed` | The requisition closed or went quiet |
+| `Vetoed` | Ruled out on a hard constraint before applying |
+| `Not applied` | Assessed and not pursued |
+
+🔴 **The distinction that matters is who decided.** *"Rejected"* alone is ambiguous between *the employer
+turned them down* and *they chose not to apply* — and **it makes the table unable to answer the one
+question that says whether the level is right: how many applications has an employer turned down?**
+
+**Capture the posting URL at ingest** — a role page without a link is a dead end three weeks later.
 
 ## Screening-call checklist
 
