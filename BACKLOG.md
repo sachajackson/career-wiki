@@ -1558,7 +1558,29 @@ deterministic verification layer, cross-vendor review and an honest defect log i
 
 ---
 
-### Everything after the submit button
+### 🟡 Everything after the submit button — FIRST PIECE BUILT
+
+**Status: the interview pack ships 2026-08-25 as `build-application` Step 6.2. The rest of this entry
+stands.**
+
+🟢 **Written while the posting is open and the research is fresh, not the night before**: four STAR
+stories chosen against this employer's own requirements, **each one taken from a 🟢 row in the REQS tally
+so the citation is already there**; a Reflection line, because it is the half candidates skip and the half
+that separates a rehearsed anecdote from someone who has thought about it; **the gap answer drafted before
+it is needed**, since an improvised answer becomes a defence and a prepared one becomes a position;
+questions pulled from the role page's own open questions; and a negotiation position **drafted only for a
+role that clears the bar**, from the wiki's own numbers rather than from imagination.
+
+🔴 **Two rules in it are there to stop a specific failure.** *"One story per requirement, not one story
+reused"* — because the same incident told to three interviewers who compare notes is worse than three
+weaker ones. And **never invent a competing offer**: it is the commonest negotiation advice online, it is
+checkable, and a floor with a reason behind it does the same work and is true.
+
+🟡 **What remains, and it is most of the entry:** outcomes after the interview, the decision itself, the
+first ninety days, and the fact that **a rejection with a reason is worth more than a silent success** and
+nothing yet asks for one.
+
+### The rest of what happens after the submit button
 
 **Deliberate scope decision, recorded in `CLAUDE.md`.** Not covered: interview preparation, offer
 evaluation and negotiation, follow-up cadence, rejection debriefs.
