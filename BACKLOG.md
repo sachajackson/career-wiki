@@ -153,6 +153,31 @@ resolves a wikilink by filename across the entire vault, so the checker has to a
 **Still open:** it cannot classify markdown with no frontmatter, and says so rather than guessing — a
 note from another tool, a pasted job ad and a page of somebody's history look identical without it.
 
+### 🔴 A radar run is twenty minutes of network wait, and re-fetches everything — measured 2026-08-25
+
+**`real 1201s, user 7.9s`** on a 41-query config with three watched employers. **Over 99% of the wall
+clock is waiting on HTTP.** Not a hypothesis — timed on two consecutive runs.
+
+🔴 **A warm cache barely helps.** The second run fetched 87 new roles and suppressed **17,350 duplicates**,
+because `seen.json` is applied *after* a listing is fetched. It saves the description fetches, which are
+the cheap half; **every run re-reads every watched board in full.**
+
+**Two directions, and the first is much cheaper:**
+
+| | |
+|---|---|
+| **Fetch board pages concurrently** | The work is entirely I/O and almost entirely independent. A modest pool would turn twenty minutes into low single digits without changing a single verdict. 🔴 **But rate limits are per-employer and undocumented** — a pool that trips one gets the source blocked, which is worse than slow |
+| **Cache board responses with an ETag or a short TTL** | Avoids the re-fetch entirely on a same-day second run. **Only helps the person who runs it twice in a day**, which is not the normal pattern |
+
+🟡 **Neither is urgent.** Twenty minutes once a week is tolerable and the tool is honest about what it is
+doing. **What is not tolerable is the documentation saying five minutes**, which it did until this was
+measured — a run that produces no output for several minutes is indistinguishable from a hung one, and the
+temptation is to kill it and report a quiet week. **The skill now states the measured figure.**
+
+🟢 **And the related finding is free to fix and worth more:** `--days` is honoured by only three of seven
+adapters. A config with no Adzuna key and LinkedIn disabled **has no date-filtered source at all**, so
+`--days 7` filters nothing. The shortlist header already says so; the skill now says it too.
+
 ### 🔴 Two files, one letter apart, opposite privacy rules — know which is which
 
 **`vault/settings/employers.json` and `tools/radar/ats_registry.json` are not variants of each other.**

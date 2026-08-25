@@ -32,6 +32,35 @@ python3 tools/radar/radar.py --all-open
 | `--reset` | Forget what has been seen and rebuild |
 | `--retier` | Re-tier the cached corpus without re-fetching. **Use when tuning** (`--score-only` still works) |
 
+### 🔴 How long it takes, measured — and why a warm cache does not help
+
+**Twenty minutes a run, and eight seconds of that is the computer thinking.** Measured 2026-08-25 on a
+41-query config with three watched employers: `real 1201s, user 7.9s`. **Over 99% of it is waiting on the
+network.**
+
+🔴 **The second run is not faster than the first.** A repeat run fetched **87 new roles and suppressed
+17,350 duplicates** — because `seen.json` dedupes *after* the listing is fetched, not before. It saves the
+description fetches, which are the cheap half. **Every run re-reads every watched board in full.**
+
+**So tell the user it will take twenty minutes before starting it, not after.** A run with no output for
+several minutes is indistinguishable from a hung one, and the temptation is to kill it and report a quiet
+week.
+
+🟡 **If it needs to be quick, `--adapter NAME` is the only lever that works.** Narrowing `--days` does
+almost nothing, for the reason directly below.
+
+### 🔴 `--days` does nothing at all for most configurations
+
+**Only three adapters honour it** — Adzuna, LinkedIn and Oracle. **Greenhouse, Workday, Lever and custom
+boards return the entire board**, every open role at any age, because that is the only call those
+endpoints offer.
+
+**A config with no Adzuna key and LinkedIn disabled has no date-filtered source**, and `--days 7` then
+filters nothing whatsoever. The shortlist header says so in as many words — *"the 3-day window applied to
+nothing"* — 🔴 **and that line is easy to skim past while believing a window was applied.**
+
+**Read the header before reporting anything as new.**
+
 ### 🔴 Run both, and know which one you ran
 
 **For a year the radar only ever looked at the last seven days, and nobody noticed.** Roles still open but
