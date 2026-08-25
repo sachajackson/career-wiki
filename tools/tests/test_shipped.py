@@ -115,3 +115,28 @@ class TheRegistryIsUsable(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TheTwoWaysIn(unittest.TestCase):
+    """A migrating user running /career-init gets templates written over pages
+    they already have and an hour of questions they have already answered.
+    Nothing said so until 2026-08-25, and career-init's own check was whether
+    sources/ had a CV -- which a migrating vault also does."""
+
+    def test_both_entry_points_exist(self):
+        for skill in ("career-init", "career-migrate"):
+            self.assertIn(f".claude/skills/{skill}/SKILL.md", tracked())
+
+    def test_init_sends_a_populated_vault_to_migrate(self):
+        p = os.path.join(ROOT, ".claude", "skills", "career-init", "SKILL.md")
+        with open(p, encoding="utf-8") as fh:
+            head = fh.read(2500)
+        self.assertIn("/career-migrate", head,
+                      "career-init must turn away a vault that already has pages")
+
+    def test_migrate_does_not_send_them_back(self):
+        """The loop that would make both useless."""
+        p = os.path.join(ROOT, ".claude", "skills", "career-migrate", "SKILL.md")
+        with open(p, encoding="utf-8") as fh:
+            text = fh.read()
+        self.assertIn("Do not run `/career-init`", text)

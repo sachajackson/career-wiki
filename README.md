@@ -250,6 +250,18 @@ actually for, which changes how it behaves.
 
 About an hour, most of it conversation.
 
+### `/career-migrate` — instead of `/career-init`, if you already have something
+
+🔴 **An existing wiki, an export from another tool, or a folder of career material.** Drop it all in
+`vault/migration/` and run this rather than `/career-init` — which assumes an empty vault, and would
+scaffold templates over pages you already have while interviewing you about things you have already
+recorded.
+
+`tools/migrate.py` files what it recognises and **refuses four things on purpose**: a forked copy of the
+tooling, regenerable state, a secret, and any filename already used elsewhere in the vault. Everything it
+cannot place stays where it is and is named — a file quietly removed from a drop zone looks exactly like
+a file that was dealt with.
+
 ### `/interview` — the core operation
 
 Continues a standing backlog of questions about how your work really operates: reporting lines including
@@ -689,8 +701,10 @@ the prompt area:
 | **Environment** | **Local** — it needs to reach files on your own machine |
 | **Project folder** | the `career-wiki` folder you just downloaded |
 
-Then type `/career-init` and press Enter. Typing `/` at any point lists every command in this repo — they
-are picked up automatically from the project folder, with nothing to install.
+Then type `/career-init` and press Enter — or **`/career-migrate` if you already have a wiki or an export
+from another tool**, in which case put it in `vault/migration/` rather than `vault/sources/` first.
+Typing `/` at any point lists every command in this repo — they are picked up automatically from the
+project folder, with nothing to install.
 
 **In the terminal:** navigate to the folder and run `claude`, then type:
 
