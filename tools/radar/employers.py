@@ -73,7 +73,23 @@ def _names_match(rule_name, company):
     a, b = norm(rule_name), norm(company)
     if not a or not b or len(a) < MIN_NAME:
         return False
-    return a in b or b in a
+    if a in b or b in a:
+        return True
+    # And again with the spaces gone. norm() collapses whitespace but keeps it,
+    # so "State Street" never matched "statestreet" -- and adapters label a row
+    # with whatever the SOURCE calls the employer, which for an ATS is the
+    # tenant slug, and a tenant slug has no spaces in it. A real avoid entry
+    # naming a two-word employer therefore matched nothing: configured,
+    # reported as configured, filtering nothing. The same gap made one employer
+    # have to be listed under two spellings by hand.
+    #
+    # The floor still applies. Removing spaces creates new adjacencies, so this
+    # is deliberately the second attempt rather than a replacement for the
+    # first: it can only add matches, never change one that already held.
+    a2, b2 = a.replace(" ", ""), b.replace(" ", "")
+    if len(a2) < MIN_NAME:
+        return False
+    return a2 in b2 or b2 in a2
 
 
 def route(emp, cfg):

@@ -40,6 +40,36 @@ class Names(unittest.TestCase):
         self.assertFalse(EMP._names_match("", "Acme"))
 
 
+    def test_a_squashed_name_matches_a_spaced_one(self):
+        """THE DEFECT. norm() collapses whitespace but keeps it, so a two-word
+        name never matched its one-word form.
+
+        It matters because adapters label rows with whatever the SOURCE calls
+        the employer, and an ATS tenant slug has no spaces in it. A real avoid
+        entry naming a two-word employer silently failed against rows the
+        adapter had labelled with the tenant slug -- the exclusion was
+        configured, reported as configured, and filtered nothing."""
+        self.assertTrue(EMP._names_match("Acme Financial", "acmefinancial"))
+        self.assertTrue(EMP._names_match("acmefinancial", "Acme Financial"))
+        self.assertTrue(EMP._names_match("Acme Financial", "AcmeFinancial Group"))
+
+    def test_squashing_does_not_make_unrelated_names_match(self):
+        """THE FALSE-POSITIVE CASE. Removing spaces creates new adjacencies,
+        so the floor and the direction still have to hold."""
+        self.assertFalse(EMP._names_match("BT", "Brighttelecom"))
+        self.assertFalse(EMP._names_match("Acme", "Widgetcorp"))
+        self.assertFalse(EMP._names_match("", "acme"))
+
+    def test_a_division_exclusion_fires_against_a_tenant_slug(self):
+        """End to end: the shape that actually failed on a real run."""
+        emp = {"avoid": [{"employer": "Acme Financial", "divisions": ["Beta Systems"]}]}
+        row = {"company": "acmefinancial",
+               "title": "Technical Delivery Manager, Beta Systems, Vice President"}
+        self.assertIsNotNone(EMP.excluded(row, emp))
+        keep = {"company": "acmefinancial", "title": "Custody Services Vice President"}
+        self.assertIsNone(EMP.excluded(keep, emp))
+
+
 class Routing(unittest.TestCase):
     def test_each_route_lands_in_the_adapter_that_serves_it(self):
         cfg = {"queries": ["delivery"]}

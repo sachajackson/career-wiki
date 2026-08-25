@@ -75,6 +75,10 @@ def resolve(config, registry=None):
     registry = registry if registry is not None else load_registry()
     employers = registry.get("employers", [])
     report = []
+    # Labels the user typed are theirs and are never touched, not even by the
+    # collision rule below.
+    labelled_by_hand = {s for k in ("workday", "oracle")
+                         for s in (config.get(k, {}).get("names") or {})}
 
     for name in config.get("watch", []):
         if not isinstance(name, str) or name.startswith("_") or not name.strip():
@@ -116,16 +120,50 @@ def resolve(config, registry=None):
 
         bucket = config.setdefault(key, {}).setdefault(listkey, [])
         value = params[fields[0]] if len(fields) == 1 else {f: params[f] for f in fields}
+
+        # Label the rows with the employer's NAME, not the ATS's slug for them.
+        #
+        # Adapters name a row after whatever the source calls the employer, and
+        # a source calls it a tenant or a site: "statestreet", "citi". Three
+        # things went wrong because nothing filled this in. The shortlist showed
+        # slugs. Cross-source dedup failed, because one source said "Citi" and
+        # another "citi", so one role appeared twice. And an avoid entry written
+        # with the real name silently matched nothing -- configured, reported as
+        # configured, filtering nothing.
+        #
+        # workday and oracle already read this map; its documented purpose is
+        # exactly this. Only ever fills a GAP: a label somebody typed is theirs.
+        label_note = ""
+        slug = params.get("tenant") or params.get("site")
+        if slug and key in ("workday", "oracle"):
+            names = config.setdefault(key, {}).setdefault("names", {})
+            held = names.get(slug)
+            if held is None:
+                names[slug] = entry["employer"]
+            elif held != entry["employer"] and slug not in labelled_by_hand:
+                # Two employers, one slug. Oracle's default site identifier is
+                # the same string across tenants -- two shipped entries really
+                # do both use CX_1001 -- and this map is keyed on the slug, so
+                # labelling both would print one employer's name on the other's
+                # rows. A slug is unhelpful; a confidently wrong employer name
+                # is worse, because it would be believed. Drop the label rather
+                # than pick a winner, and say so on this employer's own line
+                # (one line per watched name is an invariant the suite checks).
+                names.pop(slug, None)
+                label_note = (f" -- 🔴 shares the {key} identifier {slug!r} with {held!r}, so "
+                              f"NEITHER is labelled: rows keep the raw identifier rather than "
+                              f"risk carrying the wrong employer's name")
+
         # Say what it matched when that is not what was typed. Substring matching
         # is where a wrong resolution would hide, so it is shown rather than
         # assumed to be obvious.
         via = "" if name.strip().lower() == entry["employer"].lower() else f" (matched on {name.strip()!r})"
         if value in bucket:
             report.append((entry["employer"], "ALREADY LISTED",
-                           f"already in {key}.{listkey} by hand -- not added twice{via}"))
+                           f"already in {key}.{listkey} by hand -- not added twice{via}{label_note}"))
         else:
             bucket.append(value)
-            report.append((entry["employer"], "RESOLVED", f"-> {key}.{listkey}{via}"))
+            report.append((entry["employer"], "RESOLVED", f"-> {key}.{listkey}{via}{label_note}"))
 
     return config, report
 

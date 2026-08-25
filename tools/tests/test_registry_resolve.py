@@ -58,6 +58,46 @@ class Resolving(unittest.TestCase):
 
 
 class NothingIsDroppedSilently(unittest.TestCase):
+    def test_it_labels_the_rows_with_the_employer_not_the_slug(self):
+        """The registry knows the employer is called "State Street"; the ATS
+        calls the tenant "statestreet". Adapters label every row with whatever
+        the source says, so without this the shortlist shows slugs -- which
+        reads badly, defeats cross-source dedup (one source says "Citi", the
+        other "citi", so one role appears twice), and silently breaks an avoid
+        entry written with the real name.
+
+        workday and oracle already read an optional `names` map whose stated
+        purpose is exactly this. Nothing was filling it in."""
+        cfg, _ = registry.resolve({"watch": ["State Street", "Grant Thornton Ireland"]}, REG)
+        self.assertEqual(cfg["workday"]["names"].get("t"), "State Street")
+        self.assertEqual(cfg["oracle"]["names"].get("CX_1001"), "Grant Thornton Ireland")
+
+    def test_a_hand_written_name_is_not_overwritten(self):
+        """The map is the user's file. Filling a gap is help; changing what
+        somebody typed is not."""
+        cfg = {"watch": ["State Street"], "workday": {"names": {"t": "My Own Label"}}}
+        cfg, _ = registry.resolve(cfg, REG)
+        self.assertEqual(cfg["workday"]["names"]["t"], "My Own Label")
+
+    def test_two_employers_sharing_a_slug_are_both_left_unlabelled(self):
+        """Oracle's default site identifier is the same string for many
+        tenants -- two shipped entries really do both use CX_1001. The map is
+        keyed on the slug, so labelling both would print one employer's name on
+        the other's rows.
+
+        A slug is unhelpful. A confidently wrong employer name is worse, and it
+        would be believed. So a collision removes the label rather than picking
+        a winner, and says so."""
+        reg = {"employers": [
+            {"employer": "First Bank", "ats": "oracle", "careers_url": "https://a",
+             "params": {"host": "a", "site": "CX_1001"}},
+            {"employer": "Second Bank", "ats": "oracle", "careers_url": "https://b",
+             "params": {"host": "b", "site": "CX_1001"}}]}
+        cfg, rep = registry.resolve({"watch": ["First Bank", "Second Bank"]}, reg)
+        self.assertNotIn("CX_1001", cfg["oracle"].get("names", {}))
+        self.assertTrue(any("NEITHER is labelled" in r[2] for r in rep), rep)
+        self.assertEqual(len(rep), 2, "still one report line per watched name")
+
     def test_an_unknown_name_is_reported(self):
         _, rep = run(["Acme Corp"])
         self.assertEqual(rep["Acme Corp"][0], "NOT IN REGISTRY")
