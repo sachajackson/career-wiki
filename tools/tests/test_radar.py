@@ -31,9 +31,16 @@ from adapters import adzuna, greenhouse, lever, linkedin      # noqa: E402
 class FakeAdapter:
     """Stands in for a module: fetch(), TRUNCATED, HONOURS_DAYS."""
 
-    def __init__(self, rows, truncated=False, honours_days=True):
+    def __init__(self, rows, truncated=False, honours_days=True, bodies=False):
         self.rows, self.TRUNCATED, self.calls = rows, truncated, []
         self.HONOURS_DAYS = honours_days
+        self.bodies = []
+        if bodies:
+            self.fetch_body = self._body
+
+    def _body(self, row):
+        self.bodies.append(row["id"])
+        return "regulated bank portfolio roadmap mentor stakeholder adoption"
 
     def fetch(self, cfg, query, days):
         self.calls.append(days)
@@ -51,8 +58,8 @@ def posting(**kw):
 class Run:
     """Run radar.main() against a temp dir with a stubbed adapter."""
 
-    def __init__(self, argv, adapters, config=None):
-        self.argv, self.adapters = argv, adapters
+    def __init__(self, argv, adapters, config=None, employers=None):
+        self.argv, self.adapters, self.employers = argv, adapters, employers or {}
         self.config = config or {"queries": ["delivery"], "location": {}}
 
     def __enter__(self):
@@ -64,6 +71,8 @@ class Run:
         radar.SEEN = os.path.join(self.dir, "seen.json")
         radar.OUT = os.path.join(self.dir, "shortlist.md")
         radar.ADAPTERS = self.adapters
+        self._load = radar.EMP.load
+        radar.EMP.load = lambda *a, **k: self.employers
         with open(radar.CONFIG, "w") as fh:
             json.dump(self.config, fh)
         sys.argv = ["radar.py"] + self.argv
@@ -76,6 +85,7 @@ class Run:
 
     def __exit__(self, *a):
         sys.argv = self._argv
+        radar.EMP.load = self._load
         for k, v in self._saved.items():
             setattr(radar, k, v)
         import shutil
@@ -221,6 +231,74 @@ class TheHeader(unittest.TestCase):
         del mute.HONOURS_DAYS
         with Run([], {"mute": mute}) as r:
             self.assertIn("applied to nothing", r.out)
+
+
+class TheAvoidList(unittest.TestCase):
+    """Exclusions filter BEFORE scoring, which is the whole point of them.
+
+    Without that, the rule that every role found gets assessed in the same turn
+    spends effort on a question settled months ago.
+    """
+
+    def test_an_avoided_employer_never_costs_a_description_fetch(self):
+        """The ordering IS the feature, so it is pinned rather than assumed."""
+        fake = FakeAdapter([posting(id="a", company="<Employer A>"),
+                            posting(id="b", company="<Employer B>",
+                                    title="Head of Delivery Ops")], bodies=True)
+        with Run([], {"fake": fake},
+                 employers={"avoid": [{"employer": "<Employer A>"}]}) as r:
+            self.assertEqual(fake.bodies, ["b"])          # a was never fetched
+            self.assertIn("1 on the avoid list", r.out)
+
+    def test_it_says_what_it_skipped_and_why(self):
+        """A silent exclusion is indistinguishable from a source finding nothing."""
+        fake = FakeAdapter([posting(company="<Employer A>")])
+        with Run([], {"fake": fake},
+                 employers={"avoid": [{"employer": "<Employer A>"}]}) as r:
+            self.assertIn("Skipped — already decided", r.out)
+            self.assertIn("<Employer A>", r.out)
+
+    def test_a_sector_is_judged_after_the_description_arrives(self):
+        """A category catches employers never heard of, so a name is not enough."""
+        fake = FakeAdapter([posting(id="a", company="<Employer Z>")], bodies=True)
+        with Run([], {"fake": fake},
+                 employers={"avoid_sectors": [{"sector": "<sector>",
+                                               "match": ["regulated"]}]}) as r:
+            self.assertEqual(fake.bodies, ["a"])          # fetched, THEN judged
+            self.assertIn("1 on the avoid list", r.out)
+            self.assertIn("<sector>", r.out)
+
+    def test_a_declined_employer_is_marked_not_dropped(self):
+        """A role turned down on a commute can legitimately come back."""
+        body = "regulated bank portfolio roadmap adoption upskill mentor stakeholder"
+        fake = FakeAdapter([posting(company="<Employer A>", body=body)])
+        with Run([], {"fake": fake},
+                 employers={"declined": [{"employer": "<Employer A>", "reason": "commute",
+                                          "on": "2026-01-04"}]}) as r:
+            self.assertIn("<Employer A> †", r.out)
+            self.assertIn("declined 2026-01-04: commute", r.out)
+            self.assertNotIn("on the avoid list", r.out)
+
+    def test_a_watch_entry_with_no_route_is_reported_as_not_watched(self):
+        fake = FakeAdapter([posting()])
+        with Run([], {"fake": fake},
+                 employers={"watch": [{"employer": "<Employer A>"}]}) as r:
+            self.assertIn("no route", r.out)
+            self.assertIn("<Employer A>", r.out)
+
+    def test_an_employer_on_both_lists_is_flagged_rather_than_resolved(self):
+        """Whichever list won would be an accident of ordering."""
+        fake = FakeAdapter([posting()])
+        with Run([], {"fake": fake},
+                 employers={"watch": [{"employer": "<Employer A>", "query": "x"}],
+                            "avoid": [{"employer": "<Employer A>"}]}) as r:
+            self.assertIn("watch list AND the avoid list", r.out)
+
+    def test_no_employers_file_changes_nothing(self):
+        fake = FakeAdapter([posting()])
+        with Run([], {"fake": fake}) as r:
+            self.assertNotIn("avoid list", r.out)
+            self.assertNotIn("Skipped", r.out)
 
 
 # --------------------------------------------------------------------------

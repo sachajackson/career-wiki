@@ -70,6 +70,30 @@ It is not a failure and there is nothing broken. **It means you must not report 
 of open roles** — say the search was capped, and either raise `pages` for that adapter in `config.json` or
 narrow the query and run it again.
 
+### The watchlist — who to watch, and who to skip
+
+`tools/radar/employers.json` (copy `employers.example.json`) holds the user's standing positions. **It is
+optional; without it nothing changes.** With it:
+
+| List | What it does |
+|---|---|
+| `watch` | **Complete coverage of an employer**, not whatever they syndicate. The list says *who*; the route — Workday, Greenhouse, Lever, or a named query — is an implementation detail, and one employer may need a different one from the next |
+| `avoid` | **Filters before scoring**, so the assess-every-role-immediately rule never spends effort on a settled question. Works at **division** level too: a good employer can contain a division the user will not work in, and it is usually named in the job title |
+| `avoid_sectors` | Catches employers the user has never heard of. **Runs after descriptions arrive**, because a sector cannot be judged from a company name |
+| `declined` | **Not a filter.** Marks a row with † and the reason. A role turned down on a commute or a start date can legitimately come back |
+
+🔴 **Read what the run says about the list, and act on it:**
+
+- **"no route … NOT watched"** — that employer is on the list and is not being watched. **Say so**; do not
+  report coverage the run did not have.
+- **"on the watch list AND the avoid list"** — whichever won was an accident. Ask which is right.
+- **Console questions about stale or unbased exclusions** — an exclusion older than two years, or one
+  with no basis recorded. **Raise them once, when they appear**, not every session.
+
+🔴 **The contents never leave the machine.** Not into a CV, a cover letter or an oversight export, and
+**never suggest the user repeats a reason to anyone.** *"It is not the right fit for me"* is the whole
+answer. See `CLAUDE.md`.
+
 Needs `tools/radar/config.json` — copy `config.example.json` and add an Adzuna key from
 [developer.adzuna.com](https://developer.adzuna.com/). Without it, only the employer-board adapters run.
 

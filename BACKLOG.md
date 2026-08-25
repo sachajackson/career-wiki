@@ -94,7 +94,7 @@ for the reasoning. **What follows is what is next.**
 
 | | Why first |
 |---|---|
-| **The employer watchlist as data** | Preference and exclusion lists exist as a design. They are what turn *"watch these employers"* into something the radar does — **and the Workday adapter now needs a list of employers to point at**, which is the user's to give |
+| 🔴 **Ask the user for their actual lists** | ✅ The mechanism is built and empty. **`employers.json` is the user's to write and nobody has been asked** — which employers they want watched, which they will not work for, and on what basis |
 | **A `sources check` command** | Probe every configured adapter for the user's country and report what actually works, before they invest in any of it. **The Workday run proved the value cheaply** — two employers, four minutes, two defects |
 | **The Oracle Cloud CX adapter** | The remaining large ATS written up in the aggregator entry. Same argument as Workday, one endpoint, `GET` rather than `POST` |
 | **Everything after the submit button** | The system stops at submission and the process does not |
@@ -856,7 +856,39 @@ depth-and-rigour machinery and drops the breadth machinery.**
 **So the build is: a fixed question set, executed with Layer 3 depth, red-teamed, and confidence-marked.**
 Roughly a page of skill instructions rather than a research methodology.
 
-### 🟢 Employer preference and exclusion lists — designed, not built
+### ✅ Employer preference and exclusion lists — BUILT
+
+**Status: ✅ 2026-08-25 as [`tools/radar/employers.py`](tools/radar/employers.py), with 29 tests, and
+verified against two live employer boards. The design follows, because the reasoning generalises.**
+
+**Every design point below is implemented**: reason *and* basis, with entries missing either reported;
+category exclusions separate from name lists; hard exclusions separate from *assessed and declined*,
+which marks a row rather than filtering it; and dated exclusions, with anything over two years or undated
+raised for review.
+
+🟢 **Both refinements from first use are in.** The list says who to watch and the adapter is an
+implementation detail — `route()` folds a watch entry into whichever of Workday, Greenhouse, Lever or a
+named query reaches that employer. **And exclusions work at division level**, matched against the job
+title where division names actually appear.
+
+🔴 **A watch entry with no route is reported as NOT watched**, in the shortlist and on the console. That
+was not in the design and it should have been: the failure it prevents is silent, because an employer
+nobody can reach simply never appears, which is indistinguishable from an employer with nothing open.
+
+🟢 **The exclusion passes are split, and the split is the interesting part.** Employer and division
+exclusions run **before** descriptions are fetched, so a settled question costs nothing. Sector exclusions
+run **after**, because a category is the half that catches employers the user has never heard of and that
+cannot be judged from a company name. Pinned by a test that asserts the excluded row never reaches
+`fetch_body`.
+
+🔴 **The safety rule is now in `CLAUDE.md` rather than implied by the file filter**, as this entry asked.
+
+🟡 **One defect found while building it, worth repeating elsewhere.** Whole-word matching was written as
+`\b` + keyword + `\b`, which **silently never matches a keyword that begins or ends with punctuation** —
+there is no word boundary against a non-word character. The user would believe a sector was filtered and
+it would not be. Found by a placeholder in a test fixture, of all things.
+
+### 🟢 The original design
 
 **A user's idea, 2026-08-24, and it makes two existing features work better rather than adding a third.**
 

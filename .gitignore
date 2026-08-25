@@ -28,6 +28,12 @@ config.json
 # it. Caught 2026-08-24 by checking what a clone would actually contain.
 !tools/radar/config.example.json
 
+# ...and the employer watchlist example, for the same reason. The real
+# employers.json is caught by the tools/radar/*.json rule above and MUST stay
+# caught: it names companies the user will not work for and why, some of it
+# second-hand.
+!tools/radar/employers.example.json
+
 .DS_Store
 __pycache__/
 *.pyc

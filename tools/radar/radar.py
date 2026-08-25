@@ -25,6 +25,7 @@ import json, os, re, sys, time, datetime
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from adapters import ADAPTERS                                    # noqa: E402
+import employers as EMP                                          # noqa: E402
 
 CONFIG = os.path.join(HERE, "config.json")
 RAW    = os.path.join(HERE, "raw.json")
@@ -118,9 +119,17 @@ def main():
     retier = "--retier" in argv or "--score-only" in argv   # old name still works
 
     cfg = load_config()
+    # The watch list is folded into the adapter configs before anything runs, so
+    # that "watch this employer" is a fact about the employer rather than an
+    # entry in whichever adapter someone happened to think of.
+    emp = EMP.load()
+    routed, unrouted = EMP.route(emp, cfg) if emp else ([], [])
+    clash = EMP.contradictions(emp) if emp else []
+
     seen = {} if reset or not os.path.exists(SEEN) else json.load(open(SEEN))
     today = datetime.date.today().isoformat()
     dead, capped, dupes = [], [], 0
+    skipped = []
 
     if retier and os.path.exists(RAW):
         found = json.load(open(RAW))
@@ -154,12 +163,18 @@ def main():
                   "  !! Treat this as a possible breakage, NOT a quiet week.", file=sys.stderr)
 
     # filter
-    keep, dropped = [], {"loc": 0, "title": 0}
+    keep, dropped = [], {"loc": 0, "title": 0, "avoid": 0}
     for c in found.values():
         if not location_ok(cfg, c["loc"], c["title"]):
             dropped["loc"] += 1; continue
         if NEVER.search(c["title"]) or IC_TITLE.match(c["title"].strip()):
             dropped["title"] += 1; continue
+        # Before the description is fetched, so an employer already ruled out
+        # costs nothing. This is the point of the list: without it the
+        # assess-every-role-immediately rule spends effort on settled questions.
+        why = EMP.excluded(c, emp) if emp else None
+        if why:
+            dropped["avoid"] += 1; skipped.append(f"{c['title'][:60]} — {why}"); continue
         keep.append(c)
 
     # bodies, then tier
@@ -170,6 +185,13 @@ def main():
             if mod and hasattr(mod, "fetch_body"):
                 c["body"] = mod.fetch_body(c); fetched += 1
                 time.sleep(0.4)
+        # Sector exclusions run here rather than above, because a category is
+        # what catches employers the user has never heard of and that cannot be
+        # judged from a company name.
+        why = EMP.excluded_by_sector(c, emp) if emp else None
+        if why:
+            c["_drop"] = why; continue
+        c["_note"] = EMP.declined_note(c, emp) if emp else None
         c["tally"] = tally_of(c["title"] + " " + c.get("body", ""))
         if not c.get("pay"):
             m = MONEY.search(c["title"])
@@ -179,6 +201,11 @@ def main():
         c["signal"] = signal(c["tally"])
     if fetched:
         print(f"  read {fetched} descriptions", file=sys.stderr)
+
+    for c in [c for c in keep if c.get("_drop")]:
+        dropped["avoid"] += 1
+        skipped.append(f"{c['title'][:60]} — {c['_drop']}")
+    keep = [c for c in keep if not c.get("_drop")]
 
     json.dump(found, open(RAW, "w"), indent=1)
     keep.sort(key=lambda x: (-x["tally"], x["date"]))
@@ -206,8 +233,17 @@ def main():
     with open(OUT, "w") as f:
         f.write(f"# Radar shortlist — {today} ({window})\n\n")
         f.write(f"{len(found)} fetched, {dupes} duplicates suppressed. "
-                f"Dropped {dropped['loc']} on location, {dropped['title']} on title. "
-                f"**HIGH {len(high)}, MED {len(med)}.**\n\n")
+                f"Dropped {dropped['loc']} on location, {dropped['title']} on title"
+                + (f", {dropped['avoid']} on the avoid list" if dropped["avoid"] else "")
+                + f". **HIGH {len(high)}, MED {len(med)}.**\n\n")
+        if routed or unrouted:
+            f.write(f"> Watching {len(routed)} employer(s) directly"
+                    + (f". 🔴 **{len(unrouted)} on the watch list have no route and were NOT "
+                       f"watched — saying otherwise would be false:** {', '.join(unrouted)}"
+                       if unrouted else ".") + "\n\n")
+        if clash:
+            f.write(f"> 🔴 **On the watch list AND the avoid list: {', '.join(clash)}.** "
+                    "Whichever wins is an accident. Resolve it in `employers.json`.\n\n")
         if days is not None and boards:
             f.write("> **The window does not apply to every source in this file.** "
                     f"{', '.join(boards)} return{'s' if len(boards) == 1 else ''} whole boards — "
@@ -237,6 +273,17 @@ def main():
         # The per-row SIGNAL repeats its section heading on purpose: these rows
         # get lifted out of the file and pasted elsewhere, and a row has to carry
         # its own label once it is separated from the heading above it.
+        # Dropped, not hidden. An exclusion the user cannot see is
+        # indistinguishable from a source that found nothing, and the two mean
+        # opposite things.
+        if skipped:
+            f.write(f"## Skipped — already decided ({len(skipped)})\n\n")
+            for line in skipped[:25]:
+                f.write(f"- {line}\n")
+            if len(skipped) > 25:
+                f.write(f"- … and {len(skipped) - 25} more\n")
+            f.write("\n")
+
         for name, rows in (("HIGH signal", high), ("MED signal", med)):
             f.write(f"## {name}\n\n| SIGNAL | Posted | Company | Title | Location | Pay | Link |\n")
             f.write("|---|---|---|---|---|---|---|\n")
@@ -246,8 +293,15 @@ def main():
                 # far older. Showing it bare would make an ageing requisition
                 # look fresh, which is the one thing a posting date is read for.
                 posted = c["date"] + ("+" if c.get("date_is_floor") else "")
-                f.write(f"| {c['signal']} | {posted} | {c['company'][:28]} | "
+                # A dagger means this employer has been assessed and turned
+                # down before -- a note, never a filter, because a role declined
+                # on a commute or a start date can legitimately come back.
+                who = c["company"][:28] + (" †" if c.get("_note") else "")
+                f.write(f"| {c['signal']} | {posted} | {who} | "
                         f"{c['title'][:62]} | {c['loc'][:22]} | {c['pay']} | [link]({c['url']}) |\n")
+            notes = sorted({c["_note"] for c in rows if c.get("_note")})
+            for n in notes:
+                f.write(f"\n† {n}\n")
             f.write("\n")
 
     if not retier:
@@ -258,6 +312,16 @@ def main():
 
     print(f"\n{len(found)} fetched | HIGH {len(high)} | MED {len(med)} | "
           f"failures: {dead or 'none'}", file=sys.stderr)
+    if emp:
+        for who in EMP.stale(emp):
+            print(f"  ?  avoid list: {who} — companies change ownership and policy. "
+                  f"Still true?", file=sys.stderr)
+        for who in EMP.basis_gaps(emp):
+            print(f"  ?  avoid list: {who} has no reason or no basis recorded, so it "
+                  f"cannot be re-judged later", file=sys.stderr)
+    if unrouted:
+        print(f"  !! watch list: no route for {', '.join(unrouted)} — NOT watched",
+              file=sys.stderr)
     if capped:
         print(f"  !! {len(capped)} query/queries hit the source cap -- this is NOT the "
               f"complete set of open roles.", file=sys.stderr)

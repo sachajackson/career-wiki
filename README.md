@@ -755,6 +755,28 @@ fill in what you have. `config.json` is ignored by git, so your settings stay on
 You also set your location rules in the same file: which places are acceptable, which are not, and which
 are borderline.
 
+### Employers you want watched, and employers you do not
+
+Copy `employers.example.json` to `employers.json` — it is optional, and without it nothing changes.
+
+**Two lists doing different jobs.** The **watch** list gives you complete coverage of an employer rather
+than whatever they choose to syndicate to job boards; you name the employer and give it whichever route
+reaches them, and if there is no route the run tells you they are not being watched rather than quietly
+implying they are. The **avoid** list filters before anything is scored, so an employer you ruled out
+months ago costs nothing — and it works at division level too, because a company you would happily join
+can contain a part of it you would not.
+
+**Two smaller distinctions that turn out to matter.** An exclusion carries a *reason* and a *basis* —
+"their published policy says so" and "someone who worked there told me" are both fair reasons and very
+different kinds of claim, and the basis is what lets you re-judge it later. And a role you assessed and
+turned down is **not** the same as an employer you rule out on principle: the first can come back, so it
+marks the row with a dagger instead of hiding it.
+
+🔴 **This file stays on your machine.** It names companies and says why you will not work for them, some
+of it second-hand. It is gitignored, it is outside what the oversight export can carry, and the agent is
+told never to suggest you repeat any of it. If anyone asks, "it is not the right fit for me" is the whole
+answer.
+
 **One thing worth knowing about Workday**, because it is the difference between a source that works and
 one that silently misses employers: **host, tenant and site are three separate values and you cannot work
 one out from another.** There are two hosting styles — `<tenant>.wd1.myworkdayjobs.com` and the shared

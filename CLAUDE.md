@@ -482,6 +482,23 @@ if the reason is volunteered, file the constraint and leave the reason out.
 will find out?"* govern which roles are a bad idea. **Use them to steer role selection. Never put them in
 a document.**
 
+### 🔴 The employer watchlist is private, and the reason is not obvious
+
+`tools/radar/employers.json` records who the user wants watched and who they will not work for — **and
+the second list contains factual assertions about named companies, some of them second-hand.** That is
+entirely legitimate as a private note and **completely unusable anywhere else.**
+
+| | |
+|---|---|
+| 🔴 **Never let it reach an external document** | Not a CV, not a cover letter, not an oversight export. `export_review.py` copies four named kinds of file and this is not one of them, **but the rule is stated here rather than left to the file filter** |
+| 🔴 **Never suggest the user repeats it** | Asked why they are not interested in an employer, the answer is *"it is not the right fit for me"* and nothing further. **Nothing is gained by explaining, and repeating a second-hand allegation about a named company is a real risk to the person repeating it** — not to the company |
+| 🟡 **Do not put the reasons in the wiki either** | A role page may record *that* an employer is excluded. **The word-of-mouth basis stays in the one gitignored file** |
+
+**Do ask for the basis when recording one.** *"Their published policy says X"* and *"someone who worked
+there told me X"* are both legitimate reasons to decline an employer and completely different kinds of
+claim — **the basis is what decides how durable the exclusion is**, and an entry without one cannot be
+re-judged when the user asks about it in a year.
+
 ### Employer confidentiality — four tiers
 
 | Tier | In the wiki | In an external document |

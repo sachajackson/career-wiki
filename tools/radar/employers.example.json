@@ -1,0 +1,101 @@
+{
+  "_README": [
+    "Copy this to employers.json and REPLACE EVERY PLACEHOLDER. employers.json is gitignored.",
+    "",
+    "*** THIS FILE NEVER LEAVES YOUR MACHINE. ***",
+    "It holds factual assertions about named companies, some of them second-hand. That is",
+    "fine as a private note and unusable anywhere else. It must never reach a CV, a cover",
+    "letter, an oversight export, or anything a third party reads. If anyone asks why you",
+    "are not interested in an employer, the answer is 'it is not the right fit for me' and",
+    "nothing further. Repeating a second-hand allegation about a named company is a risk to",
+    "you, not to them.",
+    "",
+    "TWO LISTS, DOING DIFFERENT JOBS:",
+    "  watch  — complete coverage of an employer, not just what they syndicate to job boards",
+    "  avoid  — filters the radar BEFORE scoring, so settled questions cost nothing",
+    "",
+    "'declined' is a third thing and deliberately does not filter: a role you turned down on",
+    "a commute or a start date can legitimately come back. It marks those rows with a dagger."
+  ],
+
+  "watch": [
+    {
+      "_comment": [
+        "One entry per employer you actually want watched. Give it whichever route reaches",
+        "them — the point is complete coverage of that employer, not one adapter.",
+        "  workday     three separate values, all visible in their careers URL.",
+        "              If their careers site is NOT Workday, check anyway: search the page",
+        "              source for 'myworkdayjobs' or 'myworkdaysite'. Big employers often",
+        "              put a different front end over a Workday back end, and the Apply",
+        "              links give the tenant away.",
+        "  greenhouse  board token, from boards.greenhouse.io/<token>",
+        "  lever       company slug, from jobs.lever.co/<slug>",
+        "  query       the fallback and the weakest route — a search term rather than their",
+        "              own board, so it sees only what they choose to syndicate.",
+        "An entry with no route at all is reported loudly, because 'watching' them would",
+        "otherwise be false.",
+        "avoid_divisions excludes part of an employer you otherwise want. Division names",
+        "usually appear in the job title, which is where this looks."
+      ],
+      "employer": "<Employer name>",
+      "why": "<why you want to work there — this is for you, not for a cover letter>",
+      "workday": { "host": "<host>", "tenant": "<tenant>", "site": "<site>" },
+      "greenhouse": "",
+      "lever": "",
+      "query": "",
+      "avoid_divisions": ["<a division inside them you would not work in>"]
+    }
+  ],
+
+  "avoid": [
+    {
+      "_comment": [
+        "reason AND basis, both. 'Their published policy says X' and 'someone who worked",
+        "there told me X' are both legitimate reasons to decline an employer and completely",
+        "different kinds of claim — the basis is what decides how durable the exclusion is.",
+        "basis: published | personal-experience | word-of-mouth | reported",
+        "since: exclusions go stale. Companies change ownership, policy and management, and",
+        "the radar asks about anything older than two years.",
+        "divisions: leave empty to exclude the whole employer."
+      ],
+      "employer": "<Employer name>",
+      "reason": "<what you object to>",
+      "basis": "<published | personal-experience | word-of-mouth | reported>",
+      "since": "<YYYY-MM-DD>",
+      "divisions": []
+    }
+  ],
+
+  "avoid_sectors": [
+    {
+      "_comment": [
+        "A category catches employers you have never heard of, which a name list cannot.",
+        "Ask yourself whether the objection is to one company or to the whole sector — it is",
+        "often genuinely unclear, and the answer changes how much this filters.",
+        "Categories worth considering: gambling, tobacco, arms, payday lending, or a",
+        "documented employment-practices record.",
+        "match: whole words, checked against the description as well as the title, so this",
+        "runs after descriptions are fetched. Without a description a sector cannot be",
+        "judged from a company name at all."
+      ],
+      "sector": "<sector>",
+      "match": ["<a word that appears in such a posting>", "<another>"],
+      "reason": "<what you object to>",
+      "since": "<YYYY-MM-DD>"
+    }
+  ],
+
+  "declined": [
+    {
+      "_comment": [
+        "Assessed and turned down — NOT a principled exclusion, and deliberately not a",
+        "filter. Recording it separately means a re-appearance is decided in seconds",
+        "instead of researched again from scratch."
+      ],
+      "employer": "<Employer name>",
+      "role": "<the role you looked at>",
+      "reason": "<commute | timing | level | pay | something else>",
+      "on": "<YYYY-MM-DD>"
+    }
+  ]
+}
