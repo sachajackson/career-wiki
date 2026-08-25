@@ -63,12 +63,29 @@ BY_NAME = {"index.md": "WIKI", "log.md": "WIKI", "MEMORY.md": "WIKI"}
 # is not state, and guessing wrong here deletes something irreplaceable.
 REGENERABLE = {"seen.json", "raw.json", "shortlist.md"}
 
+# The drop zone ships with its own README explaining what the folder is for, and
+# it sits at exactly the path a user's own README.md would occupy. Nothing about
+# the PATH separates them, and comparing file contents does not work either --
+# the shipped copy IS the file at that path, so it would only ever match itself.
+#
+# So it is recognised by its own heading. A README the user drops in gets
+# classified like anything else, which matters: skipping every file called
+# README.md silently dropped the one somebody wrote at the root of their own
+# vault -- not filed, and not even reported.
+SHIPPED_README_HEADING = "# migration/ — drop anything here"
+
+
+def _is_the_shipped_readme(path):
+    return read_head(path, 200).lstrip().startswith(SHIPPED_README_HEADING)
+
+
 CODE = {".py", ".sh", ".js", ".ts", ".rb", ".go", ".pyc", ".bat", ".ps1"}
 DOCS = {".pdf", ".docx", ".doc", ".rtf", ".odt", ".pages"}
 DATA = {".csv", ".xlsx", ".json", ".zip", ".htm", ".html", ".txt"}
 
 FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---", re.S)
 TYPE = re.compile(r"^type:\s*([a-z-]+)", re.M)
+SECTION = re.compile(r"^section:\s*([a-z-]+)", re.M)
 
 # Filename shapes that are load-bearing elsewhere in this system.
 COMPANY_PAGE = re.compile(r" - Company Research\.md$", re.I)
@@ -83,12 +100,20 @@ def read_head(path, n=2000):
         return ""
 
 
-def frontmatter_type(text):
+def frontmatter(text):
+    """(type, section). Both matter, and only one of them used to.
+
+    🔴 `roles/`, `companies/`, `postings/` and `applications/` are CAREER
+    concepts. Routing on type alone sent three `type: entity` pages from a
+    health section -- Breakfast Smoothie, Lunch and Morning Coffee -- straight
+    into `companies/`, which is funny once and wrong every time after.
+    """
     m = FRONTMATTER.match(text)
     if not m:
-        return None
+        return None, None
     t = TYPE.search(m.group(1))
-    return t.group(1) if t else None
+    sec = SECTION.search(m.group(1))
+    return (t.group(1) if t else None), (sec.group(1) if sec else None)
 
 
 def classify(rel, abspath):
@@ -148,7 +173,11 @@ def classify(rel, abspath):
         return PLACED, paths.POSTINGS, "a captured posting"
 
     if ext in (".md", ".markdown"):
-        t = frontmatter_type(read_head(abspath))
+        t, section = frontmatter(read_head(abspath))
+        # A page that declares a section other than career is a wiki page of
+        # that section, whatever its type happens to be.
+        if t and section and section != "career":
+            return PLACED, paths.WIKI, f"section: {section}"
         # 🔴 `type: source` means a PAGE ABOUT a source, not the source file.
         # Routing it to sources/ was the first bug a real vault found, and it
         # was about to move the user's CV.md -- the most linked page they have
@@ -192,7 +221,14 @@ def walk(root):
     for base, dirs, files in os.walk(root):
         dirs[:] = [d for d in dirs if d not in (".git", "__pycache__", ".obsidian")]
         for f in sorted(files):
-            if f in (".DS_Store", "README.md"):
+            # 🔴 Only the READMEs the SYSTEM ships are skipped, by full path.
+            # Skipping every file called README.md silently dropped the one the
+            # user wrote at the root of their own vault -- not filed, and not
+            # even reported, which is the failure this whole tool is against.
+            full_path = os.path.join(base, f)
+            if f == ".DS_Store":
+                continue
+            if f == "README.md" and _is_the_shipped_readme(full_path):
                 continue
             full = os.path.join(base, f)
             yield os.path.relpath(full, root), full

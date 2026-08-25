@@ -204,3 +204,43 @@ class ItPlaces(MigrateCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class SectionBeatsType(MigrateCase):
+    """roles/, companies/, postings/ and applications/ are CAREER concepts.
+
+    Routing on type alone sent three `type: entity` pages from a health section
+    -- Breakfast Smoothie, Lunch and Morning Coffee -- into companies/. Funny
+    once, wrong every time after, and found only by looking at where a real
+    vault landed.
+    """
+
+    def test_a_health_page_typed_entity_is_not_an_employer(self):
+        self.drop_file("Lunch.md", "---\ntype: entity\nsection: health\n---\n")
+        v, dest = self.verdicts()["Lunch.md"]
+        self.assertEqual((v, dest), (self.migrate.PLACED, self.paths.WIKI))
+
+    def test_a_career_entity_still_goes_to_companies(self):
+        self.drop_file("IFDS.md", "---\ntype: entity\nsection: career\n---\n")
+        self.assertEqual(self.verdicts()["IFDS.md"][1], self.paths.COMPANIES)
+
+    def test_no_section_falls_back_to_the_type(self):
+        """Most vaults predate the field. Absence is not a claim."""
+        self.drop_file("Acme.md", "---\ntype: entity\n---\n")
+        self.assertEqual(self.verdicts()["Acme.md"][1], self.paths.COMPANIES)
+
+
+class AUsersOwnReadmeIsNotTheSystems(MigrateCase):
+    """Skipping every file called README.md silently dropped the one the user
+    wrote at the root of their own vault -- not filed, and not even reported."""
+
+    def test_a_readme_in_the_drop_zone_is_classified_like_anything_else(self):
+        self.drop_file("README.md", "# my vault\n\nnotes I wrote myself\n")
+        self.assertIn("README.md", self.verdicts())
+
+    def test_the_drop_zones_own_readme_is_recognised_by_its_heading(self):
+        """It sits at exactly the path a user's own README.md would occupy, and
+        comparing contents cannot help: the shipped copy IS the file at that
+        path, so it would only ever match itself."""
+        self.drop_file("README.md", self.migrate.SHIPPED_README_HEADING + "\n\ntext\n")
+        self.assertNotIn("README.md", self.verdicts())
