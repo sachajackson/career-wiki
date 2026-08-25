@@ -70,6 +70,13 @@ reads everything else through it.
 
 *Dated, with the reason. This section should grow, and a long one is a sign the system is working.*
 
+🔴 **The test for whether something belongs here: will it recur next month?** A fact the agent had wrong
+is fixed once and belongs in the log. *"Do not describe me as a leader"* recurs every time a document is
+written, and a rule that lives only in a log entry is a rule nobody reads again.
+
+**In your words, not a paraphrase.** A rule with the reason stripped out gets overridden the first time
+it is inconvenient.
+
 **Format:**
 
 ```

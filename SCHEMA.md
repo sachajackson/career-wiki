@@ -594,6 +594,27 @@ git history that cannot be edited.
 **Especially record anything that went wrong despite an instruction telling you not to.** An instruction
 that has already failed once needs a structural fix, not a stronger instruction.
 
+### 🔴 A correction that changes how to work goes in `vault/AGENTS.md`, not only the log
+
+**There are three destinations and the third is the one that gets missed:**
+
+| The correction is about... | It goes in |
+|---|---|
+| **The system** — a tool, a check, a missing feature | `BACKLOG.md`, generically |
+| **A fact about them** you had wrong | The wiki page, with the old claim marked superseded, plus a `correction` entry in `log.md` |
+| 🔴 **How to work with them** — what to call them, what not to suggest, what they will not do, what you keep getting wrong about them | **`vault/AGENTS.md`, dated, with the reason, in their words** |
+
+**The test: will this recur next month?** *"The rate of loss was recomputed wrong"* will not — it is a
+fact, it is fixed, and the log records it. *"Do not describe me as a leader"* will, every time a document
+is written, and a rule that lives only in a log entry is a rule nobody reads again.
+
+**Quote them.** A paraphrase loses the reason, and a rule with no reason attached gets overridden the
+first time it is inconvenient.
+
+🟢 **A long corrections list is a sign the system is working**, not a tally of failures. It is the most
+useful thing in the vault after the facts themselves, because it is a dated record of what the system got
+wrong about a specific person — and that is exactly what a fresh session cannot reconstruct.
+
 ## Maintenance discipline — how information is captured and kept true
 
 **This is the difference between a wiki and a folder of notes.** These rules are always on. They are not
