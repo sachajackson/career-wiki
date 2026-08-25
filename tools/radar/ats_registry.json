@@ -42,6 +42,20 @@
       "verified_returned": 536
     },
     {
+      "employer": "Citi",
+      "ats": "workday",
+      "params": {
+        "host": "citi.wd5.myworkdayjobs.com",
+        "tenant": "citi",
+        "site": "2"
+      },
+      "careers_url": "https://jobs.citi.com/search-jobs/",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 2000,
+      "notes": "Per-tenant host style. The site identifier is literally \"2\" -- not a typo and not derivable from the tenant, which is why add_employer.py could sniff host and tenant off the careers page and still not finish the entry. Its 'total' is not trustworthy: 0 at offset 1990, 2000 at offset 2100, rows returned in both. Page until an empty page rather than trusting the count, and read registry_check's job number for this employer as noise rather than a trend. A location filter of 'Dublin' also matches Dublin, California -- scope on 'Ireland'"
+    },
+    {
       "employer": "Cloudflare",
       "ats": "greenhouse",
       "params": {
@@ -182,6 +196,20 @@
       "publishes_salary": false,
       "last_verified": "2026-08-25",
       "verified_returned": 149
+    },
+    {
+      "employer": "Salesforce",
+      "ats": "workday",
+      "params": {
+        "host": "salesforce.wd12.myworkdayjobs.com",
+        "tenant": "salesforce",
+        "site": "External_Career_Site"
+      },
+      "careers_url": "https://www.salesforce.com/company/careers/jobs/",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 1527,
+      "notes": "The careers page is JavaScript-rendered and carries no ATS marker, so add_employer.py finds nothing in it. Resolve this one by probing the shards directly against the tenant name. Shard is wd12: wd1, wd3 and wd5 all answer 422, which means wrong shard rather than bad request, exactly as settings/search.json documents -- so a 422 is a signal to keep going, not to stop. 138 Ireland roles at time of verification"
     },
     {
       "employer": "SS&C Technologies",
