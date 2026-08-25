@@ -813,6 +813,188 @@ is right.**
 
 ---
 
+### 🟢 A shared employer registry — the one thing in this repo that is communal
+
+**Status: designed 2026-08-25, not built. The highest-leverage missing piece, because the adapters exist
+and have nothing to point at.**
+
+**The adapters know how to speak Greenhouse, Lever, Workday and Oracle. What nobody has is the list of
+which employer uses which, and under what identifier.** Every user starts from
+`"greenhouse": {"boards": []}` and rediscovers the same public facts.
+
+### 🔴 Why this belongs in the repo when nothing else does
+
+**Everything else here is per-user by construction.** The wiki is one person's career. The config is one
+person's geography and salary floor. **None of it can be shared and most of it must not be.**
+
+🟢 **An employer's careers endpoint is public, non-personal, and identical for everyone who looks it up.**
+That makes it **the only artefact in this project a stranger can contribute to with zero privacy risk** —
+and a repo that invites contributions needs somewhere safe for them to land.
+
+### Prior art: adapters are a commodity, the maintained list is the gap
+
+| | |
+|---|---|
+| **Open source** | `plibither8/jobber` and similar wrap Ashby, Greenhouse, Lever, BambooHR. **Adapter libraries — the same category as `tools/radar/adapters/`, not a registry** |
+| **Commercial** | Apify sells *ATS company discovery* actors. **That is the genuinely hard half** — finding which of five hundred employers use Ashby — and it is a paid product |
+| **Registries** | Marketing blog posts. *"Companies using Greenhouse include Stripe, GitLab, Figma…"* **Undated, unverified, unmaintained** |
+
+🟡 **Know the boundary: this does not solve discovery.** It records what somebody already found. That is
+still worth doing, because right now what somebody found is lost the moment their session ends.
+
+## The schema
+
+**`tools/radar/employers.json`. Data, not code — contributing means adding an object, never touching
+Python.**
+
+```json
+{
+  "version": 1,
+  "employers": [
+    {
+      "employer": "Stripe",
+      "ats": "greenhouse",
+      "params": { "token": "stripe" },
+      "careers_url": "https://stripe.com/jobs",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 214
+    },
+    {
+      "employer": "State Street",
+      "ats": "workday",
+      "params": {
+        "host": "statestreet.wd1.myworkdayjobs.com",
+        "tenant": "statestreet",
+        "site": "Global"
+      },
+      "careers_url": "https://careers.statestreet.com/global/en",
+      "publishes_salary": false,
+      "last_verified": "2026-08-24",
+      "verified_returned": 34
+    },
+    {
+      "employer": "Grant Thornton Ireland",
+      "ats": "oracle",
+      "params": { "host": "ehzq.fa.us2.oraclecloud.com", "site": "CX_1" },
+      "careers_url": "https://ehzq.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/GrantThorntonIrelandExperiencedHires",
+      "publishes_salary": false,
+      "last_verified": "2026-08-24",
+      "verified_returned": 1
+    },
+    {
+      "employer": "Deel",
+      "ats": "custom",
+      "params": {
+        "list": "https://www.deel.com/api/deel-ats/jobs/",
+        "detail": "https://www.deel.com/api/deel-ats/jobs/{id}/",
+        "note": "Ashby underneath -- every row carries ashby_id -- but the public Ashby board returns empty, so this must target deel.com"
+      },
+      "careers_url": "https://www.deel.com/careers/",
+      "publishes_salary": true,
+      "last_verified": "2026-08-25",
+      "verified_returned": 300
+    }
+  ]
+}
+```
+
+**Field notes, each of which exists for a reason:**
+
+| Field | Why |
+|---|---|
+| `ats` + `params` | **A common core with per-protocol parameters.** Greenhouse needs a token; Workday needs host, tenant and site as three separate values, because [there are two hosting styles](#) and deriving the host from the tenant silently misses employers |
+| 🔴 `last_verified` | **Non-negotiable.** An employer changes ATS and the entry returns nothing — **which looks exactly like "no jobs this week"** |
+| 🔴 `verified_returned` | **How many roles it returned when last checked.** *Returned 0* and *returned 214* are different health states and a date alone cannot tell them apart |
+| 🟢 `publishes_salary` | Rare and valuable. Deel publishes a band on every role, which takes PAY out of `TBC` before any call happens |
+| `careers_url` | The human page. **It is what the user actually finds and hands over**, and it is what a later verifier re-derives the endpoint from if the API moves |
+
+🔴 **Seeded, not comprehensive. Twenty verified entries beat five hundred guessed.** Board tokens are
+frequently just the company name, which makes guessing work *often enough to be dangerous* — it produces
+an entry that looks verified and is not.
+
+## Where the entries come from: ask at the moment the user cares
+
+🔴 **Do not ask users to go and compile a list. Ask once, about one employer, at the moment they are
+already interested in it.**
+
+**The trigger:** a role scores at or above the build threshold, or the user says they like one.
+
+> *"Before I build this — can you find their own careers page and paste me the link? It takes a minute and
+> it is worth more than it sounds."*
+
+### 🟢 Explain why, because the reason is real and it changes behaviour
+
+**The employer's own posting is materially better than the aggregator's copy, and this has been measured
+twice:**
+
+| | What the aggregator carried | What the employer's own site carried |
+|---|---|---|
+| **A professional services role** | *"Proficiency in [eight named tools]"* | 🟢 *"Proficiency in **at least one**…"* of eleven. **Two flagged capability gaps dissolved on one line** |
+| | *"Consulting experience preferred"* | 🟢 *"…**or internal product delivery, or regulated environments**"* |
+| | *(absent)* | 🔴 **The business driver for the role** — the strongest match in the whole posting |
+| | Posted "roughly three weeks ago" | 🔴 **Three weeks older than stated** |
+| **A remote SaaS role** | No salary | 🔴 **$80,000–$130,000 published — below the user's floor.** The application was never viable and the aggregator could not show it |
+| | Posted "yesterday" | 🔴 **Ten weeks old** |
+
+**The pitch to the user is not "help us build a list". It is:**
+
+> **"Aggregators truncate, and they truncate the qualifiers — which is the half that decides whether you
+> are eligible. They also re-date reposts, so a ten-week-old requisition looks like it went up yesterday.
+> One link and I read the real thing. As a side effect it gets recorded, so nobody using this has to find
+> it again."**
+
+🟢 **The user benefit is immediate and personal; the registry entry is a by-product.** That ordering is the
+whole design — a request framed as *"contribute to our database"* gets ignored.
+
+## Contributing it back: one file, and only one file
+
+🔴 **This is the part that needs care, because the contribution flow runs from a working copy that contains
+the user's private wiki.** The pre-commit hook exists for exactly this reason and must not be the only
+thing standing between a helpful impulse and a published CV.
+
+**The design, in order of strictness:**
+
+1. 🔴 **Stage exactly one path — `tools/radar/employers.json` — and refuse if anything else is staged.**
+   Not "warn": refuse. `git status --porcelain` must show that file and nothing else before the flow
+   proceeds.
+2. 🔴 **Show the user the exact diff and get a yes**, before anything leaves the machine. It is four lines
+   of JSON; there is no excuse for not showing it.
+3. **Then, by what the user actually has:**
+
+| Available | Route |
+|---|---|
+| `gh` CLI, authenticated | `gh repo fork` then `gh pr create` — **the only route that produces a real PR without the user understanding forks** |
+| A browser and nothing else | **Open a pre-filled GitHub issue URL** with the JSON in the body. Zero git knowledge, works from a phone |
+| Neither, or offline | **Print the JSON block and say where to paste it.** Still a contribution |
+
+4. 🔴 **Never attempt to push to a repository the user does not own.** It fails, and failing at a git remote
+   is exactly the moment a non-technical user concludes the whole system is broken.
+
+🟢 **And run the same personal-data check the pre-commit hook runs**, on the file being contributed. An
+employer name and a URL cannot leak anything — **but that is an argument for the check being cheap, not for
+skipping it.**
+
+## The verifier, which ships with it or it does not ship
+
+🔴 **A registry without a checker rots into the silent-zero failure the `role-radar` skill already
+documents** — every query returns nothing and the run reports a quiet week.
+
+**`tools/registry_check.py`:** hit every entry, record what came back, update `last_verified` and
+`verified_returned`, and **fail loudly on any entry that returned zero when it previously returned
+something.** Run it in CI if there is CI, and from `/career-lint` if there is not.
+
+## What already exists, in the wrong shape
+
+🔴 **In one week of real use, five employers' endpoints were found by hand and scattered across five
+places** — two on a preferences page, one on a role page, one in a company research note, and **one used
+and never recorded at all.**
+
+**That is the registry, already built, in the wrong shape.** It is the strongest argument that it should be
+one file.
+
+---
+
 ### 🟡 Offer the repo link in the cover letter — ask, never assume
 
 **Status: raised by a user 2026-08-24. Not built.**
