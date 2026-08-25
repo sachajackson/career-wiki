@@ -1521,10 +1521,52 @@ through turned out to contain a real person's home county.
 
 ---
 
-### 🔴 Ghost jobs are 20-33% of listings and nothing here checks — adopt from career-ops
+### ✅ Ghost jobs are 20-33% of listings and nothing here checked — BUILT
 
-**Status: designed 2026-08-25, not built. Cheapest of the three below and the one with the strongest
-numbers behind it.**
+**Status: ✅ 2026-08-25 as [`tools/radar/legitimacy.py`](tools/radar/legitimacy.py), 17 tests, wired into
+the shortlist and the posting archive. Measured against 240 live postings before shipping.**
+
+🟢 **The design decision held: it never touches a score, and there is no percentage.** A test asserts the
+line contains no `%`, no `n/m`, and none of the words *score*, *rating* or *confidence* — because a
+percentage is a score by another name and would be averaged, compared and ranked within a week. A mutation
+that replaces the concern count with *"87% likely real"* is caught.
+
+🟢 **False-positive rate measured, not assumed**, because a check that cries wolf gets switched off: on
+600 live Oracle postings it flags **0%**; on 40 live Workday postings it flags **7%**, and every one of
+those is the source refusing to say how old the posting is.
+
+#### 🔴 And measuring it found a defect in our own adapter
+
+**The first version compared every posting's age against a 45-day threshold. It could never have fired on
+Workday at all.**
+
+**Workday stops counting at 30 days — and does not always print the `+`.** Verified across two live
+tenants: 13 distinct *posted* strings, the highest number **30**, appearing as bare *"Posted 30 Days
+Ago"*, nothing above it. So `date_is_floor` was false for a posting that could be a year old, the computed
+age was exactly 30, and **the threshold was unreachable on the source where age is hardest to see.**
+
+🟢 **Fixed in `workday.py`: reaching the cap is the signal, not the `+`.** And in the check, a floor is its
+own finding — *"age unknown: the source stops at 30 days"* — rather than a number compared against a
+threshold.
+
+#### 🔴 The listing censors the date and the detail endpoint does not
+
+**Found in the same run, and it is the strongest evidence for bounding the expensive pass.** One real
+posting:
+
+| | |
+|---|---|
+| What the **listing** said | `Posted 30+ Days Ago` |
+| What the **detail endpoint** said | `startDate` 2026-06-08 — **78 days** |
+
+**Same employer, same source, two different answers.** That role only carried the true date because it had
+hidden locations, so the adapter fetched its detail for an unrelated reason. **Every other capped posting
+kept the censored 30.**
+
+🟢 **So a detail fetch buys the single best ghost-job predictor**, and that is exactly the trade the next
+entry is about: cheap pass over everything, expensive pass over what matters.
+
+
 
 **`career-ops` runs a posting-legitimacy check as a separate block, and the design decision worth copying
 is this one: it *"never affects the score."***

@@ -201,6 +201,23 @@ class Dates(unittest.TestCase):
         self.assertEqual(workday._date("Posted 5 Days Ago"),
                          ((TODAY - datetime.timedelta(days=5)).isoformat(), False))
 
+    def test_thirty_is_a_floor_even_without_the_plus(self):
+        """30 is Workday's display CEILING and it does not always print the "+".
+
+        Verified across two live tenants: 13 distinct posted strings, the highest
+        number 30, appearing as bare "Posted 30 Days Ago", nothing above it.
+        Trusting the "+" alone reads a year-old requisition as exactly thirty
+        days old -- on the source where age is hardest to see and matters most,
+        and where a ghost-job check would then never fire.
+        """
+        iso, floor = workday._date("Posted 30 Days Ago")
+        self.assertEqual(iso, (TODAY - datetime.timedelta(days=30)).isoformat())
+        self.assertTrue(floor, "an age at the display cap is a floor, plus or no plus")
+
+    def test_below_the_cap_is_a_real_date_not_a_floor(self):
+        _, floor = workday._date("Posted 29 Days Ago")
+        self.assertFalse(floor)
+
     def test_thirty_plus_is_a_floor_and_is_marked_as_one(self):
         """"Posted 30+ Days Ago" is the same string for a role six months old.
 

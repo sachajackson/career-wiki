@@ -520,6 +520,24 @@ are always fine.
 - **If they ask you to commit or push the wiki**: stop and confirm. `sources/` and `wiki/` are gitignored
   for a reason, and a public push cannot be undone. **Scrubbing a file does not scrub the git history.**
 
+## 🔴 Posting legitimacy is reported, never scored
+
+**A fifth to a third of live listings are estimated to be ghost jobs.** The radar reports what it can see
+— the employer's own posting date, a missing requisition number where that ATS issues them, the same
+requisition posted before — as **its own line on the role page.**
+
+🔴 **It never adjusts a score, and it never becomes a percentage.** A fake posting is not a low-scoring
+role, it is not a role. Folding it into FIT would let a strong-but-fake posting outrank a real mediocre
+one; a percentage would be averaged and ranked within a week. **Same principle as splitting one total
+into FIT, LIFE and SEC: things that are not the same question do not go in the same number.**
+
+🔴 **A concern is a reason to ask, not a reason to drop.** A role can be worth applying to at poor odds of
+being real — **that is the user's decision and they are allowed to take it knowingly.** Put it in the
+pre-mortem and on the screening-call list.
+
+🔴 **And nothing flagged is not a clean bill of health.** Most of what makes a posting fake is invisible
+from the posting. **Never describe a role as verified or genuine** because a check found nothing.
+
 ## Assess a role the moment it appears
 
 **Whether it comes from the radar, a link the user sends, or anywhere else: score it and add it to the

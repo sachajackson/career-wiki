@@ -26,6 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from adapters import ADAPTERS                                    # noqa: E402
 import employers as EMP                                          # noqa: E402
+import legitimacy as LEGIT                                       # noqa: E402
 
 CONFIG = os.path.join(HERE, "config.json")
 RAW    = os.path.join(HERE, "raw.json")
@@ -97,7 +98,7 @@ def signal(tally):
     return "HIGH" if tally >= HIGH_AT else "MED" if tally >= MED_AT else "LOW"
 
 
-def archive(rows, cfg):
+def archive(rows, cfg, history=None):
     """Save the description of every shortlisted role, before raw.json is overwritten.
 
     A posting is the source document behind the score, the requirement tally, the
@@ -145,6 +146,7 @@ def archive(rows, cfg):
                     f"Location {c['loc']}\n"
                     f"Pay      {c.get('pay') or 'not stated'}\n"
                     f"Source   {c['url']}\n"
+                    f"{LEGIT.line(c, history)}\n"
                     f"{'=' * 72}\n\n{body}\n")
         saved += 1
     return saved, skipped
@@ -405,6 +407,23 @@ def main():
         # The per-row SIGNAL repeats its section heading on purpose: these rows
         # get lifted out of the file and pasted elsewhere, and a row has to carry
         # its own label once it is separated from the heading above it.
+        # Its own block, deliberately. A fake posting is not a low-scoring role,
+        # it is not a role -- folding this into SIGNAL would let a strong-but-fake
+        # posting outrank a real mediocre one. Only roles with something to say
+        # appear: between a fifth and a third of listings are ghost jobs, but
+        # listing every clean role here would bury the few that are not.
+        flagged = [(c, LEGIT.concerns(c, seen)) for c in high + med]
+        flagged = [(c, w) for c, w in flagged if w]
+        if flagged:
+            f.write(f"## Legitimacy — {len(flagged)} posting(s) worth a second look\n\n")
+            f.write("> **Not a score, and it does not change one.** A role can be worth "
+                    "applying to at poor odds of being real; that is the user's call. "
+                    "**And nothing listed here is proof** — most of what makes a posting "
+                    "fake is invisible from the posting.\n\n")
+            for c, w in flagged:
+                f.write(f"- **{c['company'][:28]} — {c['title'][:60]}**: {'; '.join(w)}\n")
+            f.write("\n")
+
         # Dropped, not hidden. An exclusion the user cannot see is
         # indistinguishable from a source that found nothing, and the two mean
         # opposite things.
@@ -439,7 +458,7 @@ def main():
             f.write("\n")
 
     # Before seen.json is updated and raw.json is overwritten on the next run.
-    saved, skipped = archive(high + med, cfg)
+    saved, skipped = archive(high + med, cfg, seen)
     if saved or skipped:
         print(f"  archived {saved} posting(s)" + (f", {skipped} already held" if skipped else ""),
               file=sys.stderr)
@@ -447,7 +466,16 @@ def main():
     if not retier:
         for c in found.values():
             c.pop("_k", None)
-            seen[c["id"]] = {"title": c["title"], "company": c["company"], "first_seen": today}
+            # requisition and posted are here so a REPOST can be spotted next run:
+            # the same requisition number reappearing under a new id with a newer
+            # date. Records written before this shipped have neither, and the
+            # check degrades to silence rather than to a false positive.
+            rec = {"title": c["title"], "company": c["company"], "first_seen": today}
+            if c.get("requisition"):
+                rec["requisition"] = c["requisition"]
+            if c.get("date"):
+                rec["posted"] = c["date"]
+            seen[c["id"]] = rec
         json.dump(seen, open(SEEN, "w"), indent=1)
 
     print(f"\n{len(found)} fetched | HIGH {len(high)} | MED {len(med)} | "

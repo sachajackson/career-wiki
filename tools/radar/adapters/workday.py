@@ -53,6 +53,9 @@ PUBLIC_SHARED = "https://{host}/recruiting/{tenant}/{site}{path}"
 PAGE = 20              # the API's own per-request ceiling
 HIDDEN = re.compile(r"^\s*(\d+)\s+locations?\b|\band\s+(\d+)\s+more\b", re.I)
 AGO = re.compile(r"posted\s+(\d+)\+?\s+days?\s+ago", re.I)
+# Workday stops counting here. An age of exactly this is a floor whether or not
+# the page bothered to print the "+".
+DISPLAY_CAP_DAYS = 30
 TODAY = re.compile(r"posted\s+(today|yesterday)", re.I)
 
 
@@ -73,9 +76,15 @@ def _date(posted_on):
         return (datetime.date.today() - datetime.timedelta(days=d)).isoformat(), False
     a = AGO.search(posted_on)
     if a:
-        floor = "+" in posted_on
-        return ((datetime.date.today() - datetime.timedelta(days=int(a.group(1)))).isoformat(),
-                floor)
+        n = int(a.group(1))
+        # 30 is Workday's display CEILING, and it does not always print the "+".
+        # Verified across two live tenants: 13 distinct "posted" strings, the
+        # highest number 30, appearing as bare "Posted 30 Days Ago", and nothing
+        # above it. So a "+" is not the signal -- reaching the cap is. Trusting
+        # the "+" alone reads a year-old requisition as exactly thirty days old,
+        # on the source where age is hardest to see and matters most.
+        floor = "+" in posted_on or n >= DISPLAY_CAP_DAYS
+        return ((datetime.date.today() - datetime.timedelta(days=n)).isoformat(), floor)
     return "", False
 
 

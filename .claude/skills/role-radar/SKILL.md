@@ -99,6 +99,28 @@ Report that, rather than reporting no new roles.
 Oracle answers with the whole tenant's postings instead, so a typo returns *more* roles rather than none.
 The check spots it by asking for a deliberately nonsense site and comparing counts.
 
+### 🔴 The Legitimacy block — report it, never fold it into a score
+
+**Between a fifth and a third of live listings are estimated to be ghost jobs**, 40% of hiring managers
+admit to posting one in the past year, and roughly one opening in three never produces a hire.
+
+🔴 **A fake posting is not a low-scoring role. It is not a role.** Folding this into FIT would let a
+strong-but-fake posting outrank a real mediocre one, and make a scam read as a mediocre opportunity.
+**So it never touches a score, and there is no percentage** — a percentage is a score by another name and
+would be ranked within a week.
+
+**Put the line on the role page as its own line.** Then:
+
+- 🔴 **A concern is a reason to ask, never an answer.** *"Ageing: 78 days old"* is worth a sentence in the
+  pre-mortem and a question on the first call. **It is not a reason to drop a role** — that is the user's
+  call and they may take poor odds knowingly.
+- 🔴 **An empty result is not a clean bill of health.** Most of what makes a posting fake is invisible from
+  the posting. **Never report a role as verified or genuine** on the strength of nothing being flagged.
+- 🟡 **`age unknown` means the source refused to say**, not that the role is fresh. Workday stops counting
+  at 30 days and does not always print the `+`.
+- 🟢 **Liveness is already covered where it matters** — `build-application` Step 0 confirms the posting is
+  still open before anyone spends an evening on it.
+
 ### The watchlist — who to watch, and who to skip
 
 `tools/radar/employers.json` (copy `employers.example.json`) holds the user's standing positions. **It is

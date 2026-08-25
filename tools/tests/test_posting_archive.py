@@ -95,12 +95,12 @@ class WiredIn(unittest.TestCase):
         would keep mostly roles nobody ever looked at."""
         with open(os.path.join(ROOT, "tools", "radar", "radar.py"), encoding="utf-8") as fh:
             src = fh.read()
-        self.assertIn("archive(high + med, cfg)", src)
+        self.assertIn("archive(high + med, cfg", src)   # args may grow; the rows may not
 
     def test_it_runs_before_seen_json_is_updated(self):
         with open(os.path.join(ROOT, "tools", "radar", "radar.py"), encoding="utf-8") as fh:
             src = fh.read()
-        self.assertLess(src.index("archive(high + med, cfg)"), src.index("json.dump(seen,"))
+        self.assertLess(src.index("archive(high + med, cfg"), src.index("json.dump(seen,"))
 
 
 if __name__ == "__main__":
