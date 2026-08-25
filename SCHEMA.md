@@ -9,35 +9,61 @@ An LLM-maintained career knowledge base, following
 [Open Knowledge Format v0.2](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md).
 
 **Division of labour:** the user curates sources, answers questions, makes decisions. You write and
-maintain every file under `wiki/`. The user does not hand-edit wiki pages — if something is wrong, they
+maintain every file under `vault/`. The user does not hand-edit wiki pages — if something is wrong, they
 say so and you fix it.
 
 ## Layers
 
+**Everything about, belonging to, or specific to the user is under `vault/`. Everything else is the
+system.** That is the whole boundary, and it is what makes an update possible: the system can be replaced
+wholesale without touching a year of somebody's working life. **Paths come from `tools/lib/paths.py`,
+never from a string literal.**
+
 | Layer | Path | Owner | Mutable? |
 |---|---|---|---|
-| Raw sources | `sources/` | User | **Immutable to you — read only, never edit** |
-| Wiki | `wiki/` | You | You own it entirely |
+| Raw sources | `vault/sources/` | User | **Immutable to you — read only, never edit** |
+| Knowledge | `vault/wiki/`, `roles/`, `companies/`, `postings/` | You | You own it entirely |
+| Deliverables | `vault/applications/`, `vault/oversight/` | You | Point-in-time artefacts, not maintained |
+| Their instructions | `vault/AGENTS.md` | User | 🔴 **Read every session. An update never touches it** |
+| Settings, secrets, state | `vault/settings/`, `secrets/`, `state/` | User | `state/` is regenerable; `secrets/` never leaves the machine |
 | Schema | `SCHEMA.md` | Both | Co-evolved as conventions settle |
 | Tooling | `tools/` | You | Maintained, and its outputs are disposable |
 
 ```
-sources/            CVs, job specs, exports, assessment reports — the user's, never edited
-wiki/               OKF bundle. You own all of it
-  index.md          catalog of every page
-  log.md            append-only chronological record
-  Career.md         section hub
-  Operating Model.md    what the user actually does day to day
-  Role Scoring Framework.md   their values, turned into a rubric
-  roles/            one page per role assessed
-  applications/     one folder per application — generated deliverables
-    <Employer Requisition>/
-      *.pdf *.docx  the output, not the knowledge
-      *.md          working notes and ATS field packs for that one application
-tools/radar/        job search. Maintained code; its .json and shortlist.md are disposable
-.claude/skills/     the workflows
-.claude/agents/     role-triage, which reads many job descriptions without polluting the main context
+vault/                    everything that is theirs. Nothing here ships
+  AGENTS.md               their standing instructions to you. Read it first
+  sources/                CVs, job specs, exports, assessments — never edited by you
+  wiki/                   OKF bundle. You own all of it
+    index.md              catalog of every page
+    log.md                append-only chronological record
+    Career.md             section hub
+    Operating Model.md    what the user actually does day to day
+    Role Scoring Framework.md   their values, turned into a rubric
+    Achievements - <Employer> <Years>.md   the attributable figures, narrow on purpose
+  roles/                  one page per role assessed
+  companies/              <Employer> - Company Research.md, reused across roles there
+  postings/               archived job descriptions — often the only durable copy
+  applications/<Employer Req>/   one folder per application
+      *.pdf *.docx        the output, not the knowledge
+      *.md                working notes and ATS field packs for that one application
+  oversight/<Employer Req>/      export folders for the independent reviewer
+  settings/               search.json · employers.json · review.json
+  secrets/.env            an API key, and nothing else. Never commit, never bundle
+  state/                  seen · raw · shortlist. Regenerable — deleting it costs nothing
+  migration/              a drop zone. `tools/migrate.py` empties it
+
+tools/                    the system. Replaced wholesale by an update
+  lib/paths.py            the only file that knows where anything lives
+  radar/                  job search
+.claude/skills/           the workflows
+.claude/agents/           role-triage, which reads many job descriptions without
+                          polluting the main context
 ```
+
+🔴 **Filenames must be unique across the whole vault**, because Obsidian resolves a wikilink by filename
+regardless of folder. Two `posting.txt` files in two application folders are fine — nothing links to
+them by name — but two pages called `Workday - My Experience.md` break both links silently. Prefix
+internal working notes with the employer: `CrowdStrike - Workday My Experience.md`.
 
 ## OKF frontmatter — required on every wiki page
 
@@ -67,7 +93,7 @@ verified:
 | Frontmatter | Tier | What it means here |
 |---|---|---|
 | No `verified` key | **unverified** | You inferred or transcribed it. **Never put it on a CV without flagging it to the user first** |
-| `verified` by a non-human actor | **machine-confirmed** | Cross-checked against another source in `sources/` |
+| `verified` by a non-human actor | **machine-confirmed** | Cross-checked against another source in `vault/sources/` |
 | `verified` by `human:<id>` | **human-reviewed** | The user confirmed it. **Only this tier is safe to assert externally without a check** |
 
 **Mark `verified` when the user states something directly in conversation.** That is the whole point: a
@@ -148,7 +174,7 @@ needs no citation — but mark it `verified` by the user.** Never present infere
 
 ## Operations
 
-**Ingest.** The user drops a source into `sources/` and says to process it. Read it, discuss the
+**Ingest.** The user drops a source into `vault/sources/` and says to process it. Read it, discuss the
 takeaways, write or update the relevant pages, update `index.md`, append to `log.md`.
 
 **Interview.** *The core operation, and the one that produces everything else.* Ask about what the user
@@ -160,6 +186,14 @@ file it back as a page.
 
 **Lint.** Health-check: contradictions, expired `stale_after`, unverified claims used externally, orphan
 pages, concepts mentioned but lacking a page.
+
+**Migrate.** The user drops a pile into `vault/migration/` — another system's export, an old vault, a
+folder of saved job descriptions. **Run `python3 tools/migrate.py` for a report, read it aloud, then
+`--apply`.** It is a report by default because a sorter that moves hundreds of files before anybody has
+seen what it decided is not one anybody should trust.
+
+🔴 **Then tell them, by name, what it refused to place** — and run `python3 tools/wikilinks.py --fix`.
+Moving files does not break wikilinks, but arriving from another vault usually does.
 
 ## Scope
 
@@ -519,8 +553,8 @@ are always fine.
   data-training setting. Once. Do not repeat it every session.
 - **If they are about to use `/feedback`, `/bug` or `/share`** in a session that has discussed anything
   confidential: those send the conversation and are retained for five years.
-- **If they ask you to commit or push the wiki**: stop and confirm. `sources/` and `wiki/` are gitignored
-  for a reason, and a public push cannot be undone. **Scrubbing a file does not scrub the git history.**
+- **If they ask you to commit or push the wiki**: stop and confirm. `vault/` is gitignored
+  for a reason — as is everything else under `vault/` — and a public push cannot be undone. **Scrubbing a file does not scrub the git history.**
 
 ## 🔴 Posting legitimacy is reported, never scored
 
@@ -567,7 +601,7 @@ a row whose posting has gone quietly becomes unreviewable**; and the requirement
 uncheckable once the requirements are unreadable.
 
 🟡 **It is the employer's text.** A private copy kept as the evidence behind a decision is ordinary
-practice. **It stays in `wiki/`, which is gitignored, and `export_review.py` will not carry it** — it is
+practice. **It stays in `vault/postings/`, which is gitignored, and `export_review.py` will not carry it** — it is
 not one of the four reviewable kinds.
 
 **An unassessed role is worse than one never found** — it occupies attention, it looks like an option, and
@@ -789,3 +823,17 @@ break both links.
 - **It is maintained, not point-in-time.** It depends on third-party endpoints and it will break.
 - **Its outputs are disposable and must never be hand-edited.** `raw.json`, `seen.json` and
   `shortlist.md` are regenerated every run. Durable findings go into wiki pages.
+
+| | |
+|---|---|
+| `verify.py` | Traces every figure in an outgoing document back to the wiki and flags anything unsourced |
+| `cv_lint.py` | The mechanical half of the writing rules — characters, banned vocabulary, cadence |
+| `known.py` | 🔴 **Does the wiki already know this?** Run before saying anything is unrecorded |
+| `wikilinks.py` | WRAPPED / NO PAGE / NO HEADING, and `--fix`. **Scans the whole vault, because Obsidian resolves links across all of it** |
+| `migrate.py` | Empties `vault/migration/`. Reports by default, moves on `--apply` |
+| `export_review.py` | Builds an allow-listed export for the independent reviewer |
+| `doctor.py` | What is set up and what is not |
+
+🔴 **Never point an external model at `vault/`.** It holds the salary floor, the anchors, the employers
+they will not work for, and material about colleagues. `export_review.py` exists because that export has
+to be allow-listed rather than filtered.

@@ -52,8 +52,32 @@ def split_target(inner):
     return page.strip().rstrip("\\"), anchor.strip().rstrip("\\")
 
 
+# Not pages. migration/ is a drop zone whose contents are by definition not
+# filed yet, and reporting a half-sorted pile as broken links buries the real
+# findings. state/ is regenerable and secrets/ holds no markdown at all.
+NOT_PAGES = ("migration", "state", "secrets")
+
+
+def md_files(root):
+    """Every page Obsidian can see.
+
+    🔴 This used to default to wiki/ alone, which was right when wiki/ was the
+    whole vault and wrong the moment roles/, companies/ and applications/ became
+    siblings of it. Obsidian resolves a wikilink by filename across the entire
+    vault, so a checker that reads one folder reports links to the other folders
+    as broken -- 'no page named IFDS' about a page sitting in companies/.
+    """
+    out = []
+    for path in glob.glob(os.path.join(root, "**", "*.md"), recursive=True):
+        rel = os.path.relpath(path, root).replace("\\", "/").split("/")
+        if rel[0] in NOT_PAGES:
+            continue
+        out.append(path)
+    return sorted(out)
+
+
 def scan(root):
-    files = sorted(glob.glob(os.path.join(root, "**", "*.md"), recursive=True))
+    files = md_files(root)
     headings, exists = {}, {}
     for path in files:
         name = os.path.splitext(os.path.basename(path))[0]
@@ -102,7 +126,7 @@ def fix_wrapped(root):
     """Join links split across lines, where the joined target resolves."""
     _, _, exists = scan(root)
     repaired = 0
-    for path in sorted(glob.glob(os.path.join(root, "**", "*.md"), recursive=True)):
+    for path in md_files(root):
         with open(path, encoding="utf-8") as fh:
             text = original = fh.read()
         this = os.path.splitext(os.path.basename(path))[0]
@@ -131,7 +155,9 @@ def fix_wrapped(root):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("root", nargs="?", default=paths.WIKI, help="folder to scan (default: the vault wiki)")
+    ap.add_argument("root", nargs="?", default=paths.VAULT,
+                    help="folder to scan (default: the whole vault, because Obsidian "
+                         "resolves links across all of it)")
     ap.add_argument("--fix", action="store_true", help="join links split across lines, then re-check")
     ap.add_argument("--only", help="report findings in this file only. The scan still reads the whole "
                                    "folder, because a link's validity depends on every other page -- but "
@@ -149,7 +175,7 @@ def main():
         print(f"wikilinks: joined {n} wrapped link(s). Re-checking.\n")
 
     findings = check(args.root)
-    total = len(glob.glob(os.path.join(args.root, "**", "*.md"), recursive=True))
+    total = len(md_files(args.root))
     if args.only:
         want = os.path.realpath(args.only)
         findings = [f for f in findings if os.path.realpath(f[1]) == want]
