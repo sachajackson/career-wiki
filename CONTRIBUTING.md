@@ -90,6 +90,20 @@ git status --porcelain          # anything unexpected staged?
 git log --oneline origin/main..HEAD
 ```
 
+🔴 **Do not pipe the suite into anything before `&&`.** The three lines above are a gate only if the
+first one's exit status survives:
+
+```bash
+python3 tools/tests/run.py && git push              # the suite gates the push
+python3 tools/tests/run.py | tail -2 && git push    # 🔴 it does not — tail always succeeds
+```
+
+**A pipe replaces the exit status with the last command's.** Piping test output to `tail` or `grep` for
+readability is the natural thing to do and it **silently disarms every `&&` after it**. That pushed a red
+suite to `main` here, from a gate that was followed exactly — which is the same failure as the line below,
+in a different disguise: **a control that looked like it ran.** If you want the short output, run the
+suite twice, or check `$?` yourself.
+
 🔴 **`git status` answers the wrong half of the question.** It shows what is unexpectedly *there*. It
 cannot show what is expectedly *missing* — and twice a file was written, used and pushed while an ignore
 rule kept it out of the repository, with a clean status the whole time. **`test_shipped.py` is the half
@@ -123,16 +137,6 @@ three — 64, 65 and 85, against a real figure that had moved past 300. **A numb
 updates is a number that lies.** If you changed `verify.py`, `cv_lint.py` or
 `wikilinks.py`, **add a test for the behaviour you changed** — those three are the layer everything else
 leans on, and a regression in them is silent by construction.
-
-🔴 **Do not pipe the suite into anything before `&&`.**
-
-```bash
-python3 tools/tests/run.py && git push        # the exit status gates the push
-python3 tools/tests/run.py | tail -2 && git push   # 🔴 it does not. tail always succeeds
-```
-
-**A pipe replaces the exit status with the last command's**, so the readable version silently disarms
-every `&&` after it. That pushed a red suite to `main` here, from a gate that was followed exactly.
 
 🔴 **If you mutation-test, disable the bytecode cache.**
 
