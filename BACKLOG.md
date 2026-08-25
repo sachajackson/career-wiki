@@ -33,7 +33,11 @@ which is why every wiki page carries an *Open questions* section for exactly thi
 
 ## 🟢 Picking this up cold? Read this first
 
-**Twenty-five items is not a plan.** Three things about their state, then an order.
+**A list this long is not a plan.** Three things about their state, then an order.
+
+*(This said "twenty-five items" and had drifted — there are 27 open now. Counts written into prose go
+stale silently, which this file already has an entry about: "The test count was written in three places
+and wrong in all three". So the number is gone rather than corrected.)*
 
 ### 1. Nine of these are already fixed as *documented behaviour*, not as code
 
@@ -133,51 +137,6 @@ how `config.json` behaves:**
   reported `UNREACHABLE!` on a connection reset and answered fine a second later. **Anything that calls a
   live endpoint needs retries before it is allowed to call something dead.**
 
-### ✅ `migration/` — `migrate.py` BUILT 2026-08-25
-
-**Trialled against a real vault of 147 files before shipping**, which is the only reason two of its bugs
-were found. Both would have been silent:
-
-1. 🔴 **`type: source` means a page ABOUT a source, not a source file.** Routing it to `sources/` was
-   about to move `CV.md` — the most-linked page in the vault — into the one folder the agent is forbidden
-   to edit. **The two words are identical and the things are opposites.**
-2. 🔴 **Application folders must survive as folders.** Every pack holds a `cv.txt`, a `posting.txt` and an
-   `application.json`; flattening them turns a clean migration into a pile of collisions and strands the
-   survivors from the application that gave them meaning.
-
-**And it surfaced a third bug, in a different tool:** `wikilinks.py` defaulted to `wiki/`, which was
-right when `wiki/` was the whole vault and wrong the moment `roles/`, `companies/` and `applications/`
-became its siblings. It reported *"no page named IFDS"* about a page sitting in `companies/`. **Obsidian
-resolves a wikilink by filename across the entire vault, so the checker has to as well.**
-
-**Still open:** it cannot classify markdown with no frontmatter, and says so rather than guessing — a
-note from another tool, a pasted job ad and a page of somebody's history look identical without it.
-
-### ✅ A radar run was twenty minutes of network wait — 1201s → 233s, BUILT 2026-08-25
-
-**Measured before and after, same config, same boards:**
-
-| | Before | After |
-|---|---|---|
-| Wall clock | **1201s** | **358s** |
-| Roles reaching the filter | 87 | **479** |
-| CPU | 7.9s | 3.1s |
-| HTTP requests | ~600 | **313, plus 3,598 served from cache** |
-
-🟡 **The intermediate state was faster still — 233s — and returned 93 roles.** Reading Workday's whole
-board costs 125 seconds and buys 386 more. **A faster run that cannot see the roles is not a better run**,
-and the figure to quote is coverage per run rather than seconds.
-
-🟢 **The cache was the bigger half, and it is not a cache of the network — it is a cache of a mistake.** A
-whole-board adapter returns everything open and filters by query in-process, so a 41-query config asked
-Greenhouse for the **same six board URLs forty-one times.** 246 identical requests where six would do, and
-the same shape in Lever and custom. `_http` now holds successful responses **for the lifetime of the
-process and no longer.**
-
-🔴 **Failures are never cached**, and there is deliberately no on-disk cache. A transient timeout held for
-a whole run turns one flaky request into a board reported as empty — a silent zero. A board read yesterday
-would report a filled role as open, which is the failure the tool exists to prevent.
-
 ### 🔴 The first concurrency design was slower than serial, and the reason generalises
 
 **A thread pool over all (adapter, query) pairs, with a lock per adapter.** It ran 48 minutes against a
@@ -194,39 +153,6 @@ into one module would each read the other's answer.
 
 🔴 **It was also silent for its entire duration**, because nothing printed until every adapter finished.
 **That is worse than the slowness it was fixing.** Progress now prints as each adapter lands.
-
-### ✅ Workday reads the board once and filters locally — BUILT 2026-08-25
-
-**Probed before deciding, and the numbers made it obvious.** State Street's board holds **1,377 roles**;
-`searchText: "Engineering Manager"` returns **611**, and `"Delivery"` returns **682**. 🔴 **Workday's
-server-side search is not a filter — it is a loose ranked match across several fields.**
-
-So the old shape asked 41 queries × 5 pages and saw the first 100 rows of each 611-row ranked set: **about
-7% of the board per query, largely the same highly-ranked rows every time.** That is why a run fetched 781
-Workday rows and found 27 new ones.
-
-**The whole board is 69 pages: fewer requests than before, and complete.** And because the request body no
-longer varies by query, every query after the first is served from the within-run cache.
-
-🟡 **What is given up.** The server matched description text; `_titles.matches` reads titles only. A role
-whose title lacks the domain word is now dropped where Workday might have surfaced it. **Against that, 93%
-of the board was never fetched at all**, so this is more coverage and a stricter filter, not like for like.
-
-🔴 **The trap that had to be designed around:** `pages` meant *pages per query*. Reusing it for a board
-read would turn the common `pages: 5` into "the first 100 roles of the board" — **a silent 93% loss.** It
-is ignored in board mode; the ceiling is `board_pages`, default 300, with TRUNCATED set when it bites.
-**Also confirmed by probe: `limit` above 20 returns 400**, so paging is the only route.
-
-### ✅ The politeness delay was being paid on requests that never happened — FIXED 2026-08-25
-
-**Found because board mode made a run slower rather than faster, despite making a fraction of the
-requests.** The adapter slept `delay` after every page — including the 69 pages the cache served.
-**Twenty seconds of waiting for a server nobody contacted, per query. On 41 queries, thirteen minutes of
-pure sleep.**
-
-🟢 **The delay now lives in `_http`, and that is not tidying.** It exists to be polite to a server; **a
-cache hit touches no server, so it earns no delay.** Any adapter that sleeps on its own is now the thing
-to look at when a run is slow.
 
 ### 🔴 Two files, one letter apart, opposite privacy rules — know which is which
 
@@ -354,62 +280,6 @@ audit discipline above still covers the rest.**
 🟢 **And `test_shipped.py` caught the new test file untracked, in the same run** — the second time in two
 sessions that the check about untracked files has caught the person adding a check.
 
-### ✅ Templates evolve and vaults do not — `template_drift.py` BUILT
-
-**Status: ✅ 2026-08-25, 11 tests. Found by being asked what is missing to make this a platform rather
-than one person's tool, and it is the gap that grows every time a template improves.**
-
-🔴 **`/career-init` copies `templates/` into `wiki/` ONCE and nothing ever revisits it.**
-`sync-to-vault.sh` refuses to touch `wiki/` deliberately — that directory is the person, not the tool. So
-`SCHEMA.md` and the skills move forward, and the pages they give instructions about do not.
-
-**Demonstrated on the same day it was found.** The framework template gained a standing-gaps table, a
-known-locations table, a baseline row, an internal-move row and a seven-value outcome vocabulary — **and
-`SCHEMA.md`, which IS synced, was updated to instruct the agent to use all five.** Every vault created
-before that morning has an agent looking for tables that are not there. **A vault reconstructed from
-yesterday's templates reports all five.**
-
-🔴 **Two of the five were ROWS INSIDE A TABLE THE VAULT ALREADY HAD.** A section-level check walks
-straight past that, so seeded rows are compared as well — a row the template ships filled in is content
-the page is supposed to carry, distinct from a blank row, which is only a place to write. **Ship the empty
-table; ship the row that is not empty.**
-
-🟢 **The tolerance decides whether anyone keeps it switched on.** A vault has its placeholders filled and
-its own rows added, and the agent may phrase a heading its own way. Ratio alone was too strict — *"standing
-gaps"* against *"standing gaps (capabilities)"* scores 0.67 — so containment counts too. **Verified clean
-against a filled-in vault, which is the case that matters more than the detections.**
-
-🔴 **It never writes.** Merging a section into a page holding a real person's history is a judgement —
-where it goes, what carries over, whether an existing note belongs under it. **The agent owns wiki pages;
-a script editing them would be touching the one thing in this repo it does not own**, and a bad merge
-there costs somebody their notes. A test asserts the file is byte-identical after a run.
-
-🟡 **And it says what a clean run does not prove**: that the structure matches, not that a section's
-contents are current.
-
-### ✅ Nothing answered "am I set up?" — `doctor.py` BUILT
-
-**Status: ✅ 2026-08-25, 19 tests.** Setup is three config files copied from examples, a `git config`
-line, a CV in a folder and up to two API keys. `sources_check.py` answered a third of it, and only about
-job sources.
-
-🔴 **The finding it exists for is the placeholder config.** A file copied from its example and never
-filled in **looks configured and returns nothing.** `search.example.json` says so in its own first line.
-**Demonstrated rather than argued**: with an untouched example config the radar reports *"3 fetched,
-HIGH 0, MED 0"* and exits successfully. **A missing file would have been louder than a filled one.**
-
-🟢 **`OPTIONAL` is not `MISSING`** — the distinction this repo has now needed in four separate places.
-Most of the setup is optional; reporting an unconfigured thing as a fault sends someone to fix what they
-never wanted. Only `MISSING` and `PLACEHOLDER` exit non-zero.
-
-🟡 **It makes no network calls**, so it is instant, works offline, and cannot tell anyone a source
-*answers* — it says so and points at `sources_check.py`. **A test asserts the module imports nothing that
-could make a request**, because a promise in a docstring that can be checked should be.
-
-🟢 **It also names the free way round the oversight key** — `review.py --dry-run` prints the prompt to
-paste into any other vendor's chat window. Without that, a paid second-vendor key reads as a requirement
-and most users will simply skip the review.
-
 ### 🔴 Mutation testing can be defeated by the bytecode cache — 2026-08-25
 
 **Found while mutation-testing `doctor.py`, and it invalidates results rather than just wasting time.**
@@ -530,27 +400,6 @@ rather than something someone has to remember to repeat.**
 | 8 | "Remote" is country-scoped | ✅ Fixed in code 2026-08-25. It had been doing the reverse |
 | 9 | Why-X answers, values with three examples | 🟢 Present and consistent |
 
-### ✅ And one contradiction that was not on the list at all — FIXED
-
-**The outcome vocabulary exists twice, and the copy the user sees is the broken one.**
-
-| | Values |
-|---|---|
-| `SCHEMA.md` | **Submitted · Rejected by employer · Withdrew · Declined · Closed · Vetoed · Not applied** |
-| `templates/Role Scoring Framework.md` | *submitted, not applied, closed or vetoed* |
-
-🔴 **The template is missing exactly the three values that were added to fix the ambiguity** — *Rejected by
-employer*, *Withdrew*, *Declined* — and merges two that `SCHEMA.md` deliberately separates. **So a fresh
-vault's scoring table cannot express "the employer turned me down"**, which `SCHEMA.md` calls the single
-most important question about a search and the number that says whether the level is right.
-
-**This is the SIGNAL failure in another place: one concept, two vocabularies, and the authoritative one is
-not the one in front of the user.**
-
-✅ **Fixed, and made mechanical.** The template now carries the full closed set, and a test parses both
-files and asserts the two sets are identical — **because writing the same list in two places and hoping is
-what produced this.**
-
 ### 🟢 What this audit teaches about auditing
 
 🔴 **"The rule is written where it says" is the wrong question.** The previous audit asked it, passed
@@ -565,135 +414,6 @@ prescribes have somewhere to live?** Six of nine failed that question. Three way
 hope.** Where a rule prescribes a table, **ship the empty table**.
 
 ## 🔴 Defects — things that behave wrongly
-
-### ✅ The radar's SIGNAL number read like a framework score — MADE NON-NUMERIC
-
-**Status: ✅ fixed 2026-08-25, with tests. The record of why follows, because the lesson generalises.**
-
-`radar.py` produced an unbounded keyword tally. The Role Scoring Framework produces a score out of 15.
-**Both were called "score", and a radar output of 21 was reported to the user as though it were a
-framework score of 21 — which is impossible, and the user rightly caught it.**
-
-**The first two attempts at this were both instructions**, and both failed: a warning line in every
-shortlist header, then the same warning in the module docstring and the skill. **The confusion recurred
-anyway**, which is the whole argument for the third attempt being structural.
-
-**Now:** the column is `SIGNAL` and the value is `HIGH` / `MED` / `LOW`. 🟢 **A word cannot be mistaken for
-a score out of 15 even by accident** — there is no reading of `HIGH` that produces a number. The raw tally
-survives in `raw.json` for tuning and reaches nothing a human reads. Section headings, the stderr summary
-and the skill all moved to the same vocabulary, because half a rename leaves two names for one thing.
-
-🟢 **The per-row `SIGNAL` deliberately repeats its section heading.** Rows get lifted out of the shortlist
-and pasted elsewhere, and a row separated from its heading has to carry its own label.
-
-🔴 **A second reason the number was wrong, found afterwards while building a before-and-after fixture, and
-worth more than the original one.** Two roles printed an identical `23`. They were not the same 23: one was
-20 keyword points plus the **+3 the tally adds for a salary appearing in the title**, the other was 23
-keyword points and no salary. **The number asserted the two roles were equal, which the tally cannot
-support** — and it asserted it in a format that invites arithmetic nobody should be doing on a keyword
-count. **`HIGH` and `HIGH` make the weaker, true claim: both are worth reading first.**
-
-🟢 **That generalises past this repo.** A displayed value that sums a signal with a bonus implies a
-precision it does not have, and **the display format is what decides whether anyone notices.** A word
-cannot be averaged, differenced, or ranked to two significant figures.
-
-**Checked at the same time, and clean:** `verify.py` and `cv_lint.py` print `N finding(s)`, which reads as
-a count of problems rather than a rating. `verify.py` has an internal `score` used to rank coverage
-suggestions; it is a sort key and is never printed.
-
-🟢 **The generalisable rule: when a number and a different number share a name, renaming the column is the
-smaller half of the fix.** Making one of them non-numeric is what ends it.
-
-### ✅ The salary bonus in the radar tally measured the adapter, not the role — REMOVED
-
-**Status: ✅ fixed 2026-08-25 by dropping the bonus, with 4 tests. The record of why follows.**
-
-**The fix was the first of the three options below: the tally now counts what the role is *about* and
-nothing else, and the `Pay` column carries the salary — which was always the better answer, because it
-shows the reader the actual figure rather than three anonymous points.**
-
-🔴 **Nothing broke when the bonus was removed, and 208 existing tests still passed** — which is exactly
-why the defect survived as long as it did. **A term that quietly shifts a score is invisible to a suite
-that never asserts the score.** The four tests added pin it: two identical roles, one with a salary,
-score identically; and a role sitting just below a cut-point no longer crosses it because its title
-mentions money.
-
-🟡 **Option two is still open and is a different job**: normalising salary at the adapter boundary, so
-every source reports salary-visible the same way. Worth doing only if something is going to *use* it —
-and **not by scraping figures out of descriptions**, where a currency amount is as likely to be a budget,
-a contract value or a revenue number as a salary. **A wrong figure in a Pay column is worse than an empty
-one**, and this repo's first rule is never to invent a number.
-
-**The original write-up follows.**
-
-#### The defect
-
-**Found 2026-08-25 while building a before-and-after fixture for the SIGNAL change.**
-
-The tally adds **+3 when a salary is visible** — either supplied by the feed or matched in the title.
-Two problems, and the second is the one that makes it a defect rather than a design choice.
-
-1. **It is a different dimension inside the same number.** Everything else in the tally measures whether
-   the role's *content* matches. *"This posting disclosed a salary"* measures how actionable it is. Both
-   are legitimate; adding them means neither can be read off the result.
-2. 🔴 **It is source-dependent, so it scores the adapter.** Aggregator adapters return a structured salary
-   field; employer-board and scraped adapters almost never do, and fall back to matching a figure in the
-   title. **The same role fetched from two sources gets two different tallies** — one of them three points
-   higher for a reason that has nothing to do with the role.
-
-**Bounded but not harmless.** `HIGH`/`MED`/`LOW` absorbs small movements, but +3 is a third of the distance
-between the two cut-points, so it can promote a role across a band on the strength of which adapter found
-it first.
-
-**Options, in rough order of preference:**
-
-- **Carry salary-visible as a separate column**, not as points. The shortlist already has a `Pay` column
-  doing exactly this, which makes the +3 largely redundant to a reader.
-- **Normalise it at the adapter boundary** so every source reports salary-visible the same way, and the
-  bonus at least stops depending on the route.
-- **Drop it.** The framework scores PAY properly and treats an unpublished band as `TBC`; the radar does
-  not need an opinion.
-
-🟢 **The general shape is worth keeping in mind for any scoring tool here: a term that only some inputs can
-earn is a measurement of the input pipeline.**
-
-### ✅ Line-wrapped wikilinks silently do not resolve — CHECK BUILT
-
-**Status: ✅ built 2026-08-24 as [`tools/wikilinks.py`](tools/wikilinks.py), wired into `/career-lint`,
-with 20 tests. What follows is the record of why.****
-
-**A wikilink broken across two lines is not a link.** Obsidian's parser does not match `[[ ]]` across a
-newline, so `[[Some Page\nName]]` renders as literal text and resolves to nothing.
-
-**In one vault this had broken 83 links across 26 files** — including the most-linked pages in the whole
-knowledge base. It was introduced by a wrapping convention (keep prose under ~100 characters) applied
-mechanically to lines that happened to contain a link.
-
-🔴 **The reason it matters more than it sounds: it is invisible.** The prose still reads correctly. Nothing
-errors. It shows only in graph view, or on hover, or when a link that should exist does not. **It was found
-by accident while checking two new pages, not by looking for it** — which means the failure mode is
-silence, and silence is exactly what a knowledge base cannot afford.
-
-**Rule:** never wrap inside `[[ ]]`. Break the line before the link or after it, and let the line run long.
-
-🔴 **A third variant, found the same day and worse: links to a heading that has since been renamed.** Those
-do not look broken at all — **the page still opens, the reader just silently lands at the top** instead of
-the section being cited. **40 were found in one vault. 31 were repairable mechanically** (most had only
-gained a date suffix), **5 pointed at a section lost in an earlier rewrite**, and **7 were self-inflicted by
-the un-wrapping fix above**, which pulled blockquote `>` markers into the link text. **A repair pass needs
-its own verification pass.**
-
-🔴 **And the rule failed three times in one session** — 83 links in the first sweep, 7 in the repair, 2
-while writing the fix up. **An instruction that depends on remembering it mid-sentence is not a control.**
-**Build the check.**
-
-**To do:**
-- Add a wikilink check to the deterministic layer: **flag every `[[ ]]` containing a newline, and every
-  link whose target file does not exist.** Both are one regex and neither needs a model.
-- The link-target check must ignore deliverables (`.pdf`, `.docx`) and paths outside the wiki, or it
-  produces noise that gets ignored — which is how a check dies.
-
----
 
 ### 🟢 A total that does not move can still be a total that lied
 
@@ -710,138 +430,6 @@ because the reporting habit is to lead with the number.
 
 **To do:** when re-scoring after research, **diff the components and lead with the diff**, not the total.
 If any component moved by 2 or more, say so in the first line even when the total is unchanged.
-
-### ✅ Aggregator postings are truncated, and the system read them as the job — FIXED AT THE RIGHT MOMENT
-
-**Status: ✅ 2026-08-25.** 🔴 **The fix that mattered was moving it earlier.** `build-application` already
-said to fetch the employer's own posting — but by then the score has already been used to decide.
-`role-radar` now says it **before scoring**, and says why the truncation is dangerous: it strips
-qualifiers and alternatives, **the parts that make a candidate more eligible**, so a system reading
-aggregators systematically under-scores its user, invisibly. It also names the sources that need **no**
-refetch — Workday, Oracle, Greenhouse, Lever are the employer's own text — because a rule that is wrong
-half the time gets dropped entirely. A test pins both halves.
-
-🟢 **The ATS-JSON half is built too**: Workday and Oracle adapters read the employer's own API directly,
-returning the real posting date, the requisition number and hidden secondary locations.
-
-**The original write-up follows.**
-
-#### The original entry
-
-**Found 2026-08-24. This one changed a real score.**
-
-A role had been assessed from a LinkedIn posting and carried a red-flagged capability gap for three days.
-Reading **the employer's own careers page** for the same requisition dissolved it:
-
-| The aggregator carried | The employer actually wrote |
-|---|---|
-| *"Proficiency in SQL, Python, Power BI, Power Automate, Power Apps, Azure, Microsoft Fabric"* | *"Proficiency in **at least one**..."* — of **eleven** tools |
-| *"Consulting or professional services experience preferred"* | *"...**or internal product delivery, or regulated, data-intensive environments**"* |
-| *(absent)* | The **business driver** for the role — the single strongest match in the whole posting |
-| A posting date | **Three weeks later than the real one** |
-
-🔴 **The failure is asymmetric and that is what makes it dangerous.** Truncation removes qualifiers
-(*"at least one"*), alternatives (*"or..."*), and context — all of which tend to be the parts that make a
-candidate *more* eligible. **A system reading aggregators systematically under-scores its user**, and does
-so invisibly, because the truncated text is perfectly coherent.
-
-**Fix, in order of value:**
-
-1. **Make "fetch the employer's own posting" a required step before assessment**, not before packaging.
-   By packaging time the score has already been used to decide.
-2. **Prefer the ATS JSON endpoint over the rendered page.** Every major ATS exposes one and the JSON
-   carries fields the page does not — real posting date, requisition number, secondary locations, study
-   level, requisition type:
-   - **Oracle Cloud CX**: ✅ **built 2026-08-25 as [`adapters/oracle.py`](tools/radar/adapters/oracle.py)**, verified against three live tenants. Detail: `GET .../recruitingCEJobRequisitionDetails?expand=all&finder=ById;Id="<jobId>",siteNumber="<site>"`. Search: `GET .../recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder=findReqs;siteNumber=<site>,limit=25,offset=N,sortBy=POSTING_DATES_DESC,keyword="..."`. 🟡 **The "quotes are required or it 400s" note was not reproducible** — unquoted worked on every tenant tried, so it is either version-specific or was only ever true of a non-numeric id. Quoting is kept because it costs nothing, but **an instruction nobody can reproduce stops being followed**, so the claim is softened rather than repeated.
-   - **Workday CXS**: `POST /wday/cxs/<tenant>/<site>/jobs`
-   - **Greenhouse**: `/v1/boards/<token>/jobs?content=true`
-   - **Lever**: `/v0/postings/<company>?mode=json`
-3. **Capture the requisition number at ingest.** It is usually only on the employer's site, and any
-   sensible output-filename convention needs it.
-4. 🔴 **Trust the employer's posting date over the aggregator's.** Aggregators re-date reposts, which makes
-   an ageing requisition look fresh. A six-week-old senior role may already be at offer stage — **that is a
-   prioritisation input, and the system currently cannot see it.**
-
----
-
-### ✅ The verifier conflated a percentage with a count — FIXED
-
-**Status: ✅ fixed 2026-08-24, with a test. Found by building a real application pack.**
-
-`norm()` stripped the unit before comparing, so **`100%` and `100` became the same key.** A CV saying
-*"over 100 staff consume the output"* under one employer was flagged against *"100% of emergency fixes
-within SLA"* recorded under a different one — **a confident, specific, wrong ATTRIBUTION finding on a
-correct document.**
-
-🔴 **This is the failure mode that matters most in a deterministic layer.** A missed error is bad; **a
-false positive is worse, because a check that cries wolf gets switched off**, and the attribution check is
-the one that catches a real achievement attached to the wrong job.
-
-**Fixed by keeping the unit in the key** — `100%`, `3x` and `100` are three different claims. **The same
-percentage written two ways still matches.** Two tests added: one that a percentage and a count no longer
-collide, one that the intended equivalences still do.
-
-🟡 **A related gap, not fixed.** The figure regex matches `30%` but not `30 per cent`, so a claim spelled
-out in words is invisible to the check. **Silent, and the writing standard actively prefers words in some
-positions.**
-
----
-
-### ✅ A nearby transit stop is not a commute — KNOWN LOCATIONS TABLE SHIPPED
-
-**Status: ✅ 2026-08-25.** `templates/Role Scoring Framework.md` now ships an empty **Known locations**
-table — place, legs from origin, door to door, whether the time is usable, employers there, verdict —
-with the rule that **no row goes in without a door-to-door time; mark it `TBC` and ask.** A test fails if
-that table leaves the page. **The origin is recorded once**, as the town they commute from rather than an
-address.
-
-🟡 **What is still not mechanical**: nothing stops a location score being raised on the existence of a
-transit stop. The rule is written; the check would need the journey data the table now has somewhere to
-live. **Revisit once a real vault has filled one in.**
-
-**The original write-up follows.**
-
-#### The original entry
-
-**Found 2026-08-24, after the system made this exact error and the user corrected it.**
-
-An employer research pass found the office was a four-minute walk from a light-rail stop, concluded that a
-previous "this is a drive" note had been wrong, and **raised the score.** The user corrected it: from where
-he lives, that journey is **two hours each way across three legs.** It is a drive.
-
-🔴 **The system had reasoned from a map rather than from a journey.** Distance from the office to a station
-is trivially checkable and almost irrelevant. **What matters is the number of legs and the total door-to-
-door time from one specific home address** — and a metro or tram network is intra-city, so for anyone
-commuting *into* a city it usually adds a leg rather than removing one.
-
-**Fix:**
-
-- **Location scoring needs the user's origin, not just the office's postcode.** Store it once.
-- **Score the journey, not the address**: legs, total time, and whether the time is usable (a train where
-  you can work) or lost (driving).
-- 🔴 **Never raise a location score on the existence of a transit stop without a door-to-door time.** Mark
-  it `TBC` and ask.
-- 🟢 **Employment clusters are worth storing as first-class entities.** One postcode in this case held four
-  major employers, so the finding was not about one job — it was a standing filter that will apply to
-  dozens. **A "known locations" table, scored once and reused, beats re-deriving it per role and getting
-  it wrong differently each time.**
-
-### ✅ "Not recorded" and "recorded as absent" are indistinguishable to a search — TOOL BUILT
-
-**Status: ✅ [`tools/known.py`](tools/known.py) built 2026-08-24, with 11 tests and a hard rule in
-`SCHEMA.md`. It recurred three times in one session before it was built, which is the argument for it.**
-
-**What it does:** finds every mention of a term and sorts them into settled decisions, negatives and plain
-assertions, then returns **SETTLED / PRESENT / NEGATIVE ONLY / NOT FOUND** — and prints the lines it judged
-on, because a verdict trusted without being read adds confidence to the same mistake.
-
-🟢 **The question it answers is not *"is this true"*, which needs judgement. It is *"should I ask the user
-about this"*, which is decidable — and which is the one that was got wrong.**
-
-**Validated against the three real failures:** the budget question returns SETTLED with *"stop asking"* as
-the first line of evidence; the work pattern returns PRESENT; a genuinely unknown term returns NOT FOUND.
-
-**The original write-up follows, because the reasoning is what generalises.**
 
 ### The defect it was built for
 
@@ -950,90 +538,6 @@ line instead of a number to take on faith.
 and **mark it TBC where no full posting was ingested.** Most rows will be TBC, which usefully flags which
 scores came from a summary.
 
-### ✅ "Remote" is country-scoped, and the filter was waiving exclusions on the word — FIXED
-
-**Status: ✅ fixed 2026-08-25 in code, with 11 tests. Until then it was one of the "nine documented
-rules" at the top of this file — and it was not only undone by the code, the code did the opposite.**
-
-🔴 **What was actually happening.** `location_ok` skipped the exclusion list entirely whenever the word
-*remote* appeared **anywhere in the location or the title**:
-
-| Location | Config | Was | Now |
-|---|---|---|---|
-| `Remote - <excluded city>` | that city on `bad` | **kept** | dropped |
-| `<excluded city>`, title *"Remote Delivery Lead"* | same | **kept** | dropped |
-| `Remote` | — | kept, silently as though global | kept, **marked `(scope TBC)`** |
-
-**A role advertised as remote *within* an excluded geography is still in that geography** — and that is
-precisely the case the word was supposed to help with.
-
-🟢 **Now**: `parse_location()` splits the string into *is remote* and *scope*, exclusions are judged on the
-scope, and an unqualified `Remote` is carried as **unknown rather than global** and shown as `(scope TBC)`
-in the shortlist. **Not dropped** — that loses real roles — **and not trusted either.**
-
-🔴 **The lesson is the one at the top of this file, proved again: a rule is not a control.** This rule was
-written down, listed as *documented behaviour*, and the code underneath it was doing the reverse the whole
-time. **A documented rule with contradicting code is worse than no rule**, because the file says it is
-handled.
-
-**The original write-up follows.**
-
-#### The original entry
-
-An employer advertising 354 roles listed **11 as remote — and every one was bounded to a country or a US
-state**: *Remote - UK*, *Remote - Luxembourg*, *Remote - Texas*, *Remote - Arizona*, *Remote, Australia*.
-**None was globally open, and there was no remote posting for the user's own country.**
-
-🔴 **The failure this invites is expensive rather than merely wrong.** A user asking *"does remote mean I
-can stop limiting myself to my own country?"* gets a yes, the search geography widens, and **a batch of
-roles gets assessed that were never open to them.** Right-to-work, tax residency and payroll entity all sit
-behind that word and none of them appear in the listing.
-
-**Fix:**
-
-- **Parse the location string, do not just match on "remote".** *Remote - X* means *X*, and the suffix is
-  the whole meaning.
-- **Treat an unqualified "Remote" as `TBC`, not as global.** It usually means "remote within the country
-  the requisition is raised in".
-- 🔴 **Never widen the search geography on the strength of the word alone.** Confirm against the
-  requisition's country, and flag right-to-work as an open question rather than assuming it.
-
-### ✅ Greenhouse yield is low — PREFILTER FIXED, and it was a bug not a tuning problem
-
-**Status: ✅ fixed 2026-08-25 as [`adapters/_titles.py`](tools/radar/adapters/_titles.py), shared by
-Greenhouse and Lever, with 6 tests.**
-
-**Eleven boards produced 756 roles in one country and one role worth reading.** The prefilter was
-`query.split()[0] in title` — **the FIRST word of the query**, which is almost always the least
-informative one:
-
-| Query | Title | Old | New |
-|---|---|---|---|
-| *head of delivery* | **Delivery Manager** | 🔴 dropped | ✅ kept |
-| *head of delivery* | Head of Legal | 🔴 kept | ✅ dropped |
-| *delivery manager* | Account Manager | ✅ dropped | ✅ dropped |
-| *senior manager* | Senior Accountant | 🔴 kept | ✅ dropped |
-
-**Wrong in both directions at once**, which is why the yield looked like a tuning problem and was not.
-
-🟢 **What discriminates on a board is the domain word, not the seniority word.** Boards are full of
-Managers, Leads and Directors; they are not full of *Delivery*. So a query is split into generic role
-nouns and distinctive ones and a title must match something distinctive — **falling back to requiring
-every word where a query is nothing but role nouns**, since *"senior manager"* has nothing distinctive to
-ask for and deserves to be strict.
-
-**The original write-up follows.**
-
-#### The original entry
-
-**Eleven boards produced 756 roles in one country and one role worth reading.** These employers post
-everything — sales, support, legal — and the relevance filter is tuned for the LinkedIn corpus.
-
-🟢 **This is not an argument against the source.** LinkedIn shows what an employer chose to syndicate; the
-board shows everything, immediately, so a role at a watched employer can no longer be missed.
-**Completeness is the point, not hit rate.** But the noise makes the shortlist harder to read, and a
-board-specific prefilter would help.
-
 ### 🔴 Example and template files are a leak vector, because they get made by copying a real one
 
 **Status: happened 2026-08-24. Caught, remediated by history rewrite, and worth a permanent rule.**
@@ -1077,37 +581,6 @@ rebase and force-push within 25 minutes, with 0 forks and 0 stars — **and the 
 fetchable from the host by its SHA afterwards.** Verified, not assumed. **A history rewrite removes a
 commit from the branch, not from the server.** For anything genuinely sensitive — a key, a credential —
 **rotate it and ask the host to garbage-collect; do not treat the force-push as the fix.**
-
----
-
-### ✅ The deterministic layer had no tests — BUILT, and it found three live bugs
-
-**Status: ✅ 2026-08-24. [`tools/tests/`](tools/tests/) — 85 tests, stdlib only, under a second.**
-
-**`verify.py` and `cv_lint.py` are the safety-critical parts of this repo and had zero tests.** They are
-pure functions over text, so they are trivially testable, and everything else leans on them.
-
-🔴 **Writing the tests found three defects that were live in the shipped version:**
-
-1. **`cv_lint` reported `0 findings — clean` on empty input** and exited 0. It defaulted to stdin, read
-   nothing, and passed. **A checker that says clean when it checked nothing is worse than no checker**, and
-   it directly contradicted the README's own line about what a clean run means. Now refuses, with a usage
-   message.
-2. **It crashed** — `IndexError` on `Counter.most_common` — **on any document with four or more bullets
-   that had no words**, which is what a partially-converted PDF looks like.
-3. **One word produced two identical findings**, because two spelling patterns matched it.
-
-🟢 **The tests that matter are the ones encoding a bug someone actually hit**, and they say so in their
-docstrings: the circular-sourcing guard (a figure "existed in the wiki" because it existed in the CV being
-checked), the attribution check announcing loudly when it cannot run rather than passing silently, and the
-blockquote-marker case in the wikilink repair.
-
-**Still to do:**
-
-- **No tests for `export_review.py` or the radar adapters.** The adapters hit live third-party endpoints,
-  so they need recorded fixtures rather than network calls.
-- **Nothing tests the agent hook end to end** — that a write actually triggers the verifier and that a
-  failure reaches the agent's context.
 
 ---
 
@@ -1271,118 +744,6 @@ would fire on every hand-written line. **It should compare the two shipped lists
 nothing about the contents of any vault.**
 
 
-### ✅ The system modelled "leave" and "stay" and missed the third option — NOW A ROW IN THE TABLE
-
-**Status: ✅ 2026-08-25.** *An internal move* is the **second row of the scoring table** in
-`templates/Role Scoring Framework.md`, carrying what it costs nothing of — forfeited equity, notice, reset
-service, probation, reference risk — and 🔴 **that it usually will not reach the pay floor.** The section
-says to ask, because a user in a stable job will not raise it unprompted, and to fetch the employer's
-**internal** job site rather than only their public careers page. A test fails if the row is removed.
-
-**The original write-up follows.**
-
-#### The original entry
-
-**Raised by the user 2026-08-24. The system had never considered it.**
-
-Every role was being scored against *staying put*, as though those were the only two outcomes. **There is a
-third: moving within the current employer** — and on the dimensions this user actually cares about it is
-structurally advantaged, before any specific role is compared:
-
-| | External move | Internal move |
-|---|---|---|
-| **Unvested equity** | Forfeited on resignation | **Retained** |
-| **Vesting-date timing** | Governs the whole search timeline | **Dissolves as a constraint** |
-| **Notice period** | The binding constraint on every plan | **Does not apply** |
-| **Continuous service** | Resets to zero | **Preserved** |
-| **Probation, reference risk** | Both real | **Neither** |
-| 🔴 **Pay** | The user's stated floor | 🔴 **Will not reach it. Internal moves pay less** |
-
-🔴 **The consequence is a scoring one, not just a missing feature.** An external role in the middle of the
-table is not competing against nothing — **it is competing against an option that costs none of the above.**
-**Every external score should be read against that baseline**, which means the internal option has to be in
-the table rather than in the user's head.
-
-**To do:**
-
-1. **Model "internal move" as a first-class option**, scored like any other, with the retained-value items
-   computed rather than described.
-2. 🔴 **Fetch the employer's *internal* board, not just its external careers site.** Most large employers
-   run a separate internal job site carrying **internal-only requisitions** and a different application
-   route. **The external site is a floor, not the picture** — and the agent should say so rather than
-   presenting external listings as the employer's full hiring.
-3. **Prompt for it.** A user in a stable job will not raise this unprompted; this one did, and the system
-   had nothing to say.
-
----
-
-### ✅ Scores had no personal baseline — THE CURRENT JOB IS NOW ROW ONE
-
-**Status: ✅ 2026-08-25.** *Staying put — the current job* is the **first row of the scoring table**, and
-the section states that top of each scale means *no worse than this* rather than *best of what we found*.
-A test fails if the row is removed. The record-what table beside it already distinguished **contractual
-from custom**, which is the part that decides what an alternative is worth.
-
-**The original write-up follows.**
-
-#### The original entry
-
-**Found 2026-08-24 after a top-ranked role was scored wrongly for three days.**
-
-A role offering **two office days a week at a rail-accessible office** was scored **5/5 on lifestyle** and
-described as *"the best lifestyle position available anywhere."*
-
-🔴 **The user is contractually fully remote.** Two days a week is a **downgrade**. The score was measuring
-*best of the options assessed* and reporting it as *best available* — and the user's own knowledge base had
-recorded the remote arrangement months earlier.
-
-🔴 **It was not one bad row. Every lifestyle score in a 41-role table had been set against no reference
-point at all.**
-
-**Fix:**
-
-1. **Record the user's current position explicitly as a scored baseline** — work pattern, commute, pay,
-   stability, notice — and **put it in the table as a row.** A comparison table without the status quo in
-   it cannot show a downgrade.
-2. **Anchor each scale to that baseline**: top of the scale means *no worse than today*, not *best of what
-   we found*.
-3. 🔴 **Distinguish "contractual" from "current practice"** on anything that forms a baseline. A remote
-   arrangement in writing is a floor; a custom the employer could reverse is not, **and the difference
-   changes what every alternative is worth.**
-4. 🟢 **Where the baseline makes a factor near-constant across all options** — this user is unlikely to
-   match a contractual remote arrangement anywhere — **that factor belongs outside the total**, per the
-   score-splitting entry above. **It is a price, not a differentiator.**
-
----
-
-### ✅ The oversight layer's independence was a comment in a config file — ENFORCED
-
-**Status: ✅ 2026-08-24, with 9 tests.**
-
-The whole value of the review layer is that the reviewer is **not** the model that wrote the documents: a
-model that invented a number while writing will find that number plausible while reviewing. **That
-guarantee was expressed as a comment in `search.example.json` and enforced by nothing.** The authoring
-vendor's adapter was selectable, and **a self-review would have printed output identical to a real one.**
-
-🔴 **Worse than useless, because it converts an absence into false assurance.** A missing review is
-visibly missing. A self-review looks like a passed check.
-
-**Now:** `authored_by` goes in `application.json`; `export_review.py` stamps `AUTHORED-BY.txt` into the
-export telling that vendor's model to refuse; `OVERSIGHT.md` makes it the reviewer's first check, before
-even the fresh-conversation test; and `review.py` **refuses** rather than warns — with `--same-vendor-anyway`
-available and the output stamped **DEGRADED REVIEW -- NOT INDEPENDENT** if it is used.
-
-🟢 **The refusal names the free way round it**: `--dry-run` prints the prompt to paste into any other
-vendor's chat interface, which works just as well and costs nothing.
-
-🟡 **An honest limit, now stated in the docs rather than implied.** Different vendor **reduces** correlated
-blind spots; it does not eliminate them. **The stronger property is the fresh context** — the reviewer has
-not seen the reasoning that produced the document, so it cannot be anchored by an argument it never heard.
-**A different vendor with stale context is worth less than the same vendor with none.** Both together is
-the design.
-
----
-
 ### 🔴 "Track outcomes" was shipped as an instruction and ignored for six weeks
 
 **Status: rule added 2026-08-24 with a trigger. The instruction alone had already failed.**
@@ -1423,46 +784,6 @@ is right.**
 `Not applied`.
 
 ---
-
-### ✅ A shared employer registry — BUILT AND WIRED IN
-
-**Status: complete 2026-08-25.** `ats_registry.json` (15 employers, ~13,000 roles) · `registry.py` (name an
-employer, get the endpoint) · `adapters/custom.py` (employers running their own API) · `registry_check.py`
-(every entry called, canaries checked) · `add_employer.py` (verify, add, contribute one file).
-
-**What remains is seeding, not building.** Fifteen is a proof, not a starter set — and
-`python3 tools/add_employer.py "Name" <careers-url>` makes each one a line.
-
-🟢 **Every entry was verified by calling it**, not copied from a page. **Roughly 13,000 roles now reachable
-from one file that previously lived in five places and one person's memory.**
-
-**How it was built, in order:**
-
-- ✅ **A resolver — built 2026-08-25** as `tools/radar/registry.py`, 14 tests. `"watch": ["State Street"]`
-  expands into the `host`/`tenant`/`site` shape the Workday adapter wants, **merging with hand-written
-  config rather than replacing it**, and 🔴 **printing a line for every watched employer including the ones
-  it could not resolve** — an employer dropped for want of an adapter looks exactly like a quiet week.
-  **Ambiguity refuses rather than guessing**, and a substring match says what it matched on.
-- ✅ **`tools/registry_check.py` — built 2026-08-25**, wired into `/career-lint`, 11 tests. **All five entries pass.**
-- **Seed more.** Five is a proof, not a starter set.
-- ✅ **An adapter for `custom` — built 2026-08-25**, 18 tests. **All five shipped employers now resolve
-  and fetch.** The adapter walks JSON by dotted paths and **the registry says where this employer's fields
-  live**, so the next bespoke API needs a map rather than a module.
-
-  🔴 **Building it found the trap that would have made it useless.** Deel carries `location_name` — the
-  **first** of thirty countries, *"Israel"* — alongside `all_locations`. **Mapping the obvious-looking
-  field would have filtered out all 66 roles open to Ireland for a user eligible for every one of them,
-  and said nothing.** Lists are joined rather than truncated, and the registry entry carries a note saying
-  why.
-
-  🟡 **One more shape worth knowing: a detail response often unwraps what the list response wrapped.**
-  Deel returns `attributes.full_job_description` in the listing and `full_job_description` alone in the
-  detail. The adapter tries the leaf before giving up, rather than making the registry carry two paths for
-  one field.
-
-**The adapters know how to speak Greenhouse, Lever, Workday and Oracle. What nobody has is the list of
-which employer uses which, and under what identifier.** Every user starts from
-`"greenhouse": {"boards": []}` and rediscovers the same public facts.
 
 ### 🔴 Why this belongs in the repo when nothing else does
 
@@ -1783,193 +1104,6 @@ that starts archiving postings should say so out loud rather than leave it impli
 
 ---
 
-### ✅ The personal-data heuristic fired on this repo's own subject matter — SCOPED
-
-**Status: ✅ fixed 2026-08-25 by scoping the content scan out of the three system directories, with a test
-that fails if that exemption grows. The record of why follows.**
-
-**The pre-commit hook blocked a skill file** on a line of generic advice telling a user **not** to disclose
-what they are currently paid. **No number, no person, no employer** — guidance in a system file.
-
-🟢 **The rule itself is well built.** It matches four specific phrases rather than bare words, which is why
-it has produced only one false positive in a repo that discusses pay constantly.
-
-🔴 **But this repo's whole subject is job applications**, so guidance about pay disclosure keeps being
-written — **and to a regex, advice telling someone not to state a figure is indistinguishable from someone
-stating one.** The negation is invisible.
-
-🔴 **And then it happened again immediately, on this entry.** Writing up the false positive meant quoting
-the phrase that caused it, which tripped the same rule a second time. **The hook already anticipates
-exactly this** — its own comment says *"this file, and the docs describing it, necessarily contain the
-patterns they look for"*, which is why the hook, `CONTRIBUTING.md` and `PRIVACY.md` are skipped.
-
-**Both were fixed by rewording rather than overriding.** The skill line reads better for it; this entry
-describes the pattern instead of reproducing it. 🟢 **That is the right first response** — and **it does
-not scale.** The next person hits the wall, reaches for `--no-verify`, and **routine overriding is how a
-good check stops being one.**
-
-**Three options, none obviously right:**
-
-| | |
-|---|---|
-| **Leave it** | One reword every few months. **Cheapest, and it depends on whoever hits it reading the flagged line rather than overriding** |
-| **Require a figure nearby** | Would miss *"mine is well above market"*, which is genuinely personal and carries no number |
-| ✅ **Skip the content heuristic in the system directories** | **Chosen.** `.claude/skills/`, `templates/` and `tools/` are written *about* users, never *by* them. **A user's own material never lands there** — the risk this rule guards is `wiki/` and `sources/`, which are still scanned. **The same reasoning the hook already applies to itself, one step wider** |
-
-🔴 **The exemption is now under test.** `test_shipped.py` asserts the skip list is exactly what it should
-be and **fails on any addition**, with the message *"every addition needs a reason written beside it, and a
-filename is not one"*. **It caught one on its first run** — the binary-file skip, which is there because
-grep cannot read a PDF rather than because PDFs are trusted, and now says so.
-
-🟢 **Verified both directions:** the reworded skill line is accepted, and a deliberately personal line
-added to `README.md` is still blocked. **The guard holds everywhere a user actually writes.**
-
-🔴 **Do not widen this by filename.** That was tried once, on `search.example.json`, and the file it waved
-through turned out to contain a real person's home county.
-
----
-
-### ✅ Ghost jobs are 20-33% of listings and nothing here checked — BUILT
-
-**Status: ✅ 2026-08-25 as [`tools/radar/legitimacy.py`](tools/radar/legitimacy.py), 17 tests, wired into
-the shortlist and the posting archive. Measured against 240 live postings before shipping.**
-
-🟢 **The design decision held: it never touches a score, and there is no percentage.** A test asserts the
-line contains no `%`, no `n/m`, and none of the words *score*, *rating* or *confidence* — because a
-percentage is a score by another name and would be averaged, compared and ranked within a week. A mutation
-that replaces the concern count with *"87% likely real"* is caught.
-
-🟢 **False-positive rate measured, not assumed**, because a check that cries wolf gets switched off: on
-600 live Oracle postings it flags **0%**; on 40 live Workday postings it flags **7%**, and every one of
-those is the source refusing to say how old the posting is.
-
-#### 🔴 And measuring it found a defect in our own adapter
-
-**The first version compared every posting's age against a 45-day threshold. It could never have fired on
-Workday at all.**
-
-**Workday stops counting at 30 days — and does not always print the `+`.** Verified across two live
-tenants: 13 distinct *posted* strings, the highest number **30**, appearing as bare *"Posted 30 Days
-Ago"*, nothing above it. So `date_is_floor` was false for a posting that could be a year old, the computed
-age was exactly 30, and **the threshold was unreachable on the source where age is hardest to see.**
-
-🟢 **Fixed in `workday.py`: reaching the cap is the signal, not the `+`.** And in the check, a floor is its
-own finding — *"age unknown: the source stops at 30 days"* — rather than a number compared against a
-threshold.
-
-#### 🔴 The listing censors the date and the detail endpoint does not
-
-**Found in the same run, and it is the strongest evidence for bounding the expensive pass.** One real
-posting:
-
-| | |
-|---|---|
-| What the **listing** said | `Posted 30+ Days Ago` |
-| What the **detail endpoint** said | `startDate` 2026-06-08 — **78 days** |
-
-**Same employer, same source, two different answers.** That role only carried the true date because it had
-hidden locations, so the adapter fetched its detail for an unrelated reason. **Every other capped posting
-kept the censored 30.**
-
-🟢 **So a detail fetch buys the single best ghost-job predictor**, and that is exactly the trade the next
-entry is about: cheap pass over everything, expensive pass over what matters.
-
-
-
-**`career-ops` runs a posting-legitimacy check as a separate block, and the design decision worth copying
-is this one: it *"never affects the score."***
-
-🟢 **A fake posting is not a low-scoring role. It is not a role.** Folding it into a fit number would make
-a scam look like a mediocre opportunity, and would let a strong-but-fake posting outrank a real mediocre
-one. **Same principle as splitting one total into FIT, LIFE and SEC: things that are not the same question
-do not go in the same number.**
-
-**The numbers are not marginal:**
-
-| | |
-|---|---|
-| Live listings estimated to be ghost jobs | **20–33%**, with one count putting **27% of LinkedIn listings** in that bracket |
-| Hiring managers admitting to posting one in the past year | **40%** — and **30%** had one live at the time of asking |
-| US postings never filled | **At least 1 in 5** (Greenhouse). BLS: 7.4m openings against 5.2m hires — **roughly one in three never produces a hire** |
-
-🟢 **The signals are already in this system and are not being used as signals:**
-
-- 🔴 **The employer's real posting date, from their own API.** In real use an aggregator showed a
-  ten-week-old requisition as *"posted yesterday"*, and another was three weeks out. **Age is the single
-  best ghost-job predictor and it is already being fetched.**
-- **Whether the requisition is still live on the employer's own site**, rather than only on an aggregator.
-  `registry_check.py` already knows how to ask that question about one job — it is what a canary is.
-- **Repeated reposting of the same requisition id**, which `seen.json` already records.
-- **A posting with no requisition number at all**, on an employer known to use an ATS that issues them.
-
-**Report it as its own line on the role page, never as a score adjustment**, and let the user decide. **A
-role can be worth applying to even at 30% odds of being real, and that is their call, not the tool's.**
-
----
-
-### ✅ Bound the expensive pass to the delta — BUILT, and the premise was wrong
-
-**Status: ✅ 2026-08-25 as [`tools/radar/refresh.py`](tools/radar/refresh.py), 19 tests.**
-
-🔴 **It was already bounded, and nobody had measured it.** This entry said the radar fetches a description
-for everything surviving the filter on every run. **It does not.** `seen.json` is consulted at **fetch**
-time, so a role found last week never reaches the description fetch again.
-
-**Measured, twice against one live board:**
-
-| | |
-|---|---|
-| Run 1 | `read 10 descriptions`, 20 rows |
-| Run 2, same query | **`0 fetched`**, empty shortlist, `raw.json` **2 bytes** |
-
-**The 132 in the original note must have been a first run or a `--reset`.**
-
-🔴 **So the real failure was the other one this entry warned about: nothing is ever re-read.** A
-description changes after posting — a band added, a requirement softened, the role quietly withdrawn — and
-none of it is ever noticed, because the row never comes back.
-
-🟢 **And measuring it found a second defect: `raw.json` is not a cache.** It is overwritten each run with
-**that run's new rows only**, so the `role-radar` instruction *"read the cached description, no refetch
-needed"* stops being true the moment another run happens. Corrected in the skill, and the archive in
-`vault/postings/` is the durable copy.
-
-#### What was built instead
-
-**`refresh.py` re-reads one archived posting** — the expensive pass, invoked deliberately at the moment
-somebody is about to act, which is what keeps it bounded. Wired into `build-application` Step 0.
-
-🔴 **The stronger of its two reasons is the date.** A listing censors the posting date and the detail
-endpoint does not. Demonstrated on live data: an archived posting carried **2026-07-26**, the listing's
-30-day cap; its detail said **2026-07-16**. **9 of 20 postings from that tenant arrived capped.** Age is
-the best ghost-job predictor and the shortlist could not see it.
-
-🟢 **It reconstructs adapter coordinates from the public URL**, because by re-read time `raw.json` is
-gone. Both Workday hosting styles and Oracle, with the requisition taken off the URL — **not faked.**
-Passing a placeholder there would have silently disabled the missing-requisition check and reported a
-clean result it never ran, and a mutation doing exactly that is caught.
-
-🟡 **It never writes to the archive.** That file is evidence of what the assessment was based on; today's
-text is a different document, and a fetch can return a 404 page that would replace the evidence with
-nothing. A mutation that clobbers the file is caught.
-
-
-
-**`career-ops` splits its scan in two: trust the ATS feed for everything, then run a browser liveness check
-*"only against new offers (after dedup), so the cost stays bounded."***
-
-🔴 **This radar fetches a description for everything that survives filtering, every run** — 132 of them in
-one real run. **Most of those were fetched last week and the week before.**
-
-**Cheap pass over everything, expensive pass over the delta.** It is the same principle already applied one
-layer up — *"do not research an employer below the build threshold"* — moved earlier in the pipeline.
-
-🟡 **The thing to be careful of, and the reason this is not a two-line change:** a description that was
-fetched once is cached in `raw.json`, but **a role's description can change after posting** — a salary band
-added, a requirement softened. **Never re-fetching is a different failure from re-fetching everything.** A
-sensible rule is to re-read anything the user is about to act on, and trust the cache for triage.
-
----
-
 ### 🔴 Read this before moving the user root — the paths that are load-bearing
 
 **Compiled 2026-08-25 for the boundary work, from the code rather than from memory.** The move is
@@ -2003,38 +1137,6 @@ migration does not need to do anything about this** — it is additive — but a
 unknown keys would break it.
 
 ---
-
-### ✅ The boundary — BUILT. Everything the user owns is under `vault/`
-
-**2026-08-25.** The update mechanism itself is still to build; **the thing that made it impossible is not.**
-
-**User data no longer sits inside `tools/`.** `vault/` holds all of it — sources, wiki, roles, companies,
-postings, applications, oversight, settings, secrets, state, and a `migration/` drop zone. **Everything
-outside `vault/` is the system and can be replaced wholesale**, which is the precondition an updater needs.
-
-🟢 **`tools/lib/paths.py` is the only file that knows where anything is.** Before it, seven paths were
-pinned in `doctor.py` alone, four in `radar.py`, more in `employers.py`, `sources_check.py`, `registry.py`
-and `export_review.py`. **Missing one is silent** — a tool reading a path nobody writes to reports *"nothing
-here"* rather than *"I am looking in the wrong place"*. `CAREER_VAULT` relocates the vault entirely;
-`paths.use()` re-roots it in process, which exists because the first thing that needed to was a test.
-
-🟢 **`.gitignore` went from eight rules with three hand-maintained carve-outs to one line: `vault/`.**
-**That rule set had already swallowed two files that needed to ship**, each found only because somebody
-noticed a clone was broken. The pre-commit hook went the same way, from five paths to one.
-
-🟢 **`AGENTS.md` is now the entry point** — the [Linux Foundation-stewarded convention](https://agents.md/)
-that 60,000+ repos use — with the schema in `SCHEMA.md` and `CLAUDE.md` reduced to a one-line
-`@AGENTS.md` import. **The instructions are vendor-neutral now.** 🔴 **The skills are not**:
-`.claude/skills/` is Claude Code's system and nothing else reads it. That is a separate and larger piece
-of work.
-
-🟡 **Four kinds inside the vault, and a bundler has to tell them apart:** knowledge and settings travel;
-**`secrets/` and `state/` never do.** Carrying an API key or a 2MB cache is how a key ends up in a zip
-somebody emails. `paths.CARRY` and `paths.NEVER` name them, and `test_boundary.py` asserts it.
-
-**Still to build:** the merge itself — what happens when the system wants to update a file the user has
-edited. **That is the part that benefits from watching how `career-ops` lands it**, and from one real
-cold-start user.
 
 ### 🔴 There is no way for a user to take an update — and every day makes it worse
 
@@ -2311,68 +1413,6 @@ depth-and-rigour machinery and drops the breadth machinery.**
 **So the build is: a fixed question set, executed with Layer 3 depth, red-teamed, and confidence-marked.**
 Roughly a page of skill instructions rather than a research methodology.
 
-### ✅ Oracle Cloud Recruiting adapter — BUILT
-
-**Status: ✅ 2026-08-25, 20 tests, verified against three live tenants** — a numbered site, a named site,
-and a host with no region in it.
-
-🟢 **Two values, not three, and both are in the careers URL:**
-`https://<host>/hcmUI/CandidateExperience/en/sites/<site>/jobs`. **The site segment works directly as the
-API's `siteNumber`** — confirmed on all three. The host is taken verbatim and not derived, because tenants
-appear both with a region (`<pod>.fa.us2.oraclecloud.com`) and without (`<pod>.fa.oraclecloud.com`).
-
-🟢 **It is the richest source in the repo.** An **exact ISO posting date** rather than Workday's
-*"30+ days ago"*, the requisition number as the employer prints it, secondary locations, and a short
-description **in the listing itself** — so a failed description fetch degrades to something real instead
-of to nothing, which everywhere else makes a good role signal low for a reason unrelated to the role.
-
-🔴 **It forced a correction to the `TRUNCATED` contract that applies to the whole package.** This adapter
-has no window parameter but does have exact dates and a newest-first sort, so it filters exactly, in the
-adapter, and **stops paging at the first row outside the window.** In every other adapter stopping early
-means the source had more to give. **Here it means the opposite — everything in the window was seen** —
-and reporting truncation would send the reader hunting for roles that do not exist.
-
-🟢 **The rule now in `adapters/__init__.py`: set `TRUNCATED` from *why* the loop ended, never from
-*whether* it ended early.** And an adapter may set `HONOURS_DAYS` true while filtering client-side, **as
-long as the module says which** — *"the API filters"* and *"the adapter filters"* are different claims and
-only one of them can be checked against the source.
-
-🟡 **Not tiered on the short description, deliberately.** It would save a request per role and
-systematically under-score this source against ones that give full text — **the same defect as a scoring
-term only some inputs can earn**, which is already logged below about the salary bonus.
-
-### ✅ Employer preference and exclusion lists — BUILT
-
-**Status: ✅ 2026-08-25 as [`tools/radar/employers.py`](tools/radar/employers.py), with 29 tests, and
-verified against two live employer boards. The design follows, because the reasoning generalises.**
-
-**Every design point below is implemented**: reason *and* basis, with entries missing either reported;
-category exclusions separate from name lists; hard exclusions separate from *assessed and declined*,
-which marks a row rather than filtering it; and dated exclusions, with anything over two years or undated
-raised for review.
-
-🟢 **Both refinements from first use are in.** The list says who to watch and the adapter is an
-implementation detail — `route()` folds a watch entry into whichever of Workday, Greenhouse, Lever or a
-named query reaches that employer. **And exclusions work at division level**, matched against the job
-title where division names actually appear.
-
-🔴 **A watch entry with no route is reported as NOT watched**, in the shortlist and on the console. That
-was not in the design and it should have been: the failure it prevents is silent, because an employer
-nobody can reach simply never appears, which is indistinguishable from an employer with nothing open.
-
-🟢 **The exclusion passes are split, and the split is the interesting part.** Employer and division
-exclusions run **before** descriptions are fetched, so a settled question costs nothing. Sector exclusions
-run **after**, because a category is the half that catches employers the user has never heard of and that
-cannot be judged from a company name. Pinned by a test that asserts the excluded row never reaches
-`fetch_body`.
-
-🔴 **The safety rule is now in `SCHEMA.md` rather than implied by the file filter**, as this entry asked.
-
-🟡 **One defect found while building it, worth repeating elsewhere.** Whole-word matching was written as
-`\b` + keyword + `\b`, which **silently never matches a keyword that begins or ends with punctuation** —
-there is no word boundary against a non-word character. The user would believe a sector was filtered and
-it would not be. Found by a placeholder in a test fixture, of all things.
-
 ### 🟢 The original design
 
 **A user's idea, 2026-08-24, and it makes two existing features work better rather than adding a third.**
@@ -2558,50 +1598,6 @@ employer have a site nearer than the one advertised, and can the role be worked 
 answer as a question to ask, not an assumption** — but the upside is the difference between a two-hour
 round trip and none.
 
-### ✅ Source coverage is geography-dependent — `sources_check.py` BUILT
-
-**Found the hard way 2026-08-23.** A user obtained an Adzuna key, and it turned out **Adzuna does not
-cover Ireland** — `404` on the `ie` endpoint while `gb`, `us`, `nl` and `de` all returned results. The
-README had claimed *"good UK/Ireland/US coverage"*, which was simply wrong. **Corrected**, and the adapter
-now carries the check to run before wiring anything up.
-
-**The general problem remains**: a user picks an adapter, spends time on a key, and discovers the coverage
-gap afterwards. **Nothing in the repo states which adapter covers which country.**
-
-Tested for Ireland, and recorded so nobody repeats it:
-
-| Source | Status |
-|---|---|
-| LinkedIn guest endpoint | 🟢 Works |
-| Greenhouse employer boards | 🟢 Works, no key, whole boards with descriptions |
-| **Adzuna** | 🔴 **No Ireland coverage** |
-| **Indeed** | 🔴 Blocked — `401` on job pages, `403` on search |
-| **IrishJobs.ie, Jobs.ie** | 🔴 HTML only, no feed. Same territory as Indeed, not pursued |
-| **Careerjet** | 🔴 Connection refused |
-
-✅ **Built 2026-08-25 as [`tools/radar/sources_check.py`](tools/radar/sources_check.py)**, with a
-`probe(cfg)` contract on every adapter and 22 tests.
-
-🟢 **The design centre is the control probe, and it is the part worth copying.** The incident above is not
-"the API returned 404" — it is that **404-for-your-country and 401-for-a-bad-key are indistinguishable
-from one request**, and the two point in opposite directions: one says get a new key, the other says no
-key will ever help. So the adapter probes a **known-good control country** alongside the user's own and
-diagnoses from the pair. One probe cannot answer this. Two can.
-
-🔴 **And the second distinction, which is this repo's oldest theme in a new place.**
-**`NOT CONFIGURED` is not `FAILED`.** Most sources here watch named employers rather than searching, so an
-empty list means nobody is being watched — a fact about the config, not a fault in the source. Reported as
-broken it sends someone to debug a source they never wanted; reported as fine it claims coverage that does
-not exist. *Not recorded versus recorded as absent*, for the fourth time.
-
-**It also reports**: an employer on the watch list with no route, a Workday `422` as a wrong shard rather
-than a bad request, and — loudest — **"0 usable", because a radar run with no working source is silent,
-and a silent run looks exactly like a quiet week.**
-
-🟡 **What it deliberately does not claim.** It proves a source answers. It cannot prove the source covers
-a country *well*, which is a judgement, and saying otherwise would recreate the README line that started
-this.
-
 ### 🔴 Oracle does not reject an unrecognised site. It widens the search
 
 **Status: found 2026-08-25 while building the source check, against three live tenants. Detected, not
@@ -2622,93 +1618,6 @@ will match the control legitimately, so the warning says so rather than assertin
 
 **Not fixable in the adapter**, because there is no validation endpoint to call: the public careers page
 returns `200` for a nonsense site too. **Verified, not assumed.**
-
-### ✅ The search only ever covered the last seven days — `--all-open` BUILT
-
-**Status: ✅ fixed 2026-08-25 as `--all-open`, with the cap now reported and 17 tests.
-The record of why follows, because the lesson at the end is worth more than the flag.**
-
-**What was built:**
-
-- **`--all-open` passes `days=None` to every adapter**, and the adapter contract now says an adapter with
-  a recency parameter must **omit** it rather than substitute a large number — a big `--days` asks the
-  source a different question and gets a differently-wrong answer. Documented in `adapters/__init__.py`.
-- 🔴 **Truncation is detected and reported.** Every adapter sets `TRUNCATED` on each call: true when it
-  exhausted its own page budget *or* a page failed, false only when the source itself ran dry — **which is
-  the only thing that proves a result set is complete.** The shortlist and the console both say
-  `NOT THE COMPLETE SET` when it fires, and the skill tells the agent not to describe such a run as
-  everything that is open.
-- **The batch problem is answered by the triage route, not by an exemption.** An `--all-open` run prints
-  *"this is a backlog sweep, not a weekly shortlist"* and points at the `role-triage` agent. The
-  assess-every-role-immediately rule stands; the batch goes through triage first.
-- **Employer-board adapters were never affected** — they return whole boards and ignore `days` — and now
-  say so in their own docstrings rather than leaving the next reader to work it out.
-
-**The original write-up follows.**
-
-#### The defect it was built for
-
-**Found 2026-08-24 because a user asked. The most consequential defect found so far.**
-
-Every radar run passed a posted-within filter of seven days. **Roles still open but posted earlier were
-never looked at.** Tested on a single query:
-
-| Window | Results | Oldest posting |
-|---|---|---|
-| **7 days** | 100 (capped) | **17 August** |
-| **No filter** | 100 (capped) | **21 May** |
-
-🔴 **What it cost, concretely.** The highest-scoring unapplied role in that user's table had been posted
-**fourteen days** before the run. **The radar never saw it — the user found it by hand and sent the link.**
-The tool built to find roles was structurally incapable of finding the best one available.
-
-#### The fix is not "drop the filter"
-
-🔴 **Corrected 2026-08-26 — the number below was our own budget, misread as the source's.** Re-measured
-on one query over a 7-day window: `pages=4` → 40 rows *capped*, `pages=16` → 160 *capped*, `pages=40` →
-400 *capped*, **`pages=80` → 710 and it ran dry.** The "100" in the table above is what `pages=10`
-returns, not a limit LinkedIn imposes. **The conclusion below still holds and the reasoning for it
-changes**: a fixed *page budget* spread across months is sparser than the same budget over one week, so
-the two runs remain a genuine trade — but the cap is ours and it is a setting. The original entry is
-left as written; only this note is new.
-
-~~**The endpoint caps every query at roughly 100 results regardless of window**~~, so no-filter is **not a
-superset** of a windowed run. It is a different trade:
-
-| | |
-|---|---|
-| **Windowed** | Dense recent coverage — 100 results from one week |
-| **No filter** | Sparse historical sweep — 100 results across three months |
-
-**Both are needed.** A frequent windowed run for freshness, and a periodic unfiltered sweep for the
-standing backlog of still-open roles. **Dedup handles the overlap and already works.**
-
-**The generalisable fixes, all three now built:**
-
-- ✅ **Any adapter with a recency parameter needs the same treatment.** Employer boards return everything
-  open by default and are unaffected; a search API with a `posted_within` filter has this bug latent.
-- ✅ 🔴 **Where a source caps results, the cap is the real constraint and the tool should say so.** A run
-  reporting "100 results" when the true match count is higher is silently truncating. **Detect it — a page
-  returning exactly the cap means there is more — and report it rather than presenting a truncated set as
-  complete.**
-- ✅ **A first unfiltered sweep produces a backlog, not a shortlist.** In the proving case, **51 roles
-  above the read-threshold that no previous run could have surfaced.** The
-  *assess-every-role-immediately* rule assumes a handful arriving continuously and **does not survive a
-  fifty-one item catch-up**. *Resolved in favour of a triage step rather than a batch exemption* — the
-  rule is load-bearing and carving an exception into it costs more than routing the batch.
-
-🟡 **One thing the fix cannot do, and it is worth knowing.** The tool can say a query *was* capped; it
-cannot say what was behind the cap. **More pages do not help — the cap ignores them.** Narrower queries are
-the only way to see past it, which is an odd inversion of the usual advice and is now in the skill.
-
-#### 🟢 The wider lesson, which is worth more than the fix
-
-**This is the second time a search-quality problem turned out not to be about search terms.** Doubling the
-query list from 20 to 40 produced **one** additional strong result. **Fixing the time window produced
-fifty-one.**
-
-**When coverage feels thin, check the filters before adding queries.** Breadth is the intuitive lever and
-it was the wrong one twice.
 
 ### 🟢 Email alerts as a universal source — designed, not built
 
@@ -2840,6 +1749,53 @@ untested.
   knew was on.**
 
 ---
+
+
+## ✅ Done — bodies removed 2026-08-26, kept in git
+
+**This file's own rule: *delete an item when it is done — the log of what changed lives in git*.**
+29 completed entries were carrying **1095 lines, 39% of the file**, and were not being deleted.
+
+🔴 **Titles are kept and the reasoning is not, on purpose.** The reason someone needs this list is to
+avoid re-implementing finished work; the reason someone needs the full write-up is rarer and git has
+it. **To read one:**
+
+```bash
+git log --oneline -S'a phrase from the title' -- BACKLOG.md
+```
+
+🔴 **Then read the version BEFORE that commit** — `git show <sha>^:BACKLOG.md` — because the commit the
+search finds is usually the one that *removed* the text.
+
+- ✅ `migration/` — `migrate.py` BUILT 2026-08-25
+- ✅ A radar run was twenty minutes of network wait — 1201s → 233s, BUILT 2026-08-25
+- ✅ Workday reads the board once and filters locally — BUILT 2026-08-25
+- ✅ The politeness delay was being paid on requests that never happened — FIXED 2026-08-25
+- ✅ Templates evolve and vaults do not — `template_drift.py` BUILT
+- ✅ Nothing answered "am I set up?" — `doctor.py` BUILT
+- ✅ And one contradiction that was not on the list at all — FIXED
+- ✅ The radar's SIGNAL number read like a framework score — MADE NON-NUMERIC
+- ✅ The salary bonus in the radar tally measured the adapter, not the role — REMOVED
+- ✅ Line-wrapped wikilinks silently do not resolve — CHECK BUILT
+- ✅ Aggregator postings are truncated, and the system read them as the job — FIXED AT THE RIGHT MOMENT
+- ✅ The verifier conflated a percentage with a count — FIXED
+- ✅ A nearby transit stop is not a commute — KNOWN LOCATIONS TABLE SHIPPED
+- ✅ "Not recorded" and "recorded as absent" are indistinguishable to a search — TOOL BUILT
+- ✅ "Remote" is country-scoped, and the filter was waiving exclusions on the word — FIXED
+- ✅ Greenhouse yield is low — PREFILTER FIXED, and it was a bug not a tuning problem
+- ✅ The deterministic layer had no tests — BUILT, and it found three live bugs
+- ✅ The system modelled "leave" and "stay" and missed the third option — NOW A ROW IN THE TABLE
+- ✅ Scores had no personal baseline — THE CURRENT JOB IS NOW ROW ONE
+- ✅ The oversight layer's independence was a comment in a config file — ENFORCED
+- ✅ A shared employer registry — BUILT AND WIRED IN
+- ✅ The personal-data heuristic fired on this repo's own subject matter — SCOPED
+- ✅ Ghost jobs are 20-33% of listings and nothing here checked — BUILT
+- ✅ Bound the expensive pass to the delta — BUILT, and the premise was wrong
+- ✅ The boundary — BUILT. Everything the user owns is under `vault/`
+- ✅ Oracle Cloud Recruiting adapter — BUILT
+- ✅ Employer preference and exclusion lists — BUILT
+- ✅ Source coverage is geography-dependent — `sources_check.py` BUILT
+- ✅ The search only ever covered the last seven days — `--all-open` BUILT
 
 ## Deferred — considered and consciously not done
 
