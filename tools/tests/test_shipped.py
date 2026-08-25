@@ -142,6 +142,37 @@ class DocumentationPointsAtThingsThatExist(unittest.TestCase):
                     broken.append(f"{rel} -> {target}")
         self.assertEqual(broken, [], f"dead links in shipped documentation: {broken}")
 
+    def test_every_anchor_link_resolves(self):
+        """The quietest link failure: the page still opens and lands at the top.
+
+        The relative-link check above skips the `#fragment` entirely, so an
+        anchor pointing at a renamed heading passed it. That happened here
+        within one session -- an entry was renamed on being marked fixed, and a
+        link to it three hundred lines away silently stopped landing anywhere.
+
+        Same failure wikilinks.py was built for on the wiki side: 40 section
+        links in one vault all still opened the right page and none of them went
+        where they said.
+        """
+        import glob, re
+        broken = []
+        for f in glob.glob(os.path.join(ROOT, "**", "*.md"), recursive=True):
+            rel = os.path.relpath(f, ROOT)
+            if rel.startswith((".git", "wiki/")):
+                continue
+            with open(f, encoding="utf-8") as fh:
+                text = fh.read()
+            # GitHub's heading anchor: lowercase, drop anything that is not word,
+            # space or hyphen, then spaces to hyphens. Emoji and em-dashes vanish
+            # and leave their surrounding spaces behind, which is why real
+            # anchors here start with "-" and carry "--" in the middle.
+            anchors = {re.sub(r"\s", "-", re.sub(r"[^\w\s-]", "", h.strip().lower()))
+                       for h in re.findall(r"^#{1,6}\s+(.*)$", text, re.M)}
+            for m in re.finditer(r"\]\((#[^)\s]+)\)", text):
+                if m.group(1)[1:] not in anchors:
+                    broken.append(f"{rel} -> {m.group(1)}")
+        self.assertEqual(broken, [], f"anchor links pointing at no heading: {broken}")
+
 
 class ThePersonalDataHeuristicScopesCorrectly(unittest.TestCase):
     """The content scan skips the directories written about users rather than by

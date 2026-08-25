@@ -334,6 +334,31 @@ nine mutants were caught, including the one that had reported as missed.
 🟡 **The general shape is worth keeping.** Any harness that rewrites a file in place and re-executes it is
 exposed to this — **length-preserving edits are exactly the ones a careful mutation makes.**
 
+### 🔴 Two dead anchor links, one of them in the README's first sentence — 2026-08-25
+
+**Found by asking where a note had been logged, then checking the link resolved instead of assuming it.**
+
+🔴 **The quietest link failure there is: the page still opens and lands at the top.** Nothing errors, the
+prose reads correctly, and the reader silently arrives somewhere other than where the link said.
+
+| Where | What happened |
+|---|---|
+| `BACKLOG.md` | An entry was renamed on being marked ✅ FIXED **earlier the same session**, and a link to it 900 lines away stopped landing anywhere |
+| 🔴 `README.md`, line 6 | Pointed at `#-read-this-before-you-use-anything-here` — **a heading that does not exist and may never have.** The first sentence a stranger reads, in the file linked from job applications |
+
+🔴 **A markdown link check already existed and passed both.** `test_shipped.py` resolved the *file* half of
+every link and **split the `#fragment` off and threw it away** — so every anchor in the repo was unchecked
+while a test reported the links fine. **A check that covers most of a thing reads exactly like one that
+covers all of it.**
+
+🟢 **Now checked**: every `](#anchor)` in every shipped markdown file must match a heading in that file,
+slugged the way GitHub slugs them. Two mutations caught — renaming a linked heading, and pointing at one
+that never existed.
+
+🟢 **Same failure `wikilinks.py` was built for on the wiki side**, where 40 section links in one vault all
+still opened the right page and none went where they said. **It took eight days to arrive on the repo
+side, and it arrived because somebody asked a question that made me look.**
+
 ### 3. Then, in this order
 
 🟢 **The first two items on this list were done on 2026-08-25** — the seven-day window is now
@@ -348,6 +373,13 @@ for the reasoning. **What follows is what is next.**
 | 🔴 **Nothing has been run end-to-end from a cold start** | `/career-init` on an empty repo has never been exercised, and the top of this file says it should be the first thing done |
 
 🟢 **Leave the rest until the cold run says which of them matter.**
+
+🔴 **If the work is the user/system boundary — moving user data out of `tools/` — read
+[the path inventory](#-read-this-before-moving-the-user-root--the-paths-that-are-load-bearing) FIRST.**
+It is near the bottom of this file, beside the entry it supersedes, and it lists every place a path is
+pinned and to what. **This pointer exists because a handover naturally sends the next session to these
+first two sections, and an inventory 1,300 lines further down is one nobody reaches** — which is the same
+shape as everything else on this page: the note existed, and existing is not the same as being found.
 
 ---
 
@@ -1462,7 +1494,7 @@ own site. The rule is in `CLAUDE.md` and both skills; nothing enforces it.
 **The fix is small and belongs at ingest, not at pack time:**
 
 - **Save the employer's own posting text** — not the aggregator's copy, which is
-  [truncated anyway](#-aggregator-postings-are-truncated-and-the-system-reads-them-as-if-they-were-the-job)
+  [truncated anyway](#-aggregator-postings-are-truncated-and-the-system-read-them-as-the-job--fixed-at-the-right-moment)
   — **the moment a role is assessed**, with the fetch date.
 - **Beside the role page, not in an application folder.** An application folder only exists for roles that
   reach a pack; **most assessed roles never do, and those are the ones that vanish silently.**

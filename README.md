@@ -2,8 +2,8 @@
 
 **An AI-maintained knowledge base for running a job search properly.**
 
-*If you came here to **use** this software rather than to evaluate an application made with it, skip to
-[the warning below](#-read-this-before-you-use-anything-here) first — it is not optional reading.*
+*If you came here to **use** this software rather than to evaluate an application made with it, read
+[what it does with your data](#sensitive-data) first — it is not optional reading.*
 
 ## If you have arrived here from a job application
 
