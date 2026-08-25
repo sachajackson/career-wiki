@@ -4,6 +4,11 @@ Every case here is drawn from a real failure. An agent searched for evidence of
 a fact, found none, and told the user it was not recorded -- three times in one
 session, and every time the answer was in the wiki, written as a negation or
 under a heading the search did not match.
+
+The fixtures are deliberately about "the applicant" and nobody in particular.
+known.py matches on the shape of a sentence -- "resolved:", "never", "no budget"
+-- and never on its subject, so a placeholder subject tests exactly as hard as a
+real one and cannot be read back as somebody's actual situation.
 """
 import importlib.util, os, shutil, subprocess, sys, tempfile, unittest
 
@@ -45,7 +50,7 @@ class TheThreeRealFailures(unittest.TestCase):
     def test_a_recorded_fact_is_present_not_missing(self):
         """'Your work pattern isn't recorded' -- it had been for three weeks."""
         with Wiki() as w:
-            w.add("A.md", "Confirmed by him: hybrid until mid-2025, fully remote since.")
+            w.add("A.md", "Confirmed by the applicant: hybrid at first, fully remote since.")
             self.assertEqual(w.verdict("fully remote")[0], "PRESENT")
 
     def test_a_fact_filed_under_another_word_is_still_found(self):
@@ -63,19 +68,19 @@ class Verdicts(unittest.TestCase):
 
     def test_only_negatives_is_an_established_absence(self):
         with Wiki() as w:
-            w.add("A.md", "He has never held a professional certification in this.")
+            w.add("A.md", "The applicant has never held a professional certification in this.")
             self.assertEqual(w.verdict("certification")[0], "NEGATIVE ONLY")
 
     def test_struck_through_counts_as_settled(self):
         with Wiki() as w:
-            w.add("A.md", "- ~~Does he own a budget?~~ No.")
+            w.add("A.md", "- ~~Does the applicant own a budget?~~ No.")
             self.assertEqual(w.verdict("budget")[0], "SETTLED")
 
     def test_settled_beats_present_when_both_appear(self):
         """A decision outranks loose mentions -- otherwise chatter buries the answer."""
         with Wiki() as w:
             w.add("A.md", "The budget was discussed at length and it came up again.")
-            w.add("B.md", "Resolved: he holds no budget.")
+            w.add("B.md", "Resolved: the applicant holds no budget.")
             self.assertEqual(w.verdict("budget")[0], "SETTLED")
 
 
@@ -102,9 +107,9 @@ class TheOutputIsTheEvidence(unittest.TestCase):
     def test_it_prints_the_lines_it_judged_on(self):
         """The verdict is a summary. If the lines are not shown it cannot be checked."""
         with Wiki() as w:
-            w.add("A.md", "Resolved: he holds no budget, so the figure does not exist.")
+            w.add("A.md", "Resolved: the applicant holds no budget, so the figure does not exist.")
             _, out = w.verdict("budget")
-            self.assertIn("he holds no budget", out)
+            self.assertIn("the applicant holds no budget", out)
             self.assertIn("THE LINES ARE THE EVIDENCE", out)
 
 

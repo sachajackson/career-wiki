@@ -16,11 +16,16 @@ def run(text):
     return p.returncode, p.stdout + p.stderr
 
 
-CLEAN = ("Rebuilt the release process, cutting planning from 11 days to 4.\n"
-         "- Led a team of six across two sites and one time zone difference.\n"
-         "- Cut the defect backlog by 63 per cent over two quarters, then held it.\n"
+# Invented, and it has to stay realistic: this fixture exists to prove a
+# well-written document passes, and the cadence and opening-word checks only
+# mean something against prose that reads like prose. What it must NOT be is
+# anyone's actual history -- no employer, no dates, no place, and figures that
+# appear nowhere else in this repo.
+CLEAN = ("Rebuilt the deployment pipeline, taking a fortnightly cycle to three days.\n"
+         "- Ran a group of five across two offices and one time zone difference.\n"
+         "- Brought the open defect count down by a third over two quarters, then held it.\n"
          "- Ran the migration.\n"
-         "- Took the on-call rota from a rota of one to a rota of five, which ended "
+         "- Took the on-call rota from a single name to a rota of five, which ended "
          "the single point of failure nobody wanted to name.\n"
          "me@example.com\n")
 
