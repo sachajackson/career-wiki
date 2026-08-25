@@ -32,6 +32,7 @@ You never write the wiki. You answer questions and make the decisions.
 | **[SCORING.md](docs/SCORING.md)** | How a role gets a number, and why the number is four numbers |
 | **[PRIVACY.md](PRIVACY.md)** | What is held, where it goes, and what you should decide |
 | **[DISCLAIMER.md](docs/DISCLAIMER.md)** | What it cannot do, and what it will decline to do |
+| **[LESSONS.md](docs/LESSONS.md)** | **Rules learned by shipping the opposite** — kept with the failure that taught each one, so a later change does not quietly reverse it |
 | **[BACKLOG.md](BACKLOG.md)** | What does not work yet, and what has gone wrong once |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Using it and developing it, in the same clone |
 | **[SCHEMA.md](SCHEMA.md)** · **[AGENTS.md](AGENTS.md)** | The instructions the agent itself reads |

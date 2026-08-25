@@ -154,7 +154,7 @@ class TheDocsAreAMapNotAPile(unittest.TestCase):
     # because it is the one document a user must not have to hunt for, and
     # BACKLOG.md because it is a working record rather than documentation.
     GUIDES = ("docs/FOR-RECRUITERS", "docs/CHECKING", "docs/INSTALL",
-              "docs/JOB-SEARCH", "docs/SCORING", "docs/DISCLAIMER")
+              "docs/JOB-SEARCH", "docs/SCORING", "docs/DISCLAIMER", "docs/LESSONS")
     ROOTED = ("PRIVACY", "CONTRIBUTING", "BACKLOG", "SCHEMA", "AGENTS")
     PAGES = GUIDES + ROOTED
 
