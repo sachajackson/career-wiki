@@ -43,10 +43,30 @@ of results, which is the only thing that proves completeness. The runner reports
 truncation rather than presenting a capped set as the whole picture: sources cap
 per query, so a run reporting a round number is usually reporting the cap.
 
-Adding an adapter: write the module, expose fetch(), set TRUNCATED, add it to
-ADAPTERS below.
+THE `probe` CONTRACT. Each adapter exposes probe(cfg) -> (verdict, detail),
+answering "would this source work for this user, right now" WITHOUT running a
+search. `sources_check.py` calls it.
+
+Two of the verdicts exist because collapsing them is the failure this was built
+for, and both are the same mistake in different clothes:
+
+  NOT CONFIGURED is not FAILED. An adapter nobody set up has not been tried.
+  Reporting it as broken sends someone to debug a source they never wanted, and
+  reporting it as fine claims coverage that does not exist.
+
+  NO COVERAGE is not BAD CREDENTIALS. A job API returning 404 for one country
+  while serving others is telling you it does not cover that country -- not
+  that your key is wrong. An adapter that can be wrong about this must probe a
+  KNOWN-GOOD control alongside the user's own country, because one probe cannot
+  tell the two apart and guessing cost a real user an hour.
+
+Adding an adapter: write the module, expose fetch(), set TRUNCATED and
+HONOURS_DAYS, expose probe(), add it to ADAPTERS below.
 """
-from . import adzuna, greenhouse, lever, linkedin, oracle, workday
+from ._verdicts import (OK, EMPTY, NOT_CONFIGURED, NO_COVERAGE,      # noqa: F401
+                        BAD_CREDENTIALS, BLOCKED, FAILED, SEVERITY)
+
+from . import adzuna, greenhouse, lever, linkedin, oracle, workday  # noqa: E402
 
 ADAPTERS = {
     "adzuna": adzuna,

@@ -70,6 +70,30 @@ It is not a failure and there is nothing broken. **It means you must not report 
 of open roles** — say the search was capped, and either raise `pages` for that adapter in `config.json` or
 narrow the query and run it again.
 
+### 🔴 Before trusting a quiet run, check the sources answer
+
+```bash
+python3 tools/radar/sources_check.py
+```
+
+**Run it when a run comes back thin or empty, and once before relying on a newly configured source.** It
+makes no search — it asks each adapter whether it would work at all, and it keeps two distinctions that
+a glance collapses:
+
+| Verdict | What it means |
+|---|---|
+| `NOT CONFIGURED` | **Not a failure.** Nobody set that source up. Most of these watch named employers, so empty means nobody is being watched |
+| `NO COVERAGE` | The source works and **does not cover that country**. No key will ever fix it |
+| `BAD CREDENTIALS` | The key is wrong. **Told apart from the row above by probing a known-good control** — one probe cannot distinguish them |
+| `BLOCKED` / `FAILED` | Reachable but refusing us, or unreachable. The detail says which |
+
+🔴 **"0 usable" means a radar run would be silent — and a silent run looks exactly like a quiet week.**
+Report that, rather than reporting no new roles.
+
+🟡 **Read the Oracle warning if it appears.** An unrecognised site value does not fail there, it **widens**:
+Oracle answers with the whole tenant's postings instead, so a typo returns *more* roles rather than none.
+The check spots it by asking for a deliberately nonsense site and comparing counts.
+
 ### The watchlist — who to watch, and who to skip
 
 `tools/radar/employers.json` (copy `employers.example.json`) holds the user's standing positions. **It is
@@ -126,7 +150,7 @@ Real defects, found by running it. Two of them silently discarded good roles.
 
 | Failure | Looks like | What to do |
 |---|---|---|
-| 🔴 **Silent zero** | Every query returns nothing | **The source has changed or started blocking.** If the script reports no fetch failures and still found nothing, be suspicious rather than reporting a quiet week |
+| 🔴 **Silent zero** | Every query returns nothing | **The source has changed or started blocking.** If the script reports no fetch failures and still found nothing, be suspicious rather than reporting a quiet week — **run `sources_check.py`, which exists to answer exactly this** |
 | 🔴 **Silent truncation** | A round result count, and the output says NOT THE COMPLETE SET | **The cap is the constraint, not the match count.** Never describe a capped run as everything that is open |
 | 🔴 **Good role, low signal** | A strong role sitting in MED | **Expected, and the most important one.** A title-thin posting signals low. **Always read MED** |
 | 🔴 **Location field contradicts the title** | A commutable role filed under a distant city | Handled, but check — location fields are employer-entered and often wrong |

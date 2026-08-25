@@ -95,7 +95,7 @@ for the reasoning. **What follows is what is next.**
 | | Why first |
 |---|---|
 | 🔴 **Ask the user for their actual lists** | ✅ The mechanism is built and empty. **`employers.json` is the user's to write and nobody has been asked** — which employers they want watched, which they will not work for, and on what basis |
-| **A `sources check` command** | Probe every configured adapter for the user's country and report what actually works, before they invest in any of it. **The Workday run proved the value cheaply** — two employers, four minutes, two defects |
+| **Email alerts as a universal source** | Designed below, not built. Inverts the problem: *"we cannot scrape X"* becomes *"anything that will email us is a source"*, and it works with the sites' cooperation rather than against their terms |
 | **Everything after the submit button** | The system stops at submission and the process does not. **Interview prep is the largest piece and the wiki already holds what it needs** |
 | 🟡 **The salary bonus in the radar tally** | Logged as a defect below. The `+3` measures which adapter found a role rather than the role |
 
@@ -1124,8 +1124,49 @@ Tested for Ireland, and recorded so nobody repeats it:
 | **IrishJobs.ie, Jobs.ie** | 🔴 HTML only, no feed. Same territory as Indeed, not pursued |
 | **Careerjet** | 🔴 Connection refused |
 
-**Worth building**: a `sources check` command that probes every configured adapter for the user's country
-and reports what actually works, before they invest in any of it.
+✅ **Built 2026-08-25 as [`tools/radar/sources_check.py`](tools/radar/sources_check.py)**, with a
+`probe(cfg)` contract on every adapter and 22 tests.
+
+🟢 **The design centre is the control probe, and it is the part worth copying.** The incident above is not
+"the API returned 404" — it is that **404-for-your-country and 401-for-a-bad-key are indistinguishable
+from one request**, and the two point in opposite directions: one says get a new key, the other says no
+key will ever help. So the adapter probes a **known-good control country** alongside the user's own and
+diagnoses from the pair. One probe cannot answer this. Two can.
+
+🔴 **And the second distinction, which is this repo's oldest theme in a new place.**
+**`NOT CONFIGURED` is not `FAILED`.** Most sources here watch named employers rather than searching, so an
+empty list means nobody is being watched — a fact about the config, not a fault in the source. Reported as
+broken it sends someone to debug a source they never wanted; reported as fine it claims coverage that does
+not exist. *Not recorded versus recorded as absent*, for the fourth time.
+
+**It also reports**: an employer on the watch list with no route, a Workday `422` as a wrong shard rather
+than a bad request, and — loudest — **"0 usable", because a radar run with no working source is silent,
+and a silent run looks exactly like a quiet week.**
+
+🟡 **What it deliberately does not claim.** It proves a source answers. It cannot prove the source covers
+a country *well*, which is a judgement, and saying otherwise would recreate the README line that started
+this.
+
+### 🔴 Oracle does not reject an unrecognised site. It widens the search
+
+**Status: found 2026-08-25 while building the source check, against three live tenants. Detected, not
+fixable.**
+
+A mistyped or wrong `site` value in the Oracle config **does not fail.** Oracle ignores a `siteNumber` it
+does not know and answers with the tenant's default set instead, so the search **silently widens to
+everything that tenant posts** — on a multi-brand tenant, other employers' roles under the name the user
+gave. Measured on one tenant: a real site scoped to **152** postings while a nonsense value returned
+**258**.
+
+🔴 **Nothing in a single response distinguishes that from a correct config**, which is the same shape as
+the coverage-versus-key ambiguity above, arrived at from the other end. **`sources_check.py` detects it the
+same way** — it asks for a deliberately nonsense site and compares the counts.
+
+🟡 **The detection is honest about its own false positive.** An employer that genuinely runs a single site
+will match the control legitimately, so the warning says so rather than asserting a fault.
+
+**Not fixable in the adapter**, because there is no validation endpoint to call: the public careers page
+returns `200` for a nonsense site too. **Verified, not assumed.**
 
 ### ✅ The search only ever covered the last seven days — `--all-open` BUILT
 
@@ -1313,6 +1354,12 @@ untested.
   minutes found two defects that recorded fixtures could not, because **a fixture asserts the shape the
   code already produces.** The fixtures are still worth having — they are what keeps the fix from
   regressing — but they cannot be the first contact with reality.
+- 🔴 **One probe cannot diagnose an ambiguous failure. Add a control.** *"404 because that country is not
+  covered"* and *"404 because the key is wrong"* look identical alone and point opposite ways. Probing a
+  **known-good control** alongside the real target turns a guess into an answer, and it has now paid for
+  itself twice — once for country coverage, once for an ATS that answers a nonsense site with the whole
+  tenant's jobs. **Where a wrong config returns plausible data rather than an error, a control probe is
+  the only thing that will ever catch it.**
 - 🟢 **Mutation-test a checker before believing it.** All 22 Workday tests passed first run; deliberately
   breaking the code found one that passed for the wrong reason, because **two code paths set the same
   flag and removing either changed nothing.** Collapsing them to one made the test meaningful and the

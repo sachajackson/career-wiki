@@ -33,6 +33,7 @@ says it is hiding locations, this fetches the detail and expands them.
 """
 import datetime, html, re, time
 from ._http import get_json, post_json
+from . import _verdicts as V
 
 NAME = "workday"
 TRUNCATED = False
@@ -211,3 +212,34 @@ def fetch_body(row):
         return ""
     host, tenant, site, path = wd
     return _strip(_detail(host, tenant, site, path).get("jobDescription"))
+
+
+def probe(cfg):
+    employers = cfg.get("workday", {}).get("employers", [])
+    if not employers:
+        return V.NOT_CONFIGURED, ("no employers listed. This watches named employers "
+                                  "rather than searching, so empty is nobody watched")
+    good, bad, shard = [], [], []
+    for e in employers:
+        host, tenant, site = e.get("host"), e.get("tenant"), e.get("site")
+        if not (host and tenant and site):
+            bad.append(f"{e.get('tenant') or '?'} (needs host, tenant AND site)")
+            continue
+        data, status = post_json(LIST.format(host=host, tenant=tenant, site=site),
+                                 {"appliedFacets": {}, "limit": 1, "offset": 0,
+                                  "searchText": ""})
+        if status == 200 and data is not None:
+            good.append(f"{tenant} ({data.get('total', '?')} open)")
+        elif status == 422:
+            # Named separately because it is a diagnosis, not a failure: the
+            # request was right and the tenant is on another shard.
+            shard.append(tenant); bad.append(f"{tenant} (422)")
+        else:
+            bad.append(f"{tenant} ({status})")
+    hint = (f" — 422 means the wrong wd shard, not a bad request: try wd3/wd5 in "
+            f"host for {', '.join(shard)}") if shard else ""
+    if not good:
+        return V.FAILED, f"none reachable: {', '.join(bad)}{hint}"
+    if bad:
+        return V.OK, f"{len(good)}/{len(employers)} reachable: {', '.join(good)}. Not: {', '.join(bad)}{hint}"
+    return V.OK, ", ".join(good)

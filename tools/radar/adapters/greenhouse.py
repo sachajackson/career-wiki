@@ -3,8 +3,9 @@
 Best used to watch a list of target employers rather than to search broadly.
 Find a board token in the careers URL: boards.greenhouse.io/<token>
 """
-from ._http import get_json
+from ._http import get_json, fetch_json
 import re
+from . import _verdicts as V
 
 NAME = "greenhouse"
 TRUNCATED = False   # whole board, one call: never capped
@@ -44,3 +45,20 @@ def fetch(cfg, query, days):
                 "source": NAME,
             })
     return out
+
+
+def probe(cfg):
+    tokens = cfg.get("greenhouse", {}).get("boards", [])
+    if not tokens:
+        return V.NOT_CONFIGURED, ("no boards listed. This source watches named employers "
+                                  "rather than searching, so an empty list is not a "
+                                  "failure -- it is nobody being watched")
+    good, bad = [], []
+    for t in tokens:
+        data, status = fetch_json(BOARD.format(token=t))
+        (good if status == 200 and data else bad).append(f"{t} ({status})" if status != 200 else t)
+    if not good:
+        return V.FAILED, f"no board token resolved: {', '.join(bad)}. Check them at boards.greenhouse.io/<token>"
+    if bad:
+        return V.OK, f"{len(good)}/{len(tokens)} resolve. Not resolving: {', '.join(bad)}"
+    return V.OK, f"all {len(good)} resolve"

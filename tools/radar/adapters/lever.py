@@ -2,8 +2,9 @@
 
 Company handle from the careers URL: jobs.lever.co/<handle>
 """
-from ._http import get_json
+from ._http import get_json, fetch_json
 import re
+from . import _verdicts as V
 
 NAME = "lever"
 TRUNCATED = False   # whole board, one call: never capped
@@ -43,3 +44,20 @@ def fetch(cfg, query, days):
                 "source": NAME,
             })
     return out
+
+
+def probe(cfg):
+    tokens = cfg.get("lever", {}).get("companies", [])
+    if not tokens:
+        return V.NOT_CONFIGURED, ("no companies listed. This source watches named employers "
+                                  "rather than searching, so an empty list is not a "
+                                  "failure -- it is nobody being watched")
+    good, bad = [], []
+    for t in tokens:
+        data, status = fetch_json(POSTINGS.format(handle=t))
+        (good if status == 200 and data else bad).append(f"{t} ({status})" if status != 200 else t)
+    if not good:
+        return V.FAILED, f"no company slug resolved: {', '.join(bad)}. Check them at jobs.lever.co/<slug>"
+    if bad:
+        return V.OK, f"{len(good)}/{len(tokens)} resolve. Not resolving: {', '.join(bad)}"
+    return V.OK, f"all {len(good)} resolve"

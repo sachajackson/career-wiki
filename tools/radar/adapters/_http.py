@@ -16,13 +16,33 @@ def get(url, headers=None, tries=3, timeout=30):
             time.sleep(2 * (i + 1))
 
 def get_json(url, headers=None):
-    raw = get(url, headers)
-    if raw is None:
-        return None
+    return fetch_json(url, headers)[0]
+
+
+def fetch_json(url, headers=None, timeout=30):
+    """GET JSON and report the status alongside it. Returns (data, status).
+
+    get_json collapses every failure to None, which is fine when all you can do
+    is skip the row. It is not fine when the status IS the answer: a 404 from a
+    job API means that country is not covered, and a 401 means the key is wrong.
+    Told apart they are two different jobs for the user; collapsed together they
+    cost an hour of looking in the wrong place. status is None when nothing came
+    back at all.
+    """
+    h = {"User-Agent": UA, "Accept": "application/json"}
+    if headers:
+        h.update(headers)
     try:
-        return json.loads(raw)
+        req = urllib.request.Request(url, headers=h)
+        raw = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "ignore")
+    except urllib.error.HTTPError as e:
+        return None, e.code
+    except Exception:
+        return None, None
+    try:
+        return json.loads(raw), 200
     except ValueError:
-        return None
+        return None, 200
 
 def post_json(url, payload, headers=None, timeout=30):
     """POST JSON, get JSON back. Returns (data, status).

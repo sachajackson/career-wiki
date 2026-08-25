@@ -756,6 +756,26 @@ fill in what you have. `config.json` is ignored by git, so your settings stay on
 You also set your location rules in the same file: which places are acceptable, which are not, and which
 are borderline.
 
+### Check the sources actually work — before you invest in any of them
+
+```bash
+python3 tools/radar/sources_check.py
+```
+
+**This exists because of a wasted hour.** Someone got an API key for a job board, wired it up, and only
+then discovered the board does not cover their country at all — it returned "not found" there while
+serving four other countries perfectly well. The hour went on debugging a key that was never broken.
+
+So the check asks each source one question — *would you work, for this config, right now* — and it is
+careful about two answers that look the same and mean opposite things. **"Not configured" is not
+"broken"**: most of these sources watch employers you name, so an empty list means nobody is being
+watched, which is a fact about your setup rather than a fault. And **"does not cover your country" is not
+"your key is wrong"** — which cannot be told apart from a single request, so where it matters the check
+also asks about a country the source is known to serve, and compares.
+
+It runs no searches and reads no results, so it costs a request or two per source. It will tell you a
+source answers; it cannot tell you it has *good* coverage where you live. That part is a judgement.
+
 ### Employers you want watched, and employers you do not
 
 Copy `employers.example.json` to `employers.json` — it is optional, and without it nothing changes.

@@ -16,6 +16,7 @@ Prefer the adzuna adapter. It is documented, supported, and will not disappear.
 """
 import urllib.parse, re, html, time
 from ._http import get
+from . import _verdicts as V
 
 NAME = "linkedin"
 TRUNCATED = False
@@ -88,3 +89,23 @@ def _parse(h):
                     "date": dt.group(1) if dt else "", "body": "", "pay": "",
                     "url": f"https://www.linkedin.com/jobs/view/{jid}/", "source": NAME})
     return out
+
+
+def probe(cfg):
+    c = cfg.get("linkedin", {})
+    if not c.get("enabled"):
+        # Off by default is a decision, not a fault. Saying FAILED here would
+        # nag a user into enabling something they read about and declined.
+        return V.NOT_CONFIGURED, "off by default, and enabling it is your call — see the module docstring"
+    url = SEARCH + "?" + urllib.parse.urlencode(
+        {"keywords": "manager", "location": c.get("location", ""), "start": 0})
+    h = get(url, headers={"User-Agent": BROWSER_UA, "Accept-Language": "en"})
+    if h is None:
+        return V.BLOCKED, ("the guest endpoint refused us. Undocumented and rate-limited; "
+                           "it can start refusing without notice")
+    n = len(_parse(h))
+    if not n:
+        return V.EMPTY, ("responded but parsed zero cards. Either the location matches "
+                         "nothing or the page markup changed — check before trusting a "
+                         "quiet run")
+    return V.OK, f"{n} cards parsed from the first page"

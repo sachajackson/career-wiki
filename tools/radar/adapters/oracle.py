@@ -24,6 +24,13 @@ WHAT THIS SOURCE GIVES THAT OTHERS DO NOT
   ShortDescriptionStr arrives in the listing, so a failed description fetch
   degrades to something real rather than to nothing.
 
+🔴 AN UNRECOGNISED SITE DOES NOT FAIL. IT WIDENS. Oracle ignores a siteNumber it
+does not know and answers with the tenant's default set instead, so a typo in
+the site value returns MORE roles rather than none -- on a multi-brand tenant,
+other people's roles under the name you gave the employer. Nothing in a single
+response distinguishes that from a correct config. `sources_check.py` detects it
+by asking for a deliberately nonsense site and comparing the counts.
+
 A NOTE ON THE BACKLOG'S WRITE-UP. It records that the detail finder's values
 must be quoted or the request 400s. Unquoted worked on every tenant tried here,
 so that is either version-specific or was only ever true of a non-numeric id.
@@ -31,7 +38,8 @@ Quoting costs nothing and is kept -- but the claim is softened rather than
 repeated, because an instruction nobody can reproduce stops being followed.
 """
 import re, time, urllib.parse
-from ._http import get_json
+from ._http import get_json, fetch_json
+from . import _verdicts as V
 
 NAME = "oracle"
 TRUNCATED = False
@@ -169,3 +177,57 @@ def fetch_body(row):
     items = (data or {}).get("items") or []
     full = _strip(items[0].get("ExternalDescriptionStr")) if items else ""
     return full or row.get("_short", "")
+
+
+# A site value no tenant will have. Its only job is to be the control below.
+CONTROL_SITE = "zzNoSuchSiteZZ"
+
+
+def _count(host, site):
+    data, status = fetch_json(LIST.format(host=host, finder=_finder(
+        f"findReqs;siteNumber={site},limit=1")))
+    _, total = _rows(data) if data else ([], None)
+    return total, status
+
+
+def probe(cfg):
+    employers = cfg.get("oracle", {}).get("employers", [])
+    if not employers:
+        return V.NOT_CONFIGURED, ("no employers listed. This watches named employers "
+                                  "rather than searching, so empty is nobody watched")
+    good, bad, unverified = [], [], []
+    for e in employers:
+        host, site = e.get("host"), e.get("site")
+        if not (host and site):
+            bad.append(f"{site or host or '?'} (needs host AND site)")
+            continue
+        data, status = _count(host, site)
+        total = data
+        if status != 200 or total is None:
+            bad.append(f"{site} ({status})")
+            continue
+        # Oracle does not reject an unrecognised siteNumber. It falls back to
+        # the tenant's default set, so a typo does not fail -- it QUIETLY WIDENS
+        # the search to everything that tenant posts, which on a multi-brand
+        # tenant is other people's roles under your employer's name. Verified:
+        # on one tenant a real site scoped to 152 while a nonsense one returned
+        # 258. One probe cannot see this; two can. Same trick as adzuna's
+        # control country, and the same reason.
+        control, cstatus = _count(host, CONTROL_SITE)
+        if cstatus == 200 and control == total:
+            unverified.append(site)
+            good.append(f"{site} ({total} open, site value may be ignored)")
+        else:
+            good.append(f"{site} ({total} open)")
+    # Said once, not per employer: repeated for each it becomes a wall nobody
+    # reads, which for a warning is the same as not printing it.
+    note = (f" ⚠ {len(unverified)} site value(s) returned the same count as a nonsense "
+            f"one, so Oracle may be ignoring them and searching the whole tenant. "
+            f"Harmless if that employer runs a single site; otherwise check the site "
+            f"segment of the careers URL.") if unverified else ""
+    if not good:
+        return V.FAILED, f"none reachable: {', '.join(bad)}"
+    if bad:
+        return V.OK, (f"{len(good)}/{len(employers)} reachable: {', '.join(good)}. "
+                      f"Not: {', '.join(bad)}.{note}")
+    return V.OK, ", ".join(good) + note

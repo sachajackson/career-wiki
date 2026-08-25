@@ -15,7 +15,8 @@ hour if you assume the latter.
 Run that before wiring anything up.
 """
 import urllib.parse, re
-from ._http import get_json
+from . import _verdicts as V
+from ._http import get_json, fetch_json
 
 NAME = "adzuna"
 TRUNCATED = False
@@ -67,3 +68,44 @@ def fetch(cfg, query, days):
     else:
         TRUNCATED = True            # page budget exhausted, not the source
     return out
+
+
+# A country the API is known to serve. Its only job is to be the control in the
+# probe below: without it, "404 for your country" and "your key is wrong" look
+# identical, and a real user spent an hour on the wrong one of those.
+CONTROL = "gb"
+
+
+def _ping(a, country):
+    params = {"app_id": a.get("app_id", ""), "app_key": a.get("app_key", ""),
+              "results_per_page": 1, "content-type": "application/json"}
+    return fetch_json(BASE.format(country=country, page=1) + "?" +
+                      urllib.parse.urlencode(params))
+
+
+def probe(cfg):
+    a = cfg.get("adzuna", {})
+    country = a.get("country", "")
+    if not a.get("app_id") or not a.get("app_key"):
+        return V.NOT_CONFIGURED, "no app_id/app_key. Free key: developer.adzuna.com"
+    if not country or country.startswith("<"):
+        return V.NOT_CONFIGURED, "country is unset or still a placeholder"
+
+    data, status = _ping(a, country)
+    if status == 200 and data is not None:
+        return V.OK, f"{country} returns results"
+    if status in (401, 403):
+        return V.BAD_CREDENTIALS, f"{country} -> {status}. The key is wrong, not the country"
+
+    # Ambiguous so far, so ask the control. This is the whole point of the probe.
+    _, control = _ping(a, CONTROL)
+    if status == 404 and control == 200:
+        return (V.NO_COVERAGE,
+                f"{country} -> 404 while {CONTROL} -> 200. Adzuna does not cover "
+                f"{country}. Your key is fine; nothing you can do to this config "
+                f"will fix it")
+    if control in (401, 403):
+        return V.BAD_CREDENTIALS, f"{CONTROL} -> {control} too, so it is the key"
+    if control == 200:
+        return V.FAILED, f"{country} -> {status} while {CONTROL} works. Not a key problem"
+    return V.FAILED, f"{country} -> {status}, {CONTROL} -> {control}. Adzuna may be down"
