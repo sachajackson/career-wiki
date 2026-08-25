@@ -401,6 +401,57 @@ class TheSignal(unittest.TestCase):
             self.assertIn("| HIGH |", r.out)
             self.assertIn("| MED |", r.out)
 
+    def test_a_visible_salary_does_not_change_the_signal(self):
+        """The tally counts what the role is about. Salary is not that.
+
+        Only one adapter returns a structured salary field, so a bonus for
+        having one was largely a measurement of WHICH SOURCE FOUND THE ROLE --
+        the same role fetched two ways scored two different ways. A scoring term
+        only some inputs can earn measures the input pipeline.
+        """
+        body = "regulated bank portfolio roadmap adoption upskill mentor stakeholder"
+        rows = [posting(id="paid", title="Head of Delivery €120k", body=body),
+                posting(id="quiet", title="Head of Delivery Ops", body=body)]
+        with Run([], {"fake": FakeAdapter(rows)}) as r:
+            cached = json.load(open(radar.RAW))
+            self.assertEqual(cached["paid"]["tally"], cached["quiet"]["tally"])
+            self.assertEqual(cached["paid"]["signal"], cached["quiet"]["signal"])
+
+    def test_a_structured_salary_from_the_adapter_does_not_either(self):
+        """Adzuna supplies pay as a field; the boards supply nothing."""
+        body = "regulated bank portfolio roadmap adoption upskill mentor stakeholder"
+        rows = [posting(id="a", body=body, pay="90,000-110,000"),
+                posting(id="b", title="Head of Delivery Ops", body=body)]
+        with Run([], {"fake": FakeAdapter(rows)}) as r:
+            cached = json.load(open(radar.RAW))
+            self.assertEqual(cached["a"]["tally"], cached["b"]["tally"])
+
+    def test_the_salary_still_reaches_the_pay_column(self):
+        """Removing the bonus must not remove the information.
+
+        The column says the actual figure, which is more than three anonymous
+        points ever did.
+        """
+        body = "regulated bank portfolio roadmap adoption upskill mentor stakeholder"
+        with Run([], {"fake": FakeAdapter([posting(title="Head of Delivery €120k",
+                                                  body=body)])}) as r:
+            self.assertIn("| €120k |", r.out)
+
+    def test_pay_can_no_longer_promote_a_role_across_a_band(self):
+        """The concrete harm: 3 points is a third of the gap between bands.
+
+        A role sitting just under a cut-point used to cross it because its title
+        happened to mention money, or because it arrived via the one adapter
+        that reports salary.
+        """
+        just_under = "stakeholder mentor coach adoption upskill portfolio"
+        self.assertLess(radar.tally_of(just_under), radar.MED_AT)
+        self.assertGreaterEqual(radar.tally_of(just_under) + 3, radar.MED_AT)
+        with Run([], {"fake": FakeAdapter([posting(title="Head of Delivery €120k",
+                                                  body=just_under)])}) as r:
+            self.assertNotIn("| MED |", r.out)
+            self.assertNotIn("| HIGH |", r.out)
+
     def test_the_tally_survives_in_the_cache_for_tuning(self):
         """raw.json is disposable and machine-read, so the number is fine there."""
         with Run([], {"fake": FakeAdapter([posting()])}) as r:

@@ -43,6 +43,10 @@ IC_TITLE = re.compile(
     r"(\s*[-,(].*)?$", re.I)
 NEVER = re.compile(r"\b(mechanical|electrical|civil|hvac|nurse|clinical|quantity surveyor|"
                    r"site engineer|apprentice|sales representative|recruiter)\b", re.I)
+# Salary, for the Pay column only -- deliberately NOT part of the tally. Read
+# from the title, because a currency figure in a description is as likely to be
+# a budget, a contract value or a revenue number as a salary, and a wrong figure
+# in a Pay column is worse than an empty one.
 MONEY = re.compile(r"(€|£|\$)\s?\d[\d,.]*\s?k?|\b\d{2,3}\s?k\b", re.I)
 
 # Tiering vocabulary. Positive terms describe the work; negative terms are
@@ -81,6 +85,14 @@ def signal(tally):
     A word cannot be mistaken for a score out of 15 even by accident, and that is
     the entire reason this is not a number. The tally survives in raw.json for
     tuning; it does not reach anything a human reads.
+
+    THE TALLY COUNTS WHAT THE ROLE IS ABOUT, AND NOTHING ELSE. A visible salary
+    used to add 3 to it. Only one adapter returns a structured salary field, so
+    that bonus was largely a measurement of WHICH SOURCE FOUND THE ROLE -- the
+    same role fetched two ways scored two different ways. Three points is a
+    third of the distance between the cut-points below, enough to promote a role
+    across a band on the strength of the route it arrived by. A scoring term
+    only some inputs can earn is a measurement of the input pipeline.
     """
     return "HIGH" if tally >= HIGH_AT else "MED" if tally >= MED_AT else "LOW"
 
@@ -196,8 +208,10 @@ def main():
         if not c.get("pay"):
             m = MONEY.search(c["title"])
             c["pay"] = m.group(0) if m else ""
-        if c["pay"]:
-            c["tally"] += 3
+        # A visible salary used to add 3 to the tally. It does not any more --
+        # see signal(). The Pay column already tells a reader everything the
+        # bonus was trying to say, and tells them the figure rather than three
+        # anonymous points.
         c["signal"] = signal(c["tally"])
     if fetched:
         print(f"  read {fetched} descriptions", file=sys.stderr)

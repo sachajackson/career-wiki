@@ -97,7 +97,7 @@ for the reasoning. **What follows is what is next.**
 | 🔴 **Ask the user for their actual lists** | ✅ The mechanism is built and empty. **`employers.json` is the user's to write and nobody has been asked** — which employers they want watched, which they will not work for, and on what basis |
 | **Email alerts as a universal source** | Designed below, not built. Inverts the problem: *"we cannot scrape X"* becomes *"anything that will email us is a source"*, and it works with the sites' cooperation rather than against their terms |
 | **Everything after the submit button** | The system stops at submission and the process does not. **Interview prep is the largest piece and the wiki already holds what it needs** |
-| 🟡 **The salary bonus in the radar tally** | Logged as a defect below. The `+3` measures which adapter found a role rather than the role |
+| 🔴 **Nothing has been run end-to-end from a cold start** | `/career-init` on an empty repo has never been exercised, and the top of this file says it should be the first thing done |
 
 🟢 **Leave the rest until the cold run says which of them matter.**
 
@@ -143,9 +143,31 @@ suggestions; it is a sort key and is never printed.
 🟢 **The generalisable rule: when a number and a different number share a name, renaming the column is the
 smaller half of the fix.** Making one of them non-numeric is what ends it.
 
-### 🟡 The salary bonus in the radar tally measures the adapter, not the role
+### ✅ The salary bonus in the radar tally measured the adapter, not the role — REMOVED
 
-**Status: found 2026-08-25 while building a before-and-after fixture for the SIGNAL change. Not fixed.**
+**Status: ✅ fixed 2026-08-25 by dropping the bonus, with 4 tests. The record of why follows.**
+
+**The fix was the first of the three options below: the tally now counts what the role is *about* and
+nothing else, and the `Pay` column carries the salary — which was always the better answer, because it
+shows the reader the actual figure rather than three anonymous points.**
+
+🔴 **Nothing broke when the bonus was removed, and 208 existing tests still passed** — which is exactly
+why the defect survived as long as it did. **A term that quietly shifts a score is invisible to a suite
+that never asserts the score.** The four tests added pin it: two identical roles, one with a salary,
+score identically; and a role sitting just below a cut-point no longer crosses it because its title
+mentions money.
+
+🟡 **Option two is still open and is a different job**: normalising salary at the adapter boundary, so
+every source reports salary-visible the same way. Worth doing only if something is going to *use* it —
+and **not by scraping figures out of descriptions**, where a currency amount is as likely to be a budget,
+a contract value or a revenue number as a salary. **A wrong figure in a Pay column is worse than an empty
+one**, and this repo's first rule is never to invent a number.
+
+**The original write-up follows.**
+
+#### The defect
+
+**Found 2026-08-25 while building a before-and-after fixture for the SIGNAL change.**
 
 The tally adds **+3 when a salary is visible** — either supplied by the feed or matched in the title.
 Two problems, and the second is the one that makes it a defect rather than a design choice.
@@ -1354,6 +1376,13 @@ untested.
   minutes found two defects that recorded fixtures could not, because **a fixture asserts the shape the
   code already produces.** The fixtures are still worth having — they are what keeps the fix from
   regressing — but they cannot be the first contact with reality.
+- 🔴 **A scoring term only some inputs can earn is a measurement of the input pipeline.** The radar's
+  tally added 3 for a visible salary — and only one of six adapters returns a structured salary field, so
+  the same role fetched two ways scored two different ways, by enough to cross a band. **Ask of any term:
+  can every input earn this? If not, it is scoring the route, not the thing.**
+- 🟡 **A term that quietly shifts a score is invisible to a suite that never asserts the score.** 208
+  tests passed both with the bonus and without it. **Where a number decides something, assert the number,
+  not just that the code runs.**
 - 🔴 **One probe cannot diagnose an ambiguous failure. Add a control.** *"404 because that country is not
   covered"* and *"404 because the key is wrong"* look identical alone and point opposite ways. Probing a
   **known-good control** alongside the real target turns a guess into an answer, and it has now paid for

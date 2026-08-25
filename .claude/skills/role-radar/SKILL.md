@@ -8,6 +8,11 @@ description: Search job sources for new roles, filter and rank them against the 
 Finds roles and ranks them against `Role Scoring Framework.md`. **Triage, not judgement** — the script
 produces a `SIGNAL` of HIGH/MED/LOW from a keyword tally; you produce the assessment.
 
+🔴 **`SIGNAL` counts what the role is *about* and nothing else.** It is not affected by salary, by source,
+or by how much detail a posting happens to carry. **So it is comparable across sources** — which it was
+not until 2026-08-25, when a bonus for a visible salary meant the same role scored differently depending
+on which adapter found it.
+
 ## Run it
 
 ```bash
@@ -155,6 +160,7 @@ Real defects, found by running it. Two of them silently discarded good roles.
 | 🔴 **Good role, low signal** | A strong role sitting in MED | **Expected, and the most important one.** A title-thin posting signals low. **Always read MED** |
 | 🔴 **Location field contradicts the title** | A commutable role filed under a distant city | Handled, but check — location fields are employer-entered and often wrong |
 | 🔴 **Vocabulary false positive** | Platform or infrastructure roles signalling HIGH on shared jargon | **Read before believing the signal** |
+| 🟡 **Pay is missing far more often than it is absent** | A blank `Pay` column | **It is read from the job title only**, so it is blank for most roles whatever they pay. **Blank means unknown, never unpaid or low** — leave PAY as `TBC` rather than inferring anything from it |
 | **Agency reposts** | Same role, two companies | Deduped, but recruiters hide the employer, which makes employer-stability unscoreable until named |
 
 ## What it cannot do
