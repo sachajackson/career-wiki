@@ -90,6 +90,11 @@ git status --porcelain          # anything unexpected staged?
 git log --oneline origin/main..HEAD
 ```
 
+🟢 **`githooks/pre-push` now runs the suite for you and refuses the push if it is red**, so the first
+line above is a belt to the hook's braces rather than the only thing standing between a broken `main` and
+a stranger. **It needs `git config core.hooksPath githooks`, the same one line as the commit guard** — a
+fresh clone has no hooks until you point git at the tracked directory.
+
 🔴 **Do not pipe the suite into anything before `&&`.** The three lines above are a gate only if the
 first one's exit status survives:
 

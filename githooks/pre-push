@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# Runs the test suite before anything reaches the remote.
+#
+# WHY THIS IS A HOOK AND NOT A LINE IN CONTRIBUTING.md
+#
+# It was a line in CONTRIBUTING.md. The checklist there opens with
+#
+#     python3 tools/tests/run.py
+#     git status --porcelain
+#     git log --oneline origin/main..HEAD
+#
+# and it was followed exactly, and a red suite still reached main. The gate had
+# been typed as `run.py 2>&1 | tail -2 && git push` -- piping the output to make
+# it readable, which is the natural thing to do. A pipe replaces the exit status
+# with the last command's, `tail` always succeeds, and the `&&` was decorative
+# from that moment on. Nothing looked wrong at any point.
+#
+# A test cannot catch that: by the time anything runs, the shell has already
+# thrown the status away. So the check moves to the one place the shell cannot
+# disarm, which is here.
+#
+# Every instruction-shaped control in this repo has failed at least once. Every
+# executable one has held. This is the last instruction on the push path.
+#
+# Enable with:  git config core.hooksPath githooks
+set -euo pipefail
+
+root=$(git rev-parse --show-toplevel)
+suite="$root/tools/tests/run.py"
+
+# A clone without the suite is not a reason to block a push -- it is a reason to
+# say so. Silence here would read as a pass.
+if [ ! -f "$suite" ]; then
+  echo "  pre-push: no $suite to run. Not blocking, but nothing was checked." >&2
+  exit 0
+fi
+
+# Deleting a remote branch, and other pushes with nothing to test.
+if [ -z "$(cat)" ]; then
+  exit 0
+fi
+
+echo "  pre-push: running the suite..." >&2
+
+# No pipe. The whole point of this file is that the exit status survives, and
+# routing output through anything to tidy it is what broke the hand-typed
+# version. Output goes to a file and the status is read directly.
+log=$(mktemp)
+trap 'rm -f "$log"' EXIT
+
+if PYTHONDONTWRITEBYTECODE=1 python3 -B "$suite" >"$log" 2>&1; then
+  tail -n 1 "$log" >&2
+  exit 0
+fi
+
+cat >&2 <<EOF
+
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │  PUSH BLOCKED -- the test suite is failing                           │
+  └──────────────────────────────────────────────────────────────────────┘
+
+$(grep -E "^(FAIL|ERROR):" "$log" | sed 's/^/  /' || true)
+$(tail -n 2 "$log" | sed 's/^/  /')
+
+  Treat main as published: people who run their search through this may
+  reference the repository in an application, so a stranger can arrive at any
+  moment -- including mid-repair.
+
+  Run it yourself to see the detail:   python3 tools/tests/run.py
+
+  To override, if you are certain:     git push --no-verify
+
+EOF
+exit 1

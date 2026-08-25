@@ -975,8 +975,10 @@ If you fork this to work on it, run once per clone:
 git config core.hooksPath githooks
 ```
 
-That installs a commit guard that refuses personal material **even if you force-add it** — `.gitignore`
-alone does not survive `git add -f`, and a public git history is permanent.
+That installs two guards. A **commit** guard that refuses personal material **even if you force-add it** —
+`.gitignore` alone does not survive `git add -f`, and a public git history is permanent. And a **push**
+guard that runs the test suite and refuses the push if it is failing, because `main` is published the
+moment it is pushed.
 
 Full detail, including how to carry tool updates into your vault and how to migrate an existing wiki, is
 in [CONTRIBUTING.md](CONTRIBUTING.md).

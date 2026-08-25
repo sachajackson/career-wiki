@@ -367,6 +367,17 @@ readability silently disarms every `&&` after it.** Fixed within two minutes, an
 gate was followed exactly and still let it through — which is the whole thesis of this file, arriving in
 the one place that was supposed to be immune.
 
+🟢 **The push gate is now a hook** — `githooks/pre-push`, which runs the suite and refuses a red push.
+**No test could have caught the piped version**: by the time anything runs, the shell has already thrown
+the status away, so the check had to move somewhere the shell cannot disarm. **That was the last
+instruction-shaped control on the push path.**
+
+🔴 **And the test guarding the hook had the same defect as the hook's own failure.** The first version
+asserted that no line containing `run.py` is piped — **the hook invokes `"$suite"`, so the one line that
+mattered was never checked**, and a mutation piping the suite passed. **Matching the literal and missing
+the variable is the same shape as the anchor check that split the fragment off and threw it away.** Three
+times in one session: a check that covers most of a thing reads exactly like one that covers all of it.
+
 🟢 **Same failure `wikilinks.py` was built for on the wiki side**, where 40 section links in one vault all
 still opened the right page and none went where they said. **It took eight days to arrive on the repo
 side, and it arrived because somebody asked a question that made me look.**

@@ -50,6 +50,7 @@ REQUIRED = [
     ".claude/settings.json",
     ".claude/hooks/verify-artefact.sh",
     "githooks/pre-commit",
+    "githooks/pre-push",
 ]
 
 # Files that must NEVER be tracked. The mirror image, and the reason the ignore
@@ -186,6 +187,65 @@ class DocumentationPointsAtThingsThatExist(unittest.TestCase):
         stripped = re.sub(r"`[^`\n]*`", "`code`", text)
         self.assertNotIn("#not-a-real-anchor", stripped)
         self.assertIn("(#real)", stripped)
+
+
+class ThePrePushHookCannotDisarmItself(unittest.TestCase):
+    """The hook exists because the hand-typed gate was disarmed by a pipe.
+
+    CONTRIBUTING.md opened with `python3 tools/tests/run.py` and it was followed
+    exactly -- typed as `run.py 2>&1 | tail -2 && git push`, because piping the
+    output to make it readable is the natural thing to do. A pipe replaces the
+    exit status with the last command's, tail always succeeds, and the && was
+    decorative from that moment. A red suite reached main and nothing looked
+    wrong at any point.
+
+    No test can catch that in a shell -- by the time anything runs the status is
+    already gone -- so the check moved into a hook. These assert the hook does
+    not make the same mistake, which is not paranoia: it is the one file where
+    that mistake has already been made once, in prose, a few lines away.
+    """
+
+    def hook(self):
+        with open(os.path.join(ROOT, "githooks", "pre-push"), encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_it_is_executable(self):
+        """A hook without the bit set is not run, and git says nothing."""
+        self.assertTrue(os.access(os.path.join(ROOT, "githooks", "pre-push"), os.X_OK),
+                        "githooks/pre-push is not executable, so git will skip it silently")
+
+    def test_the_suite_is_never_piped(self):
+        """The exact failure this file exists for.
+
+        The first version of this test matched lines containing "run.py" -- and
+        the hook invokes "$suite", so the one line that mattered was not checked.
+        A mutation piping the suite passed it. Matching the literal and missing
+        the variable is the same shape as the anchor check that split the
+        fragment off and threw it away: a check covering most of a thing reads
+        exactly like one covering all of it.
+        """
+        invocations = [l for l in self.hook().splitlines()
+                       if not l.strip().startswith("#")
+                       and ("$suite" in l or "run.py" in l)]
+        self.assertTrue(invocations, "the hook does not appear to run the suite at all")
+        for line in invocations:
+            self.assertNotIn("|", line,
+                             f"the suite's exit status is piped away: {line.strip()}")
+
+    def test_it_actually_runs_the_suite_and_branches_on_the_result(self):
+        h = self.hook()
+        self.assertIn("run.py", h)
+        self.assertIn("if PYTHONDONTWRITEBYTECODE=1 python3 -B", h)
+        self.assertIn("exit 1", h)
+
+    def test_a_clone_without_the_suite_is_told_rather_than_waved_through(self):
+        """Silence there would read as a pass, which is the failure one line up."""
+        h = self.hook()
+        self.assertIn("nothing was checked", h)
+
+    def test_it_names_the_override(self):
+        """A hook with no way past it gets disabled wholesale rather than once."""
+        self.assertIn("--no-verify", self.hook())
 
 
 class ThePersonalDataHeuristicScopesCorrectly(unittest.TestCase):
