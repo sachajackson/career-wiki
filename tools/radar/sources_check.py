@@ -60,8 +60,22 @@ def main():
     if cfg_note:
         print(f"  {cfg_note}\n")
 
-    # The watchlist is folded in first, or every employer-board adapter reports
-    # NOT CONFIGURED while the user is looking at a watchlist full of employers.
+    # `watch` in search.json names employers; ats_registry.json knows which ATS
+    # each uses. radar.py expands one into the other in load_config() before it
+    # runs, and this did not -- so it read the raw config and reported
+    # "workday: NOT CONFIGURED, no employers listed" at somebody looking at two
+    # watched employers that the radar was in fact about to fetch. A check that
+    # confidently reports the wrong thing is worse than no check.
+    if cfg.get("watch"):
+        from registry import resolve, format_report
+        cfg, rep = resolve(cfg)
+        out = format_report(rep)
+        if out:
+            print(out + "\n")
+
+    # The employers.json watchlist is a SECOND and separate mechanism, folded in
+    # for the same reason: otherwise every employer-board adapter reports NOT
+    # CONFIGURED while the user is looking at a watchlist full of employers.
     if emp:
         import employers as EMP
         routed, unrouted = EMP.route(emp, cfg)
