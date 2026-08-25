@@ -916,7 +916,7 @@ Python.**
 |---|---|
 | `ats` + `params` | **A common core with per-protocol parameters.** Greenhouse needs a token; Workday needs host, tenant and site as three separate values, because [there are two hosting styles](#) and deriving the host from the tenant silently misses employers |
 | 🔴 `last_verified` | **Non-negotiable.** An employer changes ATS and the entry returns nothing — **which looks exactly like "no jobs this week"** |
-| 🔴 `verified_returned` | **How many roles it returned when last checked.** *Returned 0* and *returned 214* are different health states and a date alone cannot tell them apart |
+| 🔴 `verified_returned` | **How many roles it returned when last checked.** *Returned 0* and *returned 214* are different health states and a date alone cannot tell them apart. 🔴 **Compare it as an order of magnitude, never for equality** — measured an hour apart, three of five entries had already moved (1347→1351, 7354→7357, 300→299). **A verifier testing equality would cry wolf on every run and be switched off within a week** |
 | 🟢 `publishes_salary` | Rare and valuable. Deel publishes a band on every role, which takes PAY out of `TBC` before any call happens |
 | 🔴 `careers_url` | **Always the company's own page — `stripe.com/careers/search`, never `boards.greenhouse.io/stripe`.** It is what a person actually pastes, and **it is the recovery key: when an employer switches ATS the endpoint dies and the careers page does not**, so that URL is how the replacement gets found. The ATS address belongs in `params` |
 
