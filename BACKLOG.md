@@ -986,6 +986,47 @@ thing standing between a helpful impulse and a published CV.
 employer name and a URL cannot leak anything — **but that is an argument for the check being cheap, not for
 skipping it.**
 
+## 🔴 Can you actually reach the listings from the careers URL? Four of five, and testing it found a bug
+
+**Asked 2026-08-25, and worth having asked** — the recovery-key claim above was an assertion until it was
+tested.
+
+| From `careers_url` alone | |
+|---|---|
+| **SS&C** | 🟢 **Complete** — `myworkdaysite.com/recruiting/ssctech/SSCTechnologies` is in the page, host, tenant and site together |
+| **Grant Thornton** | 🟢 **Complete** — host plus `sites/GrantThorntonIrelandExperiencedHires` |
+| **JPMorganChase** | 🟢 **Complete** — host plus `sites/CX_1001` |
+| **State Street** | 🟡 **Host only.** The tenant is inferable from the host and the site still has to be probed |
+| 🔴 **Deel** | 🔴 **Nothing.** No ATS marker anywhere in the HTML — **the endpoint was only ever visible in network traffic from a live browser** |
+
+🔴 **So the recovery key works for employers who front a third-party ATS and fails for employers who proxy
+their own.** That is a real limit and the schema should carry a `discovery` note for the second kind,
+recording *how* the endpoint was found so nobody has to rediscover it from a network tab.
+
+### 🔴 And testing it found a wrong entry, because Oracle fails open
+
+**The Grant Thornton entry was seeded as `siteNumber: CX_1` — a 200 response returning 152 jobs. It was
+wrong.**
+
+| siteNumber | Returns | Contains their Data & AI role? |
+|---|---|---|
+| `CX_1` | 152 | 🔴 **No** |
+| **`CX_1001`** | **55** | 🟢 **Yes — this is the experienced-hires site** |
+| `GrantThorntonIrelandExperiencedHires` | 258 | *(the friendly name is not a valid siteNumber)* |
+| 🔴 **`CX_9999`, pure nonsense** | **258** | **Returns 200 and the tenant's whole unfiltered list** |
+
+🔴 **An unrecognised Oracle siteNumber does not error. It returns a plausible number.** So does the detail
+endpoint — which is how the wrong value survived being used to fetch a real job successfully.
+
+🟢 **Workday behaves the opposite way**: a wrong site 404s with an explicit `Job_Posting_Site_ID=` message.
+**Two platforms, opposite behaviour on a wrong identifier, and only one of them tells you.**
+
+**The rule this produces, and it governs the verifier below:**
+
+> 🔴 **Verify by known-job presence, never by status code or job count.** A check that cannot fail is not a
+> check — and both this registry and the ICON/aggregator work have now produced the same lesson from
+> different directions.
+
 ## The verifier, which ships with it or it does not ship
 
 🔴 **A registry without a checker rots into the silent-zero failure the `role-radar` skill already
@@ -993,7 +1034,11 @@ documents** — every query returns nothing and the run reports a quiet week.
 
 **`tools/registry_check.py`:** hit every entry, record what came back, update `last_verified` and
 `verified_returned`, and **fail loudly on any entry that returned zero when it previously returned
-something.** Run it in CI if there is CI, and from `/career-lint` if there is not.
+something.**
+
+🔴 **And check a known requisition id is present, not just that something came back.** Each entry should
+carry one — the `verified_by` field — because on Oracle a wrong site returns 200 and a plausible count.
+**Without that check the verifier would have confirmed the wrong Grant Thornton entry every time it ran.** Run it in CI if there is CI, and from `/career-lint` if there is not.
 
 ## What already exists, in the wrong shape
 
