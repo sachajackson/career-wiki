@@ -1443,6 +1443,22 @@ happened to be built. **Everything else is a URL and a score with no working beh
    re-scored because the evidence is gone.** They quietly become unreviewable.
 4. **The requirement tally.** *"Nine of twelve"* is uncheckable once the twelve are unreadable.
 
+✅ **Automated on the radar path 2026-08-25** — `radar.archive()`, 10 tests. **Everything shortlisted is
+written to `wiki/postings/<Employer> - <Title>.txt` before `seen.json` is updated and `raw.json` is
+overwritten**, carrying the posting date, location, pay and source URL alongside the text. **Shortlisted
+rather than everything fetched**, because the shortlist is by definition what an agent reads and the
+standing rule is that everything read gets assessed — archiving all 130-odd fetched descriptions would keep
+mostly roles nobody looked at.
+
+🔴 **It never overwrites.** An archived posting is evidence of what was read *at the time*, and a later
+fetch of the same URL returns either an edited posting or a 404 page — **which would replace the evidence
+with nothing.**
+
+🟡 **Still manual on the other two routes**: a link the user pastes, and a role assessed from an employer's
+own site. The rule is in `CLAUDE.md` and both skills; nothing enforces it.
+
+**The original design follows.**
+
 **The fix is small and belongs at ingest, not at pack time:**
 
 - **Save the employer's own posting text** — not the aggregator's copy, which is

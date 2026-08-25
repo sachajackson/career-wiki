@@ -97,6 +97,59 @@ def signal(tally):
     return "HIGH" if tally >= HIGH_AT else "MED" if tally >= MED_AT else "LOW"
 
 
+def archive(rows, cfg):
+    """Save the description of every shortlisted role, before raw.json is overwritten.
+
+    A posting is the source document behind the score, the requirement tally, the
+    angle a CV takes and the stories chosen for an interview -- and it is the only
+    input in this system guaranteed to be deleted. Usually at the point it becomes
+    most useful: after the employer has finished hiring and is about to interview.
+
+    Measured rather than assumed: in one real vault, five of forty-one assessed
+    roles already had unreachable postings, including the role a full application
+    pack had been built for and the role the user had been rejected from. Nothing
+    was left to read for the post-mortem.
+
+    SHORTLISTED, NOT EVERYTHING FETCHED. The shortlist is by definition what is
+    worth an agent reading, and the standing rule is that everything on it gets
+    assessed in the same turn -- so shortlisted and assessed are the same set.
+    Archiving all 130-odd fetched descriptions would keep mostly roles nobody
+    ever looked at.
+
+    It never overwrites. An archived posting is evidence of what was read at the
+    time, and a later fetch of the same URL can return an edited posting -- or a
+    404 page, which would replace the evidence with nothing.
+    """
+    where = cfg.get("postings_dir") or os.path.join(HERE, "..", "..", "wiki", "postings")
+    where = os.path.abspath(where)
+    try:
+        os.makedirs(where, exist_ok=True)
+    except OSError as e:
+        print(f"  !! could not archive postings to {where}: {e}", file=sys.stderr)
+        return 0, 0
+    saved = skipped = 0
+    for c in rows:
+        body = (c.get("body") or "").strip()
+        if len(body) < 400:          # nothing worth keeping; the listing had no description
+            continue
+        name = re.sub(r"[^\w &.-]", "", f"{c['company']} - {c['title']}").strip()[:90]
+        path = os.path.join(where, name + ".txt")
+        if os.path.exists(path):
+            skipped += 1
+            continue
+        posted = c["date"] + (" (floor -- source would only say 30+ days)" if c.get("date_is_floor") else "")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(f"{c['company']} -- {c['title']}\n"
+                    f"Archived {datetime.date.today().isoformat()} by the radar\n"
+                    f"Posted   {posted}\n"
+                    f"Location {c['loc']}\n"
+                    f"Pay      {c.get('pay') or 'not stated'}\n"
+                    f"Source   {c['url']}\n"
+                    f"{'=' * 72}\n\n{body}\n")
+        saved += 1
+    return saved, skipped
+
+
 def load_config():
     if not os.path.exists(CONFIG):
         sys.exit(f"No config.json. Copy config.example.json to {CONFIG} and fill it in.")
@@ -384,6 +437,12 @@ def main():
             for n in notes:
                 f.write(f"\n† {n}\n")
             f.write("\n")
+
+    # Before seen.json is updated and raw.json is overwritten on the next run.
+    saved, skipped = archive(high + med, cfg)
+    if saved or skipped:
+        print(f"  archived {saved} posting(s)" + (f", {skipped} already held" if skipped else ""),
+              file=sys.stderr)
 
     if not retier:
         for c in found.values():

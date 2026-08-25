@@ -35,6 +35,14 @@
     "start of every run rather than quietly skipped. Run `python3 tools/radar/registry.py NAME` to",
     "test a name, and `python3 tools/registry_check.py` to confirm the endpoints still answer."
   ],
+  "_postings_comment": [
+    "Where to archive the description of every shortlisted role. Default: ../../wiki/postings.",
+    "A posting is the evidence behind a score, a requirement tally and an interview story, and it is",
+    "the one input guaranteed to be deleted -- usually right when it becomes useful. Never overwritten:",
+    "an archived posting records what was actually read at the time."
+  ],
+  "postings_dir": null,
+
   "watch": ["State Street", "Grant Thornton Ireland"],
 
   "greenhouse": {
