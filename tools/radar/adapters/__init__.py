@@ -60,6 +60,23 @@ for, and both are the same mistake in different clothes:
   KNOWN-GOOD control alongside the user's own country, because one probe cannot
   tell the two apart and guessing cost a real user an hour.
 
+THE WITHIN-RUN CACHE, AND WHAT AN ADAPTER MAY ASSUME. `_http` caches successful
+responses for the lifetime of a run, keyed on url plus headers plus POST body.
+A whole-board adapter therefore costs one request per board per RUN rather than
+one per board per QUERY, which is where a twenty-minute run was going. Failures
+are never cached, so a retry still reaches the network.
+
+Two things follow for an adapter author. Fetching the same URL twice in one run
+is free, so there is no need to hand-roll caching. And an adapter must NOT rely
+on a second call returning fresher data -- within one run it will not, by design.
+
+CONCURRENCY. The runner fetches across adapters in parallel, but serialises each
+adapter with itself, because TRUNCATED is a module attribute read after fetch()
+returns and two concurrent calls into one module would each read the other's
+answer. 🔴 An adapter that keeps other mutable module state during fetch() is
+safe today for the same reason -- but state that outlives the call, or is shared
+between adapters, is not. Keep it in locals.
+
 Adding an adapter: write the module, expose fetch(), set TRUNCATED and
 HONOURS_DAYS, expose probe(), add it to ADAPTERS below.
 """

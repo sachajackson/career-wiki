@@ -32,21 +32,22 @@ python3 tools/radar/radar.py --all-open
 | `--reset` | Forget what has been seen and rebuild |
 | `--retier` | Re-tier the cached corpus without re-fetching. **Use when tuning** (`--score-only` still works) |
 
-### 🔴 How long it takes, measured — and why a warm cache does not help
+### How long it takes, measured
 
-**Twenty minutes a run, and eight seconds of that is the computer thinking.** Measured 2026-08-25 on a
-41-query config with three watched employers: `real 1201s, user 7.9s`. **Over 99% of it is waiting on the
-network.**
+**Four minutes.** Measured 2026-08-25 on a 41-query config with three watched employers: `real 233s,
+user 2.4s`. **It was 1201s before the within-run cache and per-adapter threading**, and the numbers are
+from two runs of the same config against the same boards.
 
-🔴 **The second run is not faster than the first.** A repeat run fetched **87 new roles and suppressed
-17,350 duplicates** — because `seen.json` dedupes *after* the listing is fetched, not before. It saves the
-description fetches, which are the cheap half. **Every run re-reads every watched board in full.**
+🟡 **Still say so before starting it, not after.** Four minutes of near-silence still reads as a hang.
+The run now prints each adapter as it lands, which is the thing to watch.
 
-**So tell the user it will take twenty minutes before starting it, not after.** A run with no output for
-several minutes is indistinguishable from a hung one, and the temptation is to kill it and report a quiet
-week.
+🔴 **Workday is the long pole and cannot be made faster the same way.** Its search is a POST whose body
+carries the query text, so **every query is a genuinely different request** and nothing can be reused
+across them. The cache only collapses whole-board adapters — Greenhouse, Lever and custom fetch one fixed
+URL and filter in-process, so they now cost one request per board per *run* instead of one per *query*.
+On the measured run: **225 requests made, 386 served from the cache.**
 
-🟡 **If it needs to be quick, `--adapter NAME` is the only lever that works.** Narrowing `--days` does
+🟡 **If it needs to be quicker, `--adapter NAME` is the only remaining lever.** Narrowing `--days` does
 almost nothing, for the reason directly below.
 
 ### 🔴 `--days` does nothing at all for most configurations

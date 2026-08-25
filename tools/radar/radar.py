@@ -21,10 +21,13 @@ needed -- frequent windowed runs for freshness, a periodic unfiltered sweep for
 the standing backlog of still-open roles. Dedup handles the overlap.
 """
 import argparse, json, os, re, sys, time, datetime
+import concurrent.futures as cf
+import threading
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from adapters import ADAPTERS                                    # noqa: E402
+from adapters import _http as HTTP                               # noqa: E402
 import employers as EMP                                          # noqa: E402
 import legitimacy as LEGIT                                       # noqa: E402
 
@@ -277,6 +280,76 @@ def parse(argv=None):
     return ap.parse_args(argv)
 
 
+# --- fetching -------------------------------------------------------------
+
+
+def fetch_all(cfg, names, queries, days, dead, capped, report=None):
+    """Every (adapter, query) pair. Returns {(name, q): rows}.
+
+    ONE THREAD PER ADAPTER, each working its own query list in order.
+
+    🔴 The obvious shape -- a thread pool over all (adapter, query) pairs, with a
+    lock per adapter -- was built first and measured, and it is worse than
+    serial. `map` dispatches in order, the pairs are grouped by adapter, so the
+    whole pool fills with units belonging to ONE adapter and every worker but
+    one blocks on that adapter's lock. Effective concurrency of about 1, plus
+    the overhead. Interleaving the pairs would paper over it; one thread per
+    adapter removes the lock entirely, which is the honest fix.
+
+    The lock was never conservatism. TRUNCATED is a module attribute set during
+    fetch() and read straight after, so two concurrent calls into one module
+    would each read the other's answer -- and reporting a capped result set as
+    complete is the exact failure TRUNCATED exists to prevent. One thread per
+    adapter satisfies that by construction.
+
+    Parallelism across adapters is the smaller half of the win anyway. The cache
+    in _http is the larger: a whole-board adapter asked for the same board once
+    per query, and now asks once per run.
+    """
+    out = {}
+    if not names or not queries:
+        return out
+
+    def work(name):
+        mod, rows_by_q, errors, caps = ADAPTERS[name], {}, [], []
+        for q in queries:
+            try:
+                rows_by_q[q] = mod.fetch(cfg, q, days)
+                if getattr(mod, "TRUNCATED", False):
+                    caps.append(f"{name}/{q}")
+            except Exception as e:
+                errors.append(f"{name}/{q}: {type(e).__name__}")
+        return name, rows_by_q, errors, caps
+
+    with cf.ThreadPoolExecutor(max_workers=min(len(names), 8)) as pool:
+        futures = {pool.submit(work, n): n for n in names}
+        for fut in cf.as_completed(futures):
+            name, rows_by_q, errors, caps = fut.result()
+            for q, rows in rows_by_q.items():
+                out[(name, q)] = rows
+            dead.extend(errors)
+            capped.extend(caps)
+            # 🔴 Printed as each adapter lands rather than at the end. A run that
+            # prints nothing for twenty minutes is indistinguishable from a hung
+            # one, and the first version of this was silent for its whole
+            # duration -- which is worse than the slowness it was fixing.
+            if report:
+                report(name, sum(len(r) for r in rows_by_q.values()), len(errors))
+
+    # 🔴 Sorted into the DECLARED order -- adapter, then query -- never the order
+    # the threads finished in. Dedupe keeps the first row it sees, so a
+    # nondeterministic merge would attribute a role to whichever query won the
+    # race and quietly reshuffle the shortlist between two runs that found
+    # exactly the same jobs.
+    capped.sort(key=lambda c: (names.index(c.split("/")[0]), c))
+    dead.sort(key=lambda d: (names.index(d.split("/")[0]), d))
+    # Rebuilt in declared order rather than left in finishing order. The caller
+    # already iterates by name and query, so this changes no behaviour today --
+    # which is the point: a guarantee that only holds because the caller happens
+    # to do the right thing is one the next caller forgets.
+    return {(n, q): out[(n, q)] for n in names for q in queries if (n, q) in out}
+
+
 def main(argv=None):
     args = parse(argv)
     all_open = args.all_open
@@ -286,6 +359,7 @@ def main(argv=None):
     retier = args.score_only
 
     cfg = load_config()
+    HTTP.enable_cache()   # a board does not change during a run. See adapters/_http.py
     # The watch list is folded into the adapter configs before anything runs, so
     # that "watch this employer" is a fact about the employer rather than an
     # entry in whichever adapter someone happened to think of.
@@ -304,19 +378,21 @@ def main(argv=None):
         found = {}
         names = [only] if only else [n for n in ADAPTERS
                                      if cfg.get(n, {}).get("enabled", n != "linkedin")]
+        started = time.time()
+        def landed(name, rows, errs):
+            note = f", {errs} query/queries failed" if errs else ""
+            print(f"  {name:12} fetched {rows} row(s){note}", file=sys.stderr)
+
+        results = fetch_all(cfg, names, cfg.get("queries", []), days, dead, capped, landed)
+        # 🔴 Merged in the declared order -- adapter, then query -- and NOT in
+        # the order the threads happened to finish. Dedupe keeps the first row
+        # it sees, so a nondeterministic merge would attribute a role to
+        # whichever query won the race and quietly reshuffle the shortlist
+        # between two runs that found exactly the same jobs.
         for name in names:
-            mod, got = ADAPTERS[name], 0
+            got = 0
             for q in cfg.get("queries", []):
-                try:
-                    rows = mod.fetch(cfg, q, days)
-                except Exception as e:
-                    dead.append(f"{name}/{q}: {type(e).__name__}"); continue
-                # The adapter tells us whether it stopped because the source ran
-                # dry or because it ran out of its own page budget. Only the
-                # first proves the result set is complete.
-                if getattr(mod, "TRUNCATED", False):
-                    capped.append(f"{name}/{q}")
-                for r in rows:
+                for r in results.get((name, q), []):
                     key = re.sub(r"\W+", "", r["title"].lower())[:40] + "|" + r["loc"].lower()[:12]
                     if r["id"] in found or r["id"] in seen or any(
                             f["_k"] == key for f in found.values()):
@@ -325,6 +401,9 @@ def main(argv=None):
                     found[r["id"]] = r
                     got += 1
             print(f"  {name:12} +{got}", file=sys.stderr)
+        st = HTTP.cache_stats()
+        print(f"  {'':12}  {time.time() - started:.0f}s, {st['misses']} request(s), "
+              f"{st['hits']} served from the within-run cache", file=sys.stderr)
         if not found and not dead:
             print("\n  !! Every adapter returned zero and none reported an error.\n"
                   "  !! Treat this as a possible breakage, NOT a quiet week.", file=sys.stderr)

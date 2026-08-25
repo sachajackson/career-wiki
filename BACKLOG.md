@@ -153,30 +153,54 @@ resolves a wikilink by filename across the entire vault, so the checker has to a
 **Still open:** it cannot classify markdown with no frontmatter, and says so rather than guessing — a
 note from another tool, a pasted job ad and a page of somebody's history look identical without it.
 
-### 🔴 A radar run is twenty minutes of network wait, and re-fetches everything — measured 2026-08-25
+### ✅ A radar run was twenty minutes of network wait — 1201s → 233s, BUILT 2026-08-25
 
-**`real 1201s, user 7.9s`** on a 41-query config with three watched employers. **Over 99% of the wall
-clock is waiting on HTTP.** Not a hypothesis — timed on two consecutive runs.
+**Measured before and after, same config, same boards:**
 
-🔴 **A warm cache barely helps.** The second run fetched 87 new roles and suppressed **17,350 duplicates**,
-because `seen.json` is applied *after* a listing is fetched. It saves the description fetches, which are
-the cheap half; **every run re-reads every watched board in full.**
+| | Before | After |
+|---|---|---|
+| Wall clock | **1201s** | **233s** |
+| CPU | 7.9s | 2.4s |
+| HTTP requests | ~600 | **225, plus 386 served from cache** |
 
-**Two directions, and the first is much cheaper:**
+🟢 **The cache was the bigger half, and it is not a cache of the network — it is a cache of a mistake.** A
+whole-board adapter returns everything open and filters by query in-process, so a 41-query config asked
+Greenhouse for the **same six board URLs forty-one times.** 246 identical requests where six would do, and
+the same shape in Lever and custom. `_http` now holds successful responses **for the lifetime of the
+process and no longer.**
 
-| | |
-|---|---|
-| **Fetch board pages concurrently** | The work is entirely I/O and almost entirely independent. A modest pool would turn twenty minutes into low single digits without changing a single verdict. 🔴 **But rate limits are per-employer and undocumented** — a pool that trips one gets the source blocked, which is worse than slow |
-| **Cache board responses with an ETag or a short TTL** | Avoids the re-fetch entirely on a same-day second run. **Only helps the person who runs it twice in a day**, which is not the normal pattern |
+🔴 **Failures are never cached**, and there is deliberately no on-disk cache. A transient timeout held for
+a whole run turns one flaky request into a board reported as empty — a silent zero. A board read yesterday
+would report a filled role as open, which is the failure the tool exists to prevent.
 
-🟡 **Neither is urgent.** Twenty minutes once a week is tolerable and the tool is honest about what it is
-doing. **What is not tolerable is the documentation saying five minutes**, which it did until this was
-measured — a run that produces no output for several minutes is indistinguishable from a hung one, and the
-temptation is to kill it and report a quiet week. **The skill now states the measured figure.**
+### 🔴 The first concurrency design was slower than serial, and the reason generalises
 
-🟢 **And the related finding is free to fix and worth more:** `--days` is honoured by only three of seven
-adapters. A config with no Adzuna key and LinkedIn disabled **has no date-filtered source at all**, so
-`--days 7` filters nothing. The shortlist header already says so; the skill now says it too.
+**A thread pool over all (adapter, query) pairs, with a lock per adapter.** It ran 48 minutes against a
+20-minute baseline with 0.33s of CPU.
+
+**`map` dispatches in order and the pairs are grouped by adapter, so the pool fills with units belonging
+to one adapter and every worker but one blocks on that adapter's lock.** Effective concurrency of about 1,
+plus the overhead of pretending otherwise.
+
+🟢 **Interleaving the pairs would have hidden it. One thread per adapter removes the lock**, and satisfies
+the `TRUNCATED` contract by construction rather than by mutex — which is what the lock was there for:
+`TRUNCATED` is a module attribute set during `fetch()` and read straight after, so two concurrent calls
+into one module would each read the other's answer.
+
+🔴 **It was also silent for its entire duration**, because nothing printed until every adapter finished.
+**That is worse than the slowness it was fixing.** Progress now prints as each adapter lands.
+
+### 🟡 Still open: Workday cannot benefit from either fix
+
+**Its search is a POST whose body carries the query text**, so every query is a genuinely different
+request and nothing is reusable across them. It is now the long pole in any run that watches a Workday
+employer.
+
+**The available options, none obviously worth it yet:** fetch its pages concurrently *within* one query
+(pages are independent, but rate limits are per-tenant and undocumented); or fetch the board once with an
+empty `searchText` and filter in-process like the whole-board adapters — 🔴 **which changes what the
+adapter is claiming.** "The API filtered" and "the adapter filtered" are different claims, and only one
+can be checked against the source.
 
 ### 🔴 Two files, one letter apart, opposite privacy rules — know which is which
 
