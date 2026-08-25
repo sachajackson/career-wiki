@@ -34,29 +34,24 @@ python3 tools/radar/radar.py --all-open
 
 ### How long it takes, measured
 
-**Four minutes.** Measured 2026-08-25 on a 41-query config with three watched employers: `real 233s,
-user 2.4s`. **It was 1201s before the within-run cache and per-adapter threading**, and the numbers are
-from two runs of the same config against the same boards.
+**About six minutes**, and it now returns five times as many roles as it did before. Three runs of the
+same config — 41 queries, three watched employers — on 2026-08-25:
 
-🟡 **Still say so before starting it, not after.** Four minutes of near-silence still reads as a hang.
-The run now prints each adapter as it lands, which is the thing to watch.
+| | Wall | Roles reaching the filter | Requests |
+|---|---|---|---|
+| Serial, no cache | **1201s** | 87 | ~600 |
+| Cache + one thread per adapter | **233s** | 93 | 225 |
+| **+ Workday reading its whole board** | **358s** | **479** | 313, plus 3,598 from cache |
 
-**All six adapters now read a board once per run.** Greenhouse, Lever and custom always did; **Workday
-joined them on 2026-08-25**, and the measurement is why. On State Street the board holds **1,377 roles and
-`searchText: "Engineering Manager"` returns 611 of them** — 44% of the board, ranked rather than filtered.
-So 41 queries × 5 pages saw the first 100 rows of each ranked set: **about 7% of the board per query, and
-largely the same rows each time.** The whole board is 69 pages — fewer requests, and complete.
+🔴 **The last step is slower than the one before it, and that is the right trade.** It costs 125 seconds
+and buys **386 more roles** — Workday alone went from 781 rows to 3,255, because the previous shape only
+ever saw about 7% of that board. **A faster run that cannot see the roles is not a better run.**
 
-🟡 **What that costs, stated plainly.** The server matched description text; the local filter reads titles
-only, as it does for every other board adapter. A role whose title lacks the domain word is now dropped
-where Workday might have surfaced it. **Against that, 93% of the board was previously never fetched at
-all.**
+🟡 **Say six minutes before starting it, not after.** Six minutes of near-silence still reads as a hang.
+The run prints each adapter as it lands, which is the thing to watch.
 
-🔴 **Workday is still the slowest adapter**, because its board is the largest and rows with hidden
-locations each need a detail call. It is the one to name if somebody asks why a run is not instant.
-
-🟡 **If it needs to be quicker, `--adapter NAME` is the only remaining lever.** Narrowing `--days` does
-almost nothing, for the reason directly below.
+🔴 **Workday is the slowest adapter and will stay that way**: its board is the largest, and every row that
+hides its locations needs a second call to expand them. Name it if somebody asks why a run is not instant.
 
 ### 🔴 `--days` does nothing at all for most configurations
 

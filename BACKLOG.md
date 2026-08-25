@@ -159,9 +159,14 @@ note from another tool, a pasted job ad and a page of somebody's history look id
 
 | | Before | After |
 |---|---|---|
-| Wall clock | **1201s** | **233s** |
-| CPU | 7.9s | 2.4s |
-| HTTP requests | ~600 | **225, plus 386 served from cache** |
+| Wall clock | **1201s** | **358s** |
+| Roles reaching the filter | 87 | **479** |
+| CPU | 7.9s | 3.1s |
+| HTTP requests | ~600 | **313, plus 3,598 served from cache** |
+
+🟡 **The intermediate state was faster still — 233s — and returned 93 roles.** Reading Workday's whole
+board costs 125 seconds and buys 386 more. **A faster run that cannot see the roles is not a better run**,
+and the figure to quote is coverage per run rather than seconds.
 
 🟢 **The cache was the bigger half, and it is not a cache of the network — it is a cache of a mistake.** A
 whole-board adapter returns everything open and filters by query in-process, so a 41-query config asked
