@@ -19,6 +19,9 @@ REG = {"employers": [
      "params": {"host": "gh", "site": "CX_1001"}},
     {"employer": "Stripe", "ats": "greenhouse", "careers_url": "https://z", "params": {"token": "stripe"}},
     {"employer": "Deel", "ats": "custom", "careers_url": "https://d", "params": {"list": "https://d/api"}},
+    # An ATS nothing speaks. Deel used to play this part and now has an adapter,
+    # which is why the branch needs a stand-in rather than being deleted with it.
+    {"employer": "Obscure GmbH", "ats": "bespoke_thing", "careers_url": "https://o", "params": {}},
     {"employer": "Statesman Bank", "ats": "lever", "careers_url": "https://s", "params": {"handle": "sb"}},
     {"employer": "Halfling Ltd", "ats": "workday", "careers_url": "https://hl", "params": {"host": "h"}},
 ]}
@@ -60,18 +63,23 @@ class NothingIsDroppedSilently(unittest.TestCase):
         self.assertEqual(rep["Acme Corp"][0], "NOT IN REGISTRY")
 
     def test_an_ats_with_no_adapter_is_reported_with_the_careers_url(self):
-        """Deel proxies its own ATS. Saying so beats searching four of five employers quietly."""
-        _, rep = run(["Deel"])
-        status, msg = rep["Deel"]
+        """Saying so beats searching four of five employers quietly."""
+        _, rep = run(["Obscure GmbH"])
+        status, msg = rep["Obscure GmbH"]
         self.assertEqual(status, "NO ADAPTER")
-        self.assertIn("https://d", msg)
+        self.assertIn("https://o", msg)
+
+    def test_a_bespoke_api_resolves_now_that_custom_exists(self):
+        cfg, rep = run(["Deel"])
+        self.assertEqual(rep["Deel"][0], "RESOLVED")
+        self.assertEqual(cfg["custom"]["employers"][0]["employer"], "Deel")
 
     def test_an_incomplete_registry_entry_is_reported_not_half_used(self):
         _, rep = run(["Halfling Ltd"])
         self.assertEqual(rep["Halfling Ltd"][0], "INCOMPLETE")
 
     def test_the_report_counts_what_will_not_be_searched(self):
-        _, report = registry.resolve({"watch": ["Deel", "Acme Corp", "Stripe"]}, REG)
+        _, report = registry.resolve({"watch": ["Obscure GmbH", "Acme Corp", "Stripe"]}, REG)
         out = registry.format_report(report)
         self.assertIn("2 watched employer(s) will NOT be searched", out)
 
@@ -113,7 +121,8 @@ class AgainstTheRealRegistry(unittest.TestCase):
         _, report = registry.resolve({"watch": names}, real)
         self.assertEqual(len(report), len(names), "every watched name must produce a line")
         for name, status, msg in report:
-            self.assertIn(status, ("RESOLVED", "NO ADAPTER"), f"{name}: {status} {msg}")
+            self.assertEqual(status, "RESOLVED",
+                             f"{name}: {status} {msg} -- every shipped entry should now resolve")
 
 
 if __name__ == "__main__":

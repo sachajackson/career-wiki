@@ -35,6 +35,10 @@ SHAPES = {
     "oracle":     ("oracle", "employers", ("host", "site")),
     "greenhouse": ("greenhouse", "boards", ("token",)),
     "lever":      ("lever", "companies", ("handle",)),
+    # custom carries the whole params object rather than named fields: a bespoke
+    # API needs its list URL and its field map, and which fields those are is
+    # exactly what varies between employers.
+    "custom":     ("custom", "employers", ("list",)),
 }
 
 
@@ -91,6 +95,16 @@ def resolve(config, registry=None):
 
         key, listkey, fields = shape
         params = entry.get("params", {})
+        if entry["ats"] == "custom":
+            bucket = config.setdefault(key, {}).setdefault(listkey, [])
+            if any(b.get("employer") == entry["employer"] for b in bucket):
+                report.append((entry["employer"], "ALREADY LISTED", f"already in {key}.{listkey}"))
+            elif not params.get("list"):
+                report.append((entry["employer"], "INCOMPLETE", "custom entry needs a list URL"))
+            else:
+                bucket.append({"employer": entry["employer"], "params": params})
+                report.append((entry["employer"], "RESOLVED", f"-> {key}.{listkey}"))
+            continue
         missing = [f for f in fields if not params.get(f)]
         if missing:
             report.append((entry["employer"], "INCOMPLETE",

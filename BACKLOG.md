@@ -831,8 +831,20 @@ reachable from one file that previously lived in five places and one person's me
   **Ambiguity refuses rather than guessing**, and a substring match says what it matched on.
 - ✅ **`tools/registry_check.py` — built 2026-08-25**, wired into `/career-lint`, 11 tests. **All five entries pass.**
 - **Seed more.** Five is a proof, not a starter set.
-- 🔴 **An adapter for `custom`.** Deel is watched, resolves, and is then reported as unsearchable —
-  **which is the honest state and not a good one.** Bespoke ATSs will not be rare.
+- ✅ **An adapter for `custom` — built 2026-08-25**, 18 tests. **All five shipped employers now resolve
+  and fetch.** The adapter walks JSON by dotted paths and **the registry says where this employer's fields
+  live**, so the next bespoke API needs a map rather than a module.
+
+  🔴 **Building it found the trap that would have made it useless.** Deel carries `location_name` — the
+  **first** of thirty countries, *"Israel"* — alongside `all_locations`. **Mapping the obvious-looking
+  field would have filtered out all 66 roles open to Ireland for a user eligible for every one of them,
+  and said nothing.** Lists are joined rather than truncated, and the registry entry carries a note saying
+  why.
+
+  🟡 **One more shape worth knowing: a detail response often unwraps what the list response wrapped.**
+  Deel returns `attributes.full_job_description` in the listing and `full_job_description` alone in the
+  detail. The adapter tries the leaf before giving up, rather than making the registry carry two paths for
+  one field.
 
 **The adapters know how to speak Greenhouse, Lever, Workday and Oracle. What nobody has is the list of
 which employer uses which, and under what identifier.** Every user starts from
