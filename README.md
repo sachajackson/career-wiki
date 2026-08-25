@@ -769,6 +769,15 @@ State Street means writing a host, a tenant and a site.** So you do not:
 employer uses**, and the endpoint is looked up at run time. **Fifteen employers, around 13,000 live roles,
 every entry verified by calling it.**
 
+**To see who is on it:**
+
+```bash
+python3 tools/radar/registry.py --list
+```
+
+Names, ATS, how many roles each had when last checked, and which employers publish a salary band. **It
+reads the file and calls nothing**, so it costs nothing to look.
+
 🔴 **Anything it cannot resolve is reported at the start of the run, by name.** An employer you thought you
 were watching, quietly not searched, looks exactly like a quiet week — which is the worst thing a job
 search tool can do to you.

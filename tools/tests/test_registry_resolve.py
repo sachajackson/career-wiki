@@ -114,6 +114,22 @@ class HandWrittenConfigSurvives(unittest.TestCase):
         self.assertEqual(rep["Stripe"][0], "RESOLVED")
 
 
+class Listing(unittest.TestCase):
+    """Wanting to know who is on the list should not cost fifteen requests to
+    other people's servers, which is what registry_check does."""
+
+    def test_it_names_every_employer_without_calling_anything(self):
+        out = registry.listing(REG)
+        for e in REG["employers"]:
+            self.assertIn(e["employer"], out)
+
+    def test_an_empty_registry_says_so_rather_than_printing_a_header(self):
+        self.assertIn("empty", registry.listing({"employers": []}))
+
+    def test_it_says_how_to_add_one(self):
+        self.assertIn("add_employer.py", registry.listing(REG))
+
+
 class AgainstTheRealRegistry(unittest.TestCase):
     def test_every_shipped_entry_either_resolves_or_says_why(self):
         real = registry.load_registry()

@@ -139,9 +139,36 @@ def format_report(report):
     return "\n".join(lines)
 
 
+def listing(registry=None):
+    """Who is in the registry, without calling anything.
+
+    registry_check.py shows the same names but calls fifteen endpoints to do it.
+    Wanting to know what is on the list should not cost a minute and fifteen
+    requests to other people's servers.
+    """
+    reg = registry if registry is not None else load_registry()
+    rows = sorted(reg.get("employers", []), key=lambda e: -e.get("verified_returned", 0))
+    if not rows:
+        return "  the registry is empty"
+    out = [f"  {len(rows)} employers, {sum(r.get('verified_returned', 0) for r in rows):,} roles "
+           f"at last check\n",
+           f"  {'EMPLOYER':26} {'ATS':11} {'ROLES':>7}  {'CHECKED':10}  PAY"]
+    for e in rows:
+        pay = "published" if e.get("publishes_salary") else ""
+        out.append(f"  {e['employer'][:25]:26} {e['ats']:11} {e.get('verified_returned', 0):>7}  "
+                   f"{e.get('last_verified', '?'):10}  {pay}")
+    out.append(f"\n  Add one:   python3 tools/add_employer.py \"Name\" https://their-careers-page")
+    out.append(f"  Check all: python3 tools/registry_check.py")
+    out.append(f"  Watch one: add the name to `watch` in config.json")
+    return "\n".join(out)
+
+
 if __name__ == "__main__":
     import sys
-    cfg_path = os.path.join(HERE, "config.json")
-    cfg = json.load(open(cfg_path)) if os.path.exists(cfg_path) else {"watch": sys.argv[1:]}
-    _, rep = resolve(cfg)
-    print(format_report(rep) or "  nothing in `watch`")
+    if "--list" in sys.argv or not sys.argv[1:]:
+        print(listing())
+    else:
+        cfg_path = os.path.join(HERE, "config.json")
+        cfg = json.load(open(cfg_path)) if os.path.exists(cfg_path) else {"watch": sys.argv[1:]}
+        _, rep = resolve(cfg)
+        print(format_report(rep) or "  nothing in `watch`")
