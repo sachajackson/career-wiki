@@ -1113,6 +1113,52 @@ blockquote-marker case in the wikilink repair.
 
 ## 🟡 Gaps — things the system does not do yet
 
+### 🔴 Nothing checks what OTHER tools leave beside the code
+
+**Found 2026-08-25.** `.obsidian/` sat at the repository root, **untracked but not ignored**. Its
+`workspace.json` records open and recently-opened files **by path**, so it named
+`vault/settings/employers.json`, `vault/AGENTS.md` and whichever pages had been read last. **Untracked is
+not ignored** — one `git add -A` would have published a list of a user's private files to a public
+remote. `.gitignore` now covers it. **The class it belongs to does not.**
+
+🔴 **Both existing controls missed it, and neither was malfunctioning.**
+
+| Control | Why it did not fire |
+|---|---|
+| `tools/tests/test_boundary.py` | Checks what **this repo** writes outside `vault/`. Obsidian wrote this. **The guard covers the agent, not the desk it works on** |
+| `githooks/pre-commit` rule 1 | Blocks staged paths **under `vault/`**. `.obsidian/workspace.json` is not under `vault/` |
+| `githooks/pre-commit` rule 2 | Content heuristics look for **emails, LinkedIn URLs and salary phrasing**. A JSON file listing vault *paths* matches none of them |
+
+🟢 **Verified rather than reasoned about:** force-staged with `git add -f` and the hook run directly, it
+was **allowed**.
+
+**The class is every tool that drops state next to a repository** — `.idea/`, `.vscode/`, `.trash/`,
+editor swap files, sync-tool conflict copies. Any of them can name a vault path, and the next one will
+not be Obsidian.
+
+**Closing it — and the false-positive case decides the design, so test it first:**
+
+1. 🔴 **"Fail on any untracked, non-ignored file" is useless and will be switched off in a day.** Every
+   new source file is untracked before it is added. That check fires during ordinary development, every
+   time.
+2. 🟢 **Narrow it to what actually indicates a leak:** a path that is **neither tracked nor ignored**
+   *and* whose contents name a **specific file under `vault/`** — `vault/<folder>/<file>` — rather than
+   the bare string `vault/`.
+3. 🔴 **Matching the bare string `vault/` is the trap.** This repository refers to `vault/` constantly
+   and legitimately: `tools/lib/paths.py`, `SCHEMA.md`, `AGENTS.md`, every skill file and this entry.
+   **A check on the bare string flags its own documentation**, which has already happened twice to the
+   content heuristic in `pre-commit` — see the comment in that file.
+
+**Where it belongs:** `doctor.py` warns, because it runs per session and this is advisory; `pre-commit`
+hard-fails, because staged is the last moment before history. **`test_boundary.py` is the wrong home** —
+it tests the code's behaviour, and this is a property of the working tree.
+
+🟡 **Also worth telling the user, and not a check at all:** `.obsidian/` at the repository root means
+Obsidian indexes `tools/`, `templates/`, `docs/` and `examples/` as notes, so system files appear as
+unlinked pages beside the user's own. **Pointing Obsidian at `vault/` scopes it to exactly the boundary
+this repository already draws**, and removes the symptom and the leak together.
+
+
 ### 🟡 No `.docx` route, and the one case that needs it is the agency application
 
 **`build-application` Step 6 produces a PDF only** — the CV is written as HTML from `templates/cv.html`
