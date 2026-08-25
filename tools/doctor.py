@@ -84,7 +84,7 @@ def check_sources():
     files = [f for f in os.listdir(d) if not f.startswith(".") and f != "README.md"] \
         if os.path.isdir(d) else []
     if not files:
-        return MISSING, ("sources/ has no CV in it. /career-init stops without one, and "
+        return MISSING, ("vault/sources/ has no CV in it. /career-init stops without one, and "
                          "a messy CV is more useful than a tidy one")
     return OK, f"{len(files)} file(s) — {', '.join(sorted(files)[:3])}"
 

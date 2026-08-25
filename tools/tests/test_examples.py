@@ -70,6 +70,23 @@ class NoExampleOverlapsTheRealPerson(unittest.TestCase):
         self.vault_figures = set()
         for base, _, files in os.walk(os.path.join(VAULT, "wiki")):
             for f in files:
+                # 🔴 log.md is excluded, and this is the check's SECOND false
+                # positive -- the first was a substring match, and this one was
+                # the log entry recording that fix, which quotes the example's
+                # own requisition number.
+                #
+                # The exclusion is principled rather than convenient. The risk
+                # here is an example written from the real person's career, and
+                # that risk lives in the pages that describe them. log.md is a
+                # chronological record of what the SYSTEM did, and discussing
+                # the shipped example there is exactly what it is for.
+                #
+                # It also had to go: this would have failed on day one, in a
+                # fresh clone, for a reason that is nobody's fault and cannot be
+                # fixed without editing your own history. A check that fires
+                # then is a check that gets switched off.
+                if f == "log.md":
+                    continue
                 if f.endswith(".md"):
                     with open(os.path.join(base, f), encoding="utf-8", errors="ignore") as fh:
                         self.vault_figures |= figures(fh.read())
@@ -79,8 +96,11 @@ class NoExampleOverlapsTheRealPerson(unittest.TestCase):
         for path in example_files():
             with open(path, encoding="utf-8") as fh:
                 shared |= figures(fh.read()) & self.vault_figures
-        self.assertEqual(sorted(shared), [],
-                         f"a figure in examples/ also appears in the vault -- whose career is this? {shared}")
+        self.assertEqual(
+            sorted(shared), [],
+            f"a figure in examples/ also appears in this vault's pages: {sorted(shared)}. "
+            "The example is supposed to be invented -- check whose career it was written from. "
+            "If the overlap is a coincidence, change the figure in examples/, not this test.")
 
 
 if __name__ == "__main__":
