@@ -963,6 +963,29 @@ twice:**
 🟢 **The user benefit is immediate and personal; the registry entry is a by-product.** That ordering is the
 whole design — a request framed as *"contribute to our database"* gets ignored.
 
+## ✅ Contributing it back — BUILT as `tools/add_employer.py`
+
+**2026-08-25, 12 tests.** `python3 tools/add_employer.py "Stripe" https://stripe.com/careers/search`
+
+🟢 **It verifies before the contribution exists**, which is the whole design: read the careers page, work
+out which ATS is behind it, **call the endpoint**, and only then write the entry and offer to send it.
+**Somebody has to merge these by hand, and a maintainer who has to verify contributions stops merging
+them.** A PR that arrives already checked is a thirty-second read.
+
+🔴 **Running it against the registry it was written to extend found a trap in itself.** Its sniffer
+reproduced three of five entries exactly — and on Grant Thornton it picked
+`sites/GrantThorntonIrelandExperiencedHires` from the careers page. **That is not a `siteNumber`. Oracle
+does not recognise it, falls back to the tenant's whole unfiltered list, and the entry verifies
+successfully while claiming a filter it is not applying.** Now it prefers a `CX_` number and says so
+loudly when it can only find a friendly name.
+
+🟢 **Workday is probed, Oracle is not.** Workday 404s on a wrong site, so trying `Global`, `External`,
+`Careers` in turn is honest — **State Street's site was recovered that way.** Oracle returns 200 for
+anything, so guessing there would manufacture a wrong entry that looks right. **The asymmetry decides
+where probing is allowed.**
+
+### The original design
+
 ## Contributing it back: one file, and only one file
 
 🔴 **This is the part that needs care, because the contribution flow runs from a working copy that contains
