@@ -259,6 +259,39 @@ audit discipline above still covers the rest.**
 🟢 **And `test_shipped.py` caught the new test file untracked, in the same run** — the second time in two
 sessions that the check about untracked files has caught the person adding a check.
 
+### ✅ Templates evolve and vaults do not — `template_drift.py` BUILT
+
+**Status: ✅ 2026-08-25, 11 tests. Found by being asked what is missing to make this a platform rather
+than one person's tool, and it is the gap that grows every time a template improves.**
+
+🔴 **`/career-init` copies `templates/` into `wiki/` ONCE and nothing ever revisits it.**
+`sync-to-vault.sh` refuses to touch `wiki/` deliberately — that directory is the person, not the tool. So
+`CLAUDE.md` and the skills move forward, and the pages they give instructions about do not.
+
+**Demonstrated on the same day it was found.** The framework template gained a standing-gaps table, a
+known-locations table, a baseline row, an internal-move row and a seven-value outcome vocabulary — **and
+`CLAUDE.md`, which IS synced, was updated to instruct the agent to use all five.** Every vault created
+before that morning has an agent looking for tables that are not there. **A vault reconstructed from
+yesterday's templates reports all five.**
+
+🔴 **Two of the five were ROWS INSIDE A TABLE THE VAULT ALREADY HAD.** A section-level check walks
+straight past that, so seeded rows are compared as well — a row the template ships filled in is content
+the page is supposed to carry, distinct from a blank row, which is only a place to write. **Ship the empty
+table; ship the row that is not empty.**
+
+🟢 **The tolerance decides whether anyone keeps it switched on.** A vault has its placeholders filled and
+its own rows added, and the agent may phrase a heading its own way. Ratio alone was too strict — *"standing
+gaps"* against *"standing gaps (capabilities)"* scores 0.67 — so containment counts too. **Verified clean
+against a filled-in vault, which is the case that matters more than the detections.**
+
+🔴 **It never writes.** Merging a section into a page holding a real person's history is a judgement —
+where it goes, what carries over, whether an existing note belongs under it. **The agent owns wiki pages;
+a script editing them would be touching the one thing in this repo it does not own**, and a bad merge
+there costs somebody their notes. A test asserts the file is byte-identical after a run.
+
+🟡 **And it says what a clean run does not prove**: that the structure matches, not that a section's
+contents are current.
+
 ### 3. Then, in this order
 
 🟢 **The first two items on this list were done on 2026-08-25** — the seven-day window is now
@@ -270,6 +303,7 @@ for the reasoning. **What follows is what is next.**
 | 🔴 **Ask the user for their actual lists** | ✅ The mechanism is built and empty. **`employers.json` is the user's to write and nobody has been asked** — which employers they want watched, which they will not work for, and on what basis |
 | **Email alerts as a universal source** | Designed below, not built. Inverts the problem: *"we cannot scrape X"* becomes *"anything that will email us is a source"*, and it works with the sites' cooperation rather than against their terms |
 | **Everything after the submit button** | The system stops at submission and the process does not. **Interview prep is the largest piece and the wiki already holds what it needs** |
+| 🔴 **A readiness check** | Setup is three example configs, a `git config` line and up to two API keys, and nothing answers *"am I set up?"* — `sources_check.py` covers a third of it |
 | 🔴 **Nothing has been run end-to-end from a cold start** | `/career-init` on an empty repo has never been exercised, and the top of this file says it should be the first thing done |
 
 🟢 **Leave the rest until the cold run says which of them matter.**

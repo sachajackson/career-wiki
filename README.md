@@ -965,6 +965,18 @@ alone does not survive `git add -f`, and a public git history is permanent.
 Full detail, including how to carry tool updates into your vault and how to migrate an existing wiki, is
 in [CONTRIBUTING.md](CONTRIBUTING.md).
 
+**And after any update, ask what your vault missed:**
+
+```bash
+python3 tools/template_drift.py --wiki wiki
+```
+
+Your wiki was built from the templates **once**, when you first set it up, and nothing revisits it
+afterwards. When the templates gain a section — a new table the agent is told to keep, a row it is told to
+score — **your pages do not get it**, and the agent ends up looking for something that is not there. This
+says what is missing. It never edits your pages: putting a new section into a page that already holds your
+history is a judgement, and that is the agent's job, not a script's.
+
 ---
 
 ## Credits and licence

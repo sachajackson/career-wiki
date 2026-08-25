@@ -21,6 +21,26 @@ still opens the right page and silently lands at the top.
 **`--fix` repairs the wrapped ones.** The other two need judgement: a missing page usually wants writing,
 and a renamed heading wants repointing at whatever replaced it.
 
+**And after pulling any update to the tools:**
+
+```
+python3 tools/template_drift.py --wiki wiki
+```
+
+🔴 **`/career-init` copies `templates/` into `wiki/` once and nothing ever revisits it**, and
+`sync-to-vault.sh` refuses to touch `wiki/` on purpose — that directory is the person, not the tool. So
+the tool improves and the vault does not. **In one real change the framework template gained two tables,
+two seeded rows and a longer status vocabulary, and `CLAUDE.md` was updated to instruct the agent to use
+all of them** — leaving every older vault with an agent looking for tables that are not there.
+
+🔴 **Two of those five were rows inside a table the vault already had**, which is why the check compares
+seeded rows and not just sections. **A section-level check walks straight past that case.**
+
+🟢 **Findings here are not errors and the tool will not fix them.** Merging a new section into a page that
+holds a real person's history is a judgement — where it goes, what carries over, whether an existing note
+belongs under it. **You own these pages; do the merge, and say what you added.** 🟡 And a clean run means
+the *structure* matches, **not** that a section's contents are current.
+
 **And monthly, or before relying on a quiet radar run:**
 
 ```
