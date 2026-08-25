@@ -710,7 +710,23 @@ Or, to sweep everything still open rather than only the last week:
 python3 tools/radar/radar.py --all-open
 ```
 
-### 7. Optional but recommended — read the wiki in Obsidian
+### 7. Check it is all set up
+
+```bash
+python3 tools/doctor.py
+```
+
+**It reads your files and says what is ready, what is optional, and what needs doing.** Most of it is
+optional and says so — an unconfigured thing has not been tried, which is different from broken.
+
+🔴 **The one it is really for**: a config file you copied from the example and never filled in. That
+**looks configured and matches nothing** — the search runs, finds no roles, and reports a quiet week that
+never happened. A missing file would have been louder.
+
+It makes no network calls, so it is instant and works offline. To find out whether the job sources
+actually answer, run `python3 tools/radar/sources_check.py`.
+
+### 8. Optional but recommended — read the wiki in Obsidian
 
 [Obsidian](https://obsidian.md) is a free app for reading interlinked markdown files. Open the
 `career-wiki` folder as a vault and you can click through the wiki as it is written, follow the links, and

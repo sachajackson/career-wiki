@@ -9,6 +9,17 @@ Run periodically, and **always before a batch of applications**.
 
 ## Run the mechanical half first — it takes seconds and needs no judgement
 
+**If anything looks unconfigured, or the user is new, start here:**
+
+```
+python3 tools/doctor.py
+```
+
+🔴 **`PLACEHOLDER` is the finding that matters.** A config copied from its example and never filled in
+**looks configured and matches nothing** — the radar runs, finds nothing and reports a quiet week that
+never happened. **`OPTIONAL` is not a fault** and must not be reported as one: most of the setup is
+optional, and telling someone to fix what they never wanted is how a check gets ignored.
+
 ```
 python3 tools/wikilinks.py wiki
 ```

@@ -292,6 +292,48 @@ there costs somebody their notes. A test asserts the file is byte-identical afte
 🟡 **And it says what a clean run does not prove**: that the structure matches, not that a section's
 contents are current.
 
+### ✅ Nothing answered "am I set up?" — `doctor.py` BUILT
+
+**Status: ✅ 2026-08-25, 19 tests.** Setup is three config files copied from examples, a `git config`
+line, a CV in a folder and up to two API keys. `sources_check.py` answered a third of it, and only about
+job sources.
+
+🔴 **The finding it exists for is the placeholder config.** A file copied from its example and never
+filled in **looks configured and returns nothing.** `config.example.json` says so in its own first line.
+**Demonstrated rather than argued**: with an untouched example config the radar reports *"3 fetched,
+HIGH 0, MED 0"* and exits successfully. **A missing file would have been louder than a filled one.**
+
+🟢 **`OPTIONAL` is not `MISSING`** — the distinction this repo has now needed in four separate places.
+Most of the setup is optional; reporting an unconfigured thing as a fault sends someone to fix what they
+never wanted. Only `MISSING` and `PLACEHOLDER` exit non-zero.
+
+🟡 **It makes no network calls**, so it is instant, works offline, and cannot tell anyone a source
+*answers* — it says so and points at `sources_check.py`. **A test asserts the module imports nothing that
+could make a request**, because a promise in a docstring that can be checked should be.
+
+🟢 **It also names the free way round the oversight key** — `review.py --dry-run` prints the prompt to
+paste into any other vendor's chat window. Without that, a paid second-vendor key reads as a requirement
+and most users will simply skip the review.
+
+### 🔴 Mutation testing can be defeated by the bytecode cache — 2026-08-25
+
+**Found while mutation-testing `doctor.py`, and it invalidates results rather than just wasting time.**
+
+A mutation that **preserves the file's byte length** and is written **within the same second** as the
+original is invisible to CPython's `.pyc` invalidation, which compares **mtime and size**. The stale
+bytecode gets loaded and **the test runs against the unmutated code**.
+
+🔴 **It reported `MISSED!` for a mutant that the tests do catch** — reversing a severity list, where
+`[MISSING, PLACEHOLDER, WARN, OPTIONAL, OK]` and `[OK, OPTIONAL, WARN, PLACEHOLDER, MISSING]` are the
+same length to the character. **The wrong conclusion is the dangerous one**: it says a check is weaker
+than it is, and the natural response is to weaken the code to match.
+
+🟢 **Fix: run mutation checks with `python3 -B` and `PYTHONDONTWRITEBYTECODE=1`.** Re-run that way, all
+nine mutants were caught, including the one that had reported as missed.
+
+🟡 **The general shape is worth keeping.** Any harness that rewrites a file in place and re-executes it is
+exposed to this — **length-preserving edits are exactly the ones a careful mutation makes.**
+
 ### 3. Then, in this order
 
 🟢 **The first two items on this list were done on 2026-08-25** — the seven-day window is now
@@ -303,7 +345,6 @@ for the reasoning. **What follows is what is next.**
 | 🔴 **Ask the user for their actual lists** | ✅ The mechanism is built and empty. **`employers.json` is the user's to write and nobody has been asked** — which employers they want watched, which they will not work for, and on what basis |
 | **Email alerts as a universal source** | Designed below, not built. Inverts the problem: *"we cannot scrape X"* becomes *"anything that will email us is a source"*, and it works with the sites' cooperation rather than against their terms |
 | **Everything after the submit button** | The system stops at submission and the process does not. **Interview prep is the largest piece and the wiki already holds what it needs** |
-| 🔴 **A readiness check** | Setup is three example configs, a `git config` line and up to two API keys, and nothing answers *"am I set up?"* — `sources_check.py` covers a third of it |
 | 🔴 **Nothing has been run end-to-end from a cold start** | `/career-init` on an empty repo has never been exercised, and the top of this file says it should be the first thing done |
 
 🟢 **Leave the rest until the cold run says which of them matter.**

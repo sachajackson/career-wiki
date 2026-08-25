@@ -124,5 +124,17 @@ updates is a number that lies.** If you changed `verify.py`, `cv_lint.py` or
 `wikilinks.py`, **add a test for the behaviour you changed** — those three are the layer everything else
 leans on, and a regression in them is silent by construction.
 
+🔴 **If you mutation-test, disable the bytecode cache.**
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -B tools/tests/test_thing.py
+```
+
+A mutation that keeps the file the same length and is written in the same second is invisible to
+CPython's `.pyc` invalidation, which compares **mtime and size** — so the stale bytecode loads and the
+test runs against the *unmutated* code. It reported a caught mutant as missed here, and **the wrong
+conclusion is the dangerous one**: it says a check is weaker than it is, and the natural response is to
+weaken the code to match. **Length-preserving edits are exactly the ones a careful mutation makes.**
+
 🟢 **A test that encodes a bug someone actually hit is worth three that cover the happy path.** Several of
 the existing ones are exactly that, and they say so in their docstrings.
