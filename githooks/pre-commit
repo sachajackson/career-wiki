@@ -34,9 +34,14 @@ blocked=""
 # Those READMEs are the system's words about the folder, never the user's words
 # in it -- and they are still scanned by the content heuristic below, so a
 # personal note pasted into one is caught by rule 2 rather than waved through.
+#
+# The five are named exactly. A wildcard over any-folder-slash-README was tried
+# first and is wrong: the agent writes README files inside vault folders while it
+# works, and the wildcard waved every one of them through.
 while IFS= read -r f; do
   case "$f" in
-    vault/*/README.md|vault/README.md) ;;
+    vault/README.md|vault/sources/README.md|vault/settings/README.md|\
+    vault/secrets/README.md|vault/migration/README.md) ;;
     vault/*)
       blocked+="  $f  (vault/ is the user's, and must never be committed)"$'\n' ;;
   esac

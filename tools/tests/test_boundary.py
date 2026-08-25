@@ -76,16 +76,49 @@ class NothingOfTheUsersIsTracked(unittest.TestCase):
                 hit = personal.search(fh.read())
             self.assertIsNone(hit, f"{p} looks personal: {hit.group(0) if hit else ''}")
 
-    def test_the_vault_is_ignored_by_a_pattern_not_a_list(self):
-        """Eight rules with carve-outs naming individual files is what swallowed
-        two files that had to ship. A carve-out that is a PATTERN cannot: it does
-        not need maintaining when somebody adds a file."""
+    SHIPPED = {"vault/README.md", "vault/sources/README.md", "vault/settings/README.md",
+               "vault/secrets/README.md", "vault/migration/README.md"}
+
+    def test_the_ignore_rule_the_hook_and_the_repo_agree_on_the_same_five(self):
+        """Three lists that must agree cannot drift apart quietly.
+
+        `!vault/**/README.md` was tried first because a pattern looked safer
+        than a list -- and it was wrong here. The agent writes README files
+        inside vault folders as it works, and the pattern made every one of them
+        stageable by `git add -A`. The distinction that matters is not
+        pattern-versus-list: it is whether the thing grows when the USER adds a
+        file. This one only grows when the SYSTEM adds a folder."""
         with open(os.path.join(ROOT, ".gitignore"), encoding="utf-8") as fh:
             lines = [l.strip() for l in fh if l.strip() and not l.startswith("#")]
         self.assertIn("vault/**", lines)
-        for carve in [l for l in lines if l.startswith("!")]:
-            self.assertTrue(carve.endswith("/") or carve.endswith("README.md"),
-                            f"{carve} names a file -- that is the failure mode, use a pattern")
+        carved = {l[1:] for l in lines if l.startswith("!") and not l.endswith("/")}
+        self.assertEqual(carved, self.SHIPPED, "the ignore rule and the shipped set disagree")
+
+        with open(os.path.join(ROOT, "githooks", "pre-commit"), encoding="utf-8") as fh:
+            hook = fh.read()
+        for p in self.SHIPPED:
+            self.assertIn(p, hook, f"the hook does not allow {p}")
+        self.assertNotIn("vault/*/README.md", hook, "a wildcard waves through agent-written READMEs")
+
+        self.assertEqual({p for p in tracked() if p.startswith("vault/")}, self.SHIPPED)
+
+    def test_a_readme_the_agent_writes_is_still_ignored(self):
+        """The probe that found the hole. It is not enough to assert the rules
+        look right -- what matters is what git does with a path nobody listed."""
+        import tempfile
+        probe = os.path.join(ROOT, "vault", "wiki", "_boundary_probe")
+        os.makedirs(probe, exist_ok=True)
+        target = os.path.join(probe, "README.md")
+        try:
+            with open(target, "w") as fh:
+                fh.write("written by the agent, not by the system\n")
+            r = subprocess.run(["git", "-C", ROOT, "check-ignore", target],
+                               capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0,
+                             "a README the agent writes inside the vault is not ignored")
+        finally:
+            os.remove(target)
+            os.removedirs(probe)
 
     def test_the_hook_blocks_the_vault(self):
         with open(os.path.join(ROOT, "githooks", "pre-commit"), encoding="utf-8") as fh:
@@ -103,15 +136,59 @@ class NothingOfTheUsersIsTracked(unittest.TestCase):
             git("config", "user.name", "t"); git("config", "core.hooksPath",
                                                  os.path.join(ROOT, "githooks"))
             os.makedirs(os.path.join(tmp, "vault", "wiki"))
-            for rel, body in (("vault/wiki/CV.md", "private\n"),
-                              ("vault/wiki/README.md", "what goes here\n")):
+            os.makedirs(os.path.join(tmp, "vault", "sources"))
+            files = {"vault/wiki/CV.md": "private\n",
+                     # The agent writes these as it works. They are not the
+                     # system's, and the hook must not wave them through.
+                     "vault/wiki/README.md": "notes on this folder\n",
+                     "vault/sources/README.md": "what goes here\n"}
+            for rel, body in files.items():
                 with open(os.path.join(tmp, rel), "w") as fh:
                     fh.write(body)
-            git("add", "-f", "vault/wiki/CV.md", "vault/wiki/README.md")
+            git("add", "-f", *files)
             r = git("commit", "-m", "x")
             self.assertNotEqual(r.returncode, 0, "the hook let a vault file through")
-            self.assertIn("vault/wiki/CV.md", r.stderr)
-            self.assertNotIn("vault/wiki/README.md", r.stderr.split("looks personal")[0])
+            blocked = r.stderr.split("looks personal")[0]
+            self.assertIn("vault/wiki/CV.md", blocked)
+            self.assertIn("vault/wiki/README.md", blocked,
+                          "only the five shipped READMEs are the system's")
+            self.assertNotIn("vault/sources/README.md", blocked)
+
+
+class TheGuardInstallsItself(unittest.TestCase):
+    """`git config core.hooksPath githooks` was a line in the setup docs, which
+    means it was on for whoever read them. The person who skips setup is exactly
+    the person who does not know the boundary exists."""
+
+    def test_the_installer_ships_and_is_executable(self):
+        rel = ".claude/hooks/install-guard.sh"
+        self.assertIn(rel, tracked())
+        self.assertTrue(os.access(os.path.join(ROOT, rel), os.X_OK), f"{rel} is not executable")
+
+    def test_a_session_runs_it(self):
+        import json
+        with open(os.path.join(ROOT, ".claude", "settings.json"), encoding="utf-8") as fh:
+            cfg = json.load(fh)
+        cmds = [h.get("command", "") for g in cfg["hooks"].get("SessionStart", [])
+                for h in g.get("hooks", [])]
+        self.assertTrue(any("install-guard" in c for c in cmds),
+                        "nothing installs the commit guard at session start")
+
+    def test_it_is_idempotent_and_safe_outside_a_repo(self):
+        import tempfile
+        script = os.path.join(ROOT, ".claude", "hooks", "install-guard.sh")
+        with tempfile.TemporaryDirectory() as tmp:
+            env = dict(os.environ, CLAUDE_PROJECT_DIR=tmp)
+            r = subprocess.run(["bash", script], env=env, capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, "it must not fail on a ZIP download")
+            subprocess.run(["git", "-C", tmp, "init", "-q"], check=True)
+            os.makedirs(os.path.join(tmp, "githooks"), exist_ok=True)
+            for _ in range(2):
+                self.assertEqual(subprocess.run(["bash", script], env=env,
+                                                capture_output=True).returncode, 0)
+            got = subprocess.run(["git", "-C", tmp, "config", "core.hooksPath"],
+                                 capture_output=True, text=True).stdout.strip()
+            self.assertEqual(got, "githooks")
 
 
 class NothingOfTheUsersLivesOutsideIt(unittest.TestCase):

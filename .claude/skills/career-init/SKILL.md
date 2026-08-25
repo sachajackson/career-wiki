@@ -10,13 +10,13 @@ conversation.
 
 ## Before anything
 
-Check `sources/` contains at least one CV or profile export. If it is empty, stop and ask for one — every
+Check `vault/sources/` contains at least one CV or profile export. If it is empty, stop and ask for one — every
 other step depends on it. **Ask for a LinkedIn export too** if they have one: the two documents disagree
 surprisingly often, and the disagreements are findings.
 
 ## 1. Read, then say what you found
 
-Read everything in `sources/`. Then, **before writing any files**, tell the user what you noticed:
+Read everything in `vault/sources/`. Then, **before writing any files**, tell the user what you noticed:
 gaps in the timeline, claims without numbers, roles described in a sentence that sound like they deserve
 a page, anything that contradicts something else.
 

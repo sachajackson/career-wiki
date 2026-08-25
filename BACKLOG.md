@@ -133,6 +133,42 @@ how `config.json` behaves:**
   reported `UNREACHABLE!` on a connection reset and answered fine a second later. **Anything that calls a
   live endpoint needs retries before it is allowed to call something dead.**
 
+### 🔴 `migration/` is described but not built — 2026-08-25
+
+**`vault/migration/README.md` promises that the agent empties the folder, files what it recognises and
+names what it cannot. Nothing implements that.** It is an instruction, and every instruction-shaped
+control in this repo has failed at least once.
+
+**It matters more than it looks**, because it is the only route from an existing vault onto this system,
+and the first person to try it will have a *large* one — hundreds of files, years of wikilinks, a state
+folder, and a fork of the tooling that has since diverged. **A hand-sorted migration at that size will
+break links silently.**
+
+**What is already here and does most of the work:**
+
+| | |
+|---|---|
+| `tools/wikilinks.py` | **WRAPPED / NO PAGE / NO HEADING, and `--fix`.** Run it after any bulk move — this is the check that makes a migration safe rather than hopeful |
+| `tools/template_drift.py` | Finds pages built from a template version that has since changed |
+| `tools/known.py` | Answers whether something is already recorded, before it gets written twice |
+
+**What is missing is the classifier and the report**, not the checks.
+
+🔴 **Three traps to build for, all real:**
+
+1. **`sources/` is not the drop zone and people will use it as one.** It is read-only raw material the
+   agent never edits; `migration/` is the folder that gets emptied. **A migration dumped into `sources/`
+   looks like it worked and quietly does nothing.**
+2. **Regenerable state should be dropped, not migrated.** `seen.json` and a description cache are worth
+   nothing on the far side and carry the most weight.
+3. 🔴 **A forked copy of the tooling must not come across.** It is the system, not the vault. Somebody
+   arriving from an older clone will have edited theirs, and their version will be behind on the scoring
+   model, the adapters and the registry. **Migrating it silently reinstates every bug that was fixed
+   since they forked.**
+
+**Report what could not be placed, by name.** A file quietly left in a drop zone looks exactly like a
+file that was dealt with.
+
 ### 🔴 Two files, one letter apart, opposite privacy rules — know which is which
 
 **`vault/settings/employers.json` and `tools/radar/ats_registry.json` are not variants of each other.**

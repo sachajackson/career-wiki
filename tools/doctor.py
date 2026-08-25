@@ -72,9 +72,10 @@ def check_git():
     except Exception:
         return WARN, "git is not on PATH"
     if hooks != "githooks":
-        return WARN, ("`git config core.hooksPath githooks` has not been run. Only matters "
-                      "if you commit from here, and then it matters a lot: it is what "
-                      "refuses personal material even against `git add -f`")
+        return WARN, ("the commit guard is not installed. It normally installs itself at the "
+                      "start of a session — if you are not using an agent here, run "
+                      "`git config core.hooksPath githooks` yourself. It is what refuses "
+                      "personal material even against `git add -f`")
     return OK, "clone, with the commit guard installed"
 
 

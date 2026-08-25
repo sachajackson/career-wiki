@@ -19,16 +19,29 @@
 # documentation first. So the folders ship, with a README in each explaining
 # what belongs there. The READMEs are the system's words, not the user's.
 #
-# tools/tests/test_boundary.py asserts that the ONLY tracked files under vault/
-# are README.md, and the pre-commit hook blocks everything else regardless. If
-# you find yourself wanting to add another exception here, that is the signal
-# that something is in the wrong folder.
+# The exceptions name FIVE EXACT PATHS rather than a `**/README.md` pattern, and
+# that is not a relapse into listing files. A pattern looked cleaner and was
+# wrong: the agent writes README files inside vault folders as it works, and
+# `!vault/**/README.md` silently made every one of them stageable by `git add
+# -A`. This list only ever grows when the SYSTEM adds a folder -- never when the
+# USER adds a file, which is the failure mode that matters.
+#
+# tools/tests/test_boundary.py asserts these five, the five the pre-commit hook
+# allows, and the five actually tracked are the SAME FIVE. Three lists that must
+# agree cannot drift apart quietly. If you want to add a sixth, that is usually
+# the signal that something is in the wrong folder.
 # ---------------------------------------------------------------------------
 
 vault/**
-!vault/**/
-!vault/**/README.md
 !vault/README.md
+!vault/migration/
+!vault/migration/README.md
+!vault/secrets/
+!vault/secrets/README.md
+!vault/settings/
+!vault/settings/README.md
+!vault/sources/
+!vault/sources/README.md
 
 .DS_Store
 __pycache__/
