@@ -62,9 +62,9 @@ def coords(url):
 def requisition(url):
     """The requisition number, off the URL. Both ATSs put it there.
 
-    Workday ends a job path with the requisition -- _R-795434, _R44938, and
-    _R45465-1 where the same requisition is posted in two places. Oracle's job
-    id IS the requisition.
+    Workday ends a job path with the requisition, in three shapes seen live:
+    _R-000000, _R000000, and _R000000-1 where one requisition is posted in two
+    places. Oracle's job id IS the requisition.
     """
     m = ORACLE.match(url or "")
     if m:

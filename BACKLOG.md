@@ -1662,6 +1662,40 @@ sensible rule is to re-read anything the user is about to act on, and trust the 
 
 ---
 
+### 🔴 Read this before moving the user root — the paths that are load-bearing
+
+**Compiled 2026-08-25 for the boundary work, from the code rather than from memory.** The move is
+happening in a separate piece of work; this is the inventory it needs, and it is here because the person
+doing it will be reading the entry below.
+
+🔴 **`wiki/postings/` is now load-bearing and it was not a week ago.** It is the **only durable copy of a
+posting** — `raw.json` is overwritten every run with that run's new rows, so nothing else survives.
+`radar.archive()` writes it, defaulting to `HERE/../../wiki/postings` with a `postings_dir` override in
+`config.json`, and **`refresh.py` reads it by path** when someone is about to apply. It is already on the
+user's side of the line, but two tools now agree on where it is, and a third (`build-application` Step 0)
+names the path in prose.
+
+**Where a path is currently pinned, and to what:**
+
+| | Holds | Note |
+|---|---|---|
+| `radar.py` | `CONFIG`, `RAW`, `SEEN`, `OUT`, and `archive()`'s default | **The four the handover asked to be told about.** Untouched this session |
+| `radar/employers.py` | `employers.json` | 🔴 The private avoid list. **Never ships** |
+| `doctor.py` | `sources/`, `wiki/`, `.git/`, both `config.json`s, `employers.json`, `ats_registry.json` | **Seven paths in one file** — the most concentrated place the move will show up, and the one that will silently report `OPTIONAL` for everything if a root changes under it |
+| `registry.py`, `registry_check.py`, `add_employer.py` | `ats_registry.json` | 🟢 System-side. Ships, and stays where it is |
+| `export_review.py` | `oversight/` | User-side |
+| `verify.py`, `known.py`, `wikilinks.py`, `template_drift.py` | `--wiki`, defaulting to `wiki` | 🟢 **Already parameterised.** These need nothing |
+
+🟢 **The pattern worth keeping**: the four that take `--wiki` are the ones that will survive the move
+untouched. **Anything that computes a path from `HERE` is what has to change.**
+
+🟡 **And one schema change, not a path**: `seen.json` records now carry `requisition` and `posted`, so a
+repost can be spotted on a later run. Older records have neither and the check degrades to silence. **A
+migration does not need to do anything about this** — it is additive — but a validator that rejects
+unknown keys would break it.
+
+---
+
 ### 🔴 There is no way for a user to take an update — and every day makes it worse
 
 **Status: designed 2026-08-25, not built. Architectural, and the one that compounds.**

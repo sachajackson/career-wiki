@@ -28,7 +28,7 @@ refresh = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(refresh)
 
 WD = "https://wd1.myworkdaysite.com/recruiting/<tenant>/<site>/job/<city>/Head-of-Delivery_R-100"
-ORC = "https://<pod>.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/<site>/job/336508"
+ORC = "https://<pod>.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/<site>/job/000000"
 
 
 def archive(url=WD, posted="2026-07-26", body="The original description. " * 30):
@@ -62,7 +62,7 @@ class UrlsBackIntoCoordinates(unittest.TestCase):
     def test_oracle(self):
         ats, row = refresh.coords(ORC)
         self.assertEqual(ats, "oracle")
-        self.assertEqual(row["_or"][1:], ["<site>", "336508"])
+        self.assertEqual(row["_or"][1:], ["<site>", "000000"])
 
     def test_an_aggregator_url_says_so_rather_than_guessing(self):
         ats, why = refresh.coords("https://www.linkedin.com/jobs/view/123/")
@@ -73,7 +73,7 @@ class UrlsBackIntoCoordinates(unittest.TestCase):
         """Passing a placeholder would silently disable the missing-requisition
         check and report a clean result it never ran."""
         self.assertEqual(refresh.requisition(WD), "R-100")
-        self.assertEqual(refresh.requisition(ORC), "336508")
+        self.assertEqual(refresh.requisition(ORC), "000000")
         self.assertEqual(refresh.requisition("https://www.linkedin.com/jobs/view/1/"), "")
 
 
