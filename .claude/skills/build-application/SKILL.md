@@ -18,6 +18,25 @@ If a fetch fails, say what failed rather than concluding. **A 403 is not evidenc
 careers site that will not render for an automated browser tells you nothing about the role. If you cannot
 resolve it, ask the user to check while logged in.
 
+🟢 **If the posting was archived by the radar, re-read it — this is the moment the expensive pass is
+for:**
+
+```bash
+python3 tools/radar/refresh.py "wiki/postings/<Employer> - <Title>.txt"
+```
+
+**The radar is bounded to the delta and never re-reads anything**, so the text and the date behind an
+assessment are however old the assessment is. Re-reading answers three things at once:
+
+| | |
+|---|---|
+| **Still readable?** | `GONE` means filled, withdrawn or moved. **Do not build from the archived copy without checking** |
+| **Has the description moved?** | A band added, a requirement softened. **A salary appearing is called out by name** — it changes the PAY row and the screening-call question |
+| 🔴 **How old is it really?** | **A listing censors the posting date and the detail endpoint does not.** One real posting's listing said *"30+ days"* while its detail said ten days earlier, and **9 of 20 postings from that employer arrived capped.** Age is the best ghost-job signal and the shortlist could not see it |
+
+🟡 **It never updates the archive.** That file is the evidence of what the assessment was based on, and
+today's text is a different document — **note what changed on the role page instead.**
+
 ## Step 0.4 — research the employer, and the division separately
 
 🔴 **Before writing anything, and before the route decision.** The posting tells you what the employer

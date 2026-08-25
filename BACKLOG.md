@@ -1599,9 +1599,52 @@ role can be worth applying to even at 30% odds of being real, and that is their 
 
 ---
 
-### 🟡 Bound the expensive pass to the delta — adopt from career-ops
+### ✅ Bound the expensive pass to the delta — BUILT, and the premise was wrong
 
-**Status: designed 2026-08-25, not built. Touches the radar fetch loop.**
+**Status: ✅ 2026-08-25 as [`tools/radar/refresh.py`](tools/radar/refresh.py), 19 tests.**
+
+🔴 **It was already bounded, and nobody had measured it.** This entry said the radar fetches a description
+for everything surviving the filter on every run. **It does not.** `seen.json` is consulted at **fetch**
+time, so a role found last week never reaches the description fetch again.
+
+**Measured, twice against one live board:**
+
+| | |
+|---|---|
+| Run 1 | `read 10 descriptions`, 20 rows |
+| Run 2, same query | **`0 fetched`**, empty shortlist, `raw.json` **2 bytes** |
+
+**The 132 in the original note must have been a first run or a `--reset`.**
+
+🔴 **So the real failure was the other one this entry warned about: nothing is ever re-read.** A
+description changes after posting — a band added, a requirement softened, the role quietly withdrawn — and
+none of it is ever noticed, because the row never comes back.
+
+🟢 **And measuring it found a second defect: `raw.json` is not a cache.** It is overwritten each run with
+**that run's new rows only**, so the `role-radar` instruction *"read the cached description, no refetch
+needed"* stops being true the moment another run happens. Corrected in the skill, and the archive in
+`wiki/postings/` is the durable copy.
+
+#### What was built instead
+
+**`refresh.py` re-reads one archived posting** — the expensive pass, invoked deliberately at the moment
+somebody is about to act, which is what keeps it bounded. Wired into `build-application` Step 0.
+
+🔴 **The stronger of its two reasons is the date.** A listing censors the posting date and the detail
+endpoint does not. Demonstrated on live data: an archived posting carried **2026-07-26**, the listing's
+30-day cap; its detail said **2026-07-16**. **9 of 20 postings from that tenant arrived capped.** Age is
+the best ghost-job predictor and the shortlist could not see it.
+
+🟢 **It reconstructs adapter coordinates from the public URL**, because by re-read time `raw.json` is
+gone. Both Workday hosting styles and Oracle, with the requisition taken off the URL — **not faked.**
+Passing a placeholder there would have silently disabled the missing-requisition check and reported a
+clean result it never ran, and a mutation doing exactly that is caught.
+
+🟡 **It never writes to the archive.** That file is evidence of what the assessment was based on; today's
+text is a different document, and a fetch can return a 404 page that would replace the evidence with
+nothing. A mutation that clobbers the file is caught.
+
+
 
 **`career-ops` splits its scan in two: trust the ATS feed for everything, then run a browser liveness check
 *"only against new offers (after dedup), so the cost stays bounded."***

@@ -162,6 +162,11 @@ Then:
 1. **Drop anything already in the scoring table.** The script only remembers what *it* has seen, not what
    was ingested by hand.
 2. **Read the cached description** of anything promising — already in `raw.json`, no refetch needed.
+   🔴 **Within this run only.** `raw.json` is overwritten every run with that run's NEW roles, and
+   `seen.json` drops everything already known before it gets there — so after the next run it is empty.
+   **Measured: run the radar twice against one board and the second run reads zero descriptions and
+   writes a 2-byte `raw.json`.** The archive in `wiki/postings/` is the durable copy, and
+   `tools/radar/refresh.py` re-reads one when somebody is about to act on it.
    🔴 **But an aggregator's cached description is not the posting.** LinkedIn and Adzuna truncate, and the
    truncation is asymmetric: it removes qualifiers (*"at least one of"*), alternatives (*"or internal
    product delivery"*) and the business driver — **the parts that make a candidate more eligible.** A
