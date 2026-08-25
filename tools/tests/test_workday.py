@@ -102,6 +102,42 @@ class TheTwoHostingStyles(unittest.TestCase):
         self.assertEqual(rec.posts[0][1]["searchText"], "head of delivery")
 
 
+class ThePublicUrl(unittest.TestCase):
+    """The two hosting styles need two different public paths.
+
+    Got wrong and shipped nowhere, because a live run caught it: the shared-host
+    form needs /recruiting/<tenant>/<site> and the per-tenant form does not.
+    Both verified as HTTP 200 against a real employer of each style.
+    """
+
+    def test_per_tenant_omits_the_recruiting_segment(self):
+        self.assertEqual(
+            workday._public("acme.wd1.myworkdayjobs.com", "acme", "Global", "/job/x"),
+            "https://acme.wd1.myworkdayjobs.com/Global/job/x")
+
+    def test_shared_host_needs_the_recruiting_segment_and_the_tenant(self):
+        self.assertEqual(
+            workday._public("wd1.myworkdaysite.com", "acme", "External", "/job/x"),
+            "https://wd1.myworkdaysite.com/recruiting/acme/External/job/x")
+
+    def test_the_employers_own_link_wins_where_the_detail_was_fetched(self):
+        """Constructing a URL is a guess; externalUrl is the employer's answer."""
+        rec = Recorder([listing([row(loc="2 Locations")])],
+                       detail={"jobPostingInfo": {"location": "<city>",
+                                                  "externalUrl": "https://real/link"}})
+        out, _ = run(cfg(), rec)
+        self.assertEqual(out[0]["url"], "https://real/link")
+
+    def test_entities_are_unescaped_not_just_tags_stripped(self):
+        """A real description arrives holding &amp; and &nbsp;."""
+        rec = Recorder([listing([row(loc="2 Locations")])],
+                       detail={"jobPostingInfo": {
+                           "location": "<city>",
+                           "jobDescription": "<p>Acme&amp;Co&nbsp;delivery &lt;scale&gt;</p>"}})
+        out, _ = run(cfg(), rec)
+        self.assertEqual(out[0]["body"], "Acme&Co delivery <scale>")
+
+
 class TheShard(unittest.TestCase):
     def test_a_422_names_the_shard_rather_than_the_request(self):
         """422 means the tenant is on wd3 or wd5, not that the body is wrong.

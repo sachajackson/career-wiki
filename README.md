@@ -749,7 +749,7 @@ fill in what you have. `config.json` is ignored by git, so your settings stay on
 | **adzuna** | A free API key from [developer.adzuna.com](https://developer.adzuna.com/) | Documented and supported. 🔴 **Check your country is covered before relying on it** — GB, US, NL, DE and others work; **Ireland is not covered and returns 404** |
 | **greenhouse** | Employer board names | Public data, no key. Best for watching specific target employers |
 | **lever** | Employer handles | Public data, no key. Same idea |
-| **workday** | Host, tenant and site, read off the employer's careers URL | Public data, no key. **A large share of big employers run Workday**, including where the careers site looks bespoke. Returns the requisition number and the real posting date, and expands roles advertised in one city that are open in several. 🟡 **Written from verified endpoints and tested against recorded responses, but not yet run against a live tenant from this repo** |
+| **workday** | Host, tenant and site, read off the employer's careers URL | Public data, no key. **A large share of big employers run Workday**, including where the careers site looks bespoke. Returns the requisition number and the real posting date, and expands roles advertised in one city that are open in several. Verified against two live employers, one of each hosting style |
 | **linkedin** | Nothing | **Off by default.** Uses an undocumented endpoint, is against LinkedIn's terms of service, and will break without warning. Enable knowingly or not at all |
 
 You also set your location rules in the same file: which places are acceptable, which are not, and which
@@ -761,6 +761,10 @@ one out from another.** There are two hosting styles — `<tenant>.wd1.myworkday
 `wd1.myworkdaysite.com` — and all three values are visible in the employer's own careers URL. If a
 configured employer returns a `422`, that means the tenant sits on a different shard: try `wd3` or `wd5`
 in the host rather than changing anything else. The adapter says so when it happens.
+
+🟢 **And if an employer's careers site clearly is not Workday, check anyway.** Big employers often put a
+different front end over a Workday back end, and the *Apply* links give it away — search the page source
+for `myworkdayjobs` or `myworkdaysite`, and the host, tenant and site are all in the link.
 
 ---
 

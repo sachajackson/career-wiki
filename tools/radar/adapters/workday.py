@@ -3,12 +3,13 @@
 Public, no key, returns JSON. Many big employers front Workday on their own
 domain, so a careers page that looks bespoke is often this API underneath.
 
-*** NOT YET RUN AGAINST A LIVE TENANT FROM THIS REPOSITORY. ***
+Verified against two live tenants on 2026-08-25, one of each hosting style.
+Every field read is still guarded, because a tenant that returns a shape this
+has not seen should yield a thin row, not a traceback that kills the run.
 
-Written from endpoints recorded in BACKLOG.md and verified there against two
-real employers, and tested here against recorded response shapes. Every field
-read is guarded, because a tenant that returns a shape this has not seen should
-yield a thin row, not a traceback that kills the run.
+The live run found two things a recorded fixture could not have: the public URL
+differs between the two hosting styles, and descriptions arrive with their HTML
+entities intact. Both are pinned by tests now.
 
 TWO HOSTING STYLES, AND AN ADAPTER THAT ASSUMES ONE SILENTLY MISSES EMPLOYERS:
 
@@ -30,7 +31,7 @@ any description -- so a role that is open in the user's city, advertised under a
 city they have excluded, is dropped and never looked at again. When the listing
 says it is hiding locations, this fetches the detail and expands them.
 """
-import datetime, re, time
+import datetime, html, re, time
 from ._http import get_json, post_json
 
 NAME = "workday"
@@ -39,7 +40,14 @@ HONOURS_DAYS = False   # no recency parameter: returns everything currently open
 
 LIST   = "https://{host}/wday/cxs/{tenant}/{site}/jobs"
 DETAIL = "https://{host}/wday/cxs/{tenant}/{site}{path}"
-PUBLIC = "https://{host}/{site}{path}"
+# The public URL differs by hosting style, and this was got wrong until a live
+# run caught it. Verified against one employer of each style:
+#   per-tenant   https://<tenant>.wd1.myworkdayjobs.com/<site>/job/...
+#   shared host  https://wd1.myworkdaysite.com/recruiting/<tenant>/<site>/job/...
+# The detail response carries the authoritative externalUrl, so where the detail
+# is fetched at all that is used in preference to either of these.
+PUBLIC_TENANT = "https://{host}/{site}{path}"
+PUBLIC_SHARED = "https://{host}/recruiting/{tenant}/{site}{path}"
 
 PAGE = 20              # the API's own per-request ceiling
 HIDDEN = re.compile(r"^\s*(\d+)\s+locations?\b|\band\s+(\d+)\s+more\b", re.I)
@@ -70,8 +78,14 @@ def _date(posted_on):
     return "", False
 
 
-def _strip(html):
-    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html or "")).strip()
+def _strip(markup):
+    """Tags out, then entities. A description arrives holding &amp; and &nbsp;."""
+    return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", markup or ""))).strip()
+
+
+def _public(host, tenant, site, path):
+    tmpl = PUBLIC_TENANT if host.lower().startswith(tenant.lower() + ".") else PUBLIC_SHARED
+    return tmpl.format(host=host, tenant=tenant, site=site, path=path)
 
 
 def _detail(host, tenant, site, path):
@@ -132,7 +146,7 @@ def fetch(cfg, query, days):
                 # the thing an application folder has to be named for and that
                 # no aggregator carries.
                 req = next((b for b in (j.get("bulletFields") or []) if b), "")
-                body = ""
+                body, url = "", _public(host, tenant, site, path)
 
                 # Only pay for the detail call when the listing admits it is
                 # hiding something. Expanding every posting would triple the
@@ -147,6 +161,8 @@ def fetch(cfg, query, days):
                     req = info.get("jobReqId") or info.get("id") or req
                     if info.get("startDate"):
                         date, floor = str(info["startDate"])[:10], False
+                    # The employer's own link, rather than one this reconstructed.
+                    url = info.get("externalUrl") or url
                     time.sleep(delay)
 
                 out.append({
@@ -155,7 +171,7 @@ def fetch(cfg, query, days):
                     "company": w.get("names", {}).get(tenant, tenant),
                     "loc": loc or "?",
                     "date": date,
-                    "url": PUBLIC.format(host=host, site=site, path=path),
+                    "url": url,
                     "body": body,
                     "pay": "",
                     "source": NAME,

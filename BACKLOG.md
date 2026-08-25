@@ -95,7 +95,7 @@ for the reasoning. **What follows is what is next.**
 | | Why first |
 |---|---|
 | **The employer watchlist as data** | Preference and exclusion lists exist as a design. They are what turn *"watch these employers"* into something the radar does — **and the Workday adapter now needs a list of employers to point at**, which is the user's to give |
-| 🟡 **Run the Workday adapter against a live tenant** | ✅ Built 2026-08-25 against verified endpoints and recorded responses, **but never yet run against a real employer from this repository.** Until it is, treat its field mapping as unproven |
+| **A `sources check` command** | Probe every configured adapter for the user's country and report what actually works, before they invest in any of it. **The Workday run proved the value cheaply** — two employers, four minutes, two defects |
 | **The Oracle Cloud CX adapter** | The remaining large ATS written up in the aggregator entry. Same argument as Workday, one endpoint, `GET` rather than `POST` |
 | **Everything after the submit button** | The system stops at submission and the process does not |
 
@@ -937,13 +937,25 @@ heuristic; and the requisition number is captured at ingest from `bulletFields`.
 it. **Verified as an A/B against `location_ok`, not asserted** — the filter runs before any description is
 read, so this is the only point at which the role can be rescued.
 
-🔴 **Two limitations, both stated in the code rather than discovered later:**
+🟢 **Run against two live tenants the same day, one of each hosting style. It found two defects that no
+recorded fixture could have**, which is the argument for doing this to every adapter:
 
-- **It has never been run against a live tenant from this repository.** The endpoints were verified
-  against two real employers when they were written up above; the field mapping has not been. Every read
-  is guarded so an unfamiliar shape yields a thin row rather than a traceback, **but a thin row is a
-  silent failure and this should be watched on its first real run.**
-- 🟡 **Workday will only say "30+ Days Ago".** A role six months old and one exactly thirty days old
+| Found | Why a fixture could not catch it |
+|---|---|
+| 🔴 **The public URL differs by hosting style.** Shared-host needs a `/recruiting/<tenant>/<site>` segment the per-tenant form does not | **The fixture asserted the shape the code produced.** Both styles now verified as HTTP 200, and where the detail is fetched the employer's own `externalUrl` is used in preference to any construction |
+| **Descriptions arrive with HTML entities intact**, so a company name with an ampersand in it came through as `Acme&amp;Co` | Invented fixture text had no entities in it |
+
+🟢 **And it confirmed two design guesses cheaply.** `searchText` really does filter server-side
+(352 → 127 → 0 on a nonsense term), so the query is worth sending rather than discarding as the board
+adapters do. And **14 of 40 postings in one sample had hidden locations** — 35%, far more than expected,
+which settles whether the extra call earns its place.
+
+🟢 **One of those expansions is the "remote is country-scoped" defect, caught in the wild by a different
+mechanism**: a posting listed as one city expanded to four entries, three of them of the form
+*Remote - \<US state\>*. **State-scoped remote, invisible in the listing** — and a scope that decides
+right-to-work and payroll before anything else about the role matters.
+
+🟡 **The remaining limitation: Workday will only say "30+ Days Ago".** A role six months old and one exactly thirty days old
   produce the same string, so the derived date is a **floor**. It is rendered with a trailing `+` and the
   raw text is kept on the row — because a date that looks exact and is not is the aggregator-re-dating
   problem arrived at from the other direction.
@@ -1230,6 +1242,15 @@ untested.
   true**, which is the same mechanism as the `.example` config. 🟢 **Where a fixture must stay realistic
   to be a valid test — a well-written CV, for the cadence checks — rewrite it as invented rather than
   replacing it with placeholder text, and check the measurements it exercises are unchanged.**
+- 🟢 **A careers site that is not Workday may still be a Workday tenant underneath, and the apply links
+  say so.** One employer's site was Phenom People — 82 platform tells — and looked like a dead end for
+  every ATS adapter. **Its apply links pointed at `<tenant>.wd1.myworkdayjobs.com/<site>/job/…`, which is
+  the host, tenant and site the adapter needs.** A front end is not the ATS. **Grep a careers page for
+  `myworkdayjobs|myworkdaysite|wday/cxs` before concluding an employer cannot be watched.**
+- 🟢 **Run a new adapter against a real endpoint the same day it is written.** Two employers and four
+  minutes found two defects that recorded fixtures could not, because **a fixture asserts the shape the
+  code already produces.** The fixtures are still worth having — they are what keeps the fix from
+  regressing — but they cannot be the first contact with reality.
 - 🟢 **Mutation-test a checker before believing it.** All 22 Workday tests passed first run; deliberately
   breaking the code found one that passed for the wrong reason, because **two code paths set the same
   flag and removing either changed nothing.** Collapsing them to one made the test meaningful and the
