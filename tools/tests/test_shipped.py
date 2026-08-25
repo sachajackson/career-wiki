@@ -111,6 +111,38 @@ class TheIgnoreRuleThatKeepsCatchingThings(unittest.TestCase):
                           f"{f} is carved out of .gitignore but the hook will still block it")
 
 
+class DocumentationPointsAtThingsThatExist(unittest.TestCase):
+    """wikilinks.py covers [[wiki links]]. Nothing covered [](markdown links),
+    which is what the README, BACKLOG and CONTRIBUTING use -- and the README is
+    now linked from job applications, so a dead link in it has an audience."""
+
+    EXPECTED_MISSING = {
+        # templates/ links at what the agent will generate, not at shipped files.
+        # A link to a page that does not exist yet is a valid marker in this
+        # schema; see wikilinks.py, which treats the same case as NO PAGE.
+        ("templates/index.md", "CV.md"),
+    }
+
+    def test_every_relative_link_resolves(self):
+        import glob, re, urllib.parse
+        broken = []
+        for f in glob.glob(os.path.join(ROOT, "**", "*.md"), recursive=True):
+            rel = os.path.relpath(f, ROOT)
+            if rel.startswith((".git", "wiki/")):
+                continue
+            with open(f, encoding="utf-8") as fh:
+                text = fh.read()
+            for m in re.finditer(r"\[[^\]]*\]\(([^)\s]+)\)", text):
+                target = urllib.parse.unquote(m.group(1).split("#")[0])
+                if not target or target.startswith(("http", "mailto", "#")):
+                    continue
+                if (rel, target) in self.EXPECTED_MISSING:
+                    continue
+                if not os.path.exists(os.path.normpath(os.path.join(os.path.dirname(f), target))):
+                    broken.append(f"{rel} -> {target}")
+        self.assertEqual(broken, [], f"dead links in shipped documentation: {broken}")
+
+
 class TheRegistryIsUsable(unittest.TestCase):
     def test_it_parses_and_is_not_empty(self):
         p = os.path.join(ROOT, "tools", "radar", "ats_registry.json")
