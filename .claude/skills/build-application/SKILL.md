@@ -479,8 +479,17 @@ remember to run.
 pdftotext -layout "cv.pdf" - | python3 tools/cv_lint.py -
 ```
 
-That checks characters, banned vocabulary, participial tails, round-number tells, US spelling and bullet
-cadence, and it exits non-zero if anything is flagged. **Run it against the extracted PDF text, not the
+🔴 **Run it on the cover letter too, not just the CV:**
+
+```bash
+pdftotext -layout "cover letter.pdf" - | python3 tools/cv_lint.py -
+```
+
+**This step used to lint the CV alone**, which is how seven CVs shipped carrying twenty-five third-person
+pronouns. The letters happened to be clean; nothing was checking them.
+
+That checks characters, banned vocabulary, participial tails, round-number tells, US spelling, bullet
+cadence and **third person**, and it exits non-zero if anything is flagged. **Run it against the extracted PDF text, not the
 source** — that is approximately what an applicant tracking system receives, and if the name is missing or
 the dates have vanished, fix the source file before sending anything.
 

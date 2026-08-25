@@ -41,6 +41,23 @@ TAILS = [", resulting in", ", driving", ", enabling", ", leading to", ", allowin
 US_SPELLING = [r"\b\w+ize\b", r"\b\w+ization\b", r"\bcolor\b", r"\bcenter\b",
                r"\banalyze\b", r"\bfavorite\b", r"\bbehavior\b", r"\borganization\b"]
 
+# Third-person SINGULAR only, and the omission is the whole design.
+#
+# A CV written about its own subject leaks these when it is generated from a
+# wiki that describes the person in the third person -- "the function he now
+# leads", "six of his fifteen". Against the impersonal register these documents
+# use ("Leads a function of fifteen") every one of them is a visible break, and
+# it reads as a profile somebody else wrote. Six CVs carried seventeen of them
+# and five went to employers before anybody noticed, because nothing looked at
+# it: cv_lint called the worst of them clean.
+#
+# they/them/their are NOT here. In a CV they almost always point at an employer,
+# a client or a team -- "the product owner sits inside the client, and works
+# with them, their operations teams and their management" is correct English and
+# correct content. Flagging those fires on nearly every real document, and a
+# check that cries wolf is a check somebody switches off.
+THIRD_PERSON = ["he", "him", "his", "himself", "she", "her", "hers", "herself"]
+
 
 def bullets(text):
     return [l.strip().lstrip("-*• ").strip()
@@ -102,7 +119,15 @@ def main():
             if m.group(0) not in ("size", "prize", "seize"):
                 findings.append(f"US spelling: {m.group(0)!r}")
 
-    # 6. cadence
+    # 6. third person -- the register leak
+    for n, line in enumerate(lines, 1):
+        for w in THIRD_PERSON:
+            for m in re.finditer(r"\b" + w + r"\b", line, re.I):
+                findings.append(
+                    f"L{n}: THIRD PERSON {m.group(0)!r} -- a CV about its own subject "
+                    f"should not name him or her: {line.strip()[:70]!r}")
+
+    # 7. cadence
     bs = bullets(text)
     stats = ""
     if len(bs) >= 4:

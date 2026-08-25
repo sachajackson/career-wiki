@@ -124,6 +124,46 @@ class Cadence(unittest.TestCase):
         self.assertIn(code, (0, 1))
 
 
+class ThirdPerson(unittest.TestCase):
+    """Six CVs carried these and five went to employers before anybody looked."""
+
+    def test_he_is_flagged(self):
+        out = run("The estate is still in production, inside the function he now leads.\n")[1]
+        self.assertIn("THIRD PERSON", out)
+
+    def test_his_is_flagged(self):
+        self.assertIn("THIRD PERSON", run("Six of his fifteen work on AI.\n")[1])
+
+    def test_him_is_flagged(self):
+        out = run("Delivers through functions that do not report to him.\n")[1]
+        self.assertIn("THIRD PERSON", out)
+
+    def test_she_and_her_are_flagged(self):
+        self.assertIn("THIRD PERSON", run("The lifecycle she designed.\n")[1])
+        self.assertIn("THIRD PERSON", run("Grew her function from 5 to 20.\n")[1])
+
+    def test_they_them_their_are_NOT_flagged(self):
+        """The false-positive case, and the reason the check is singular-only.
+
+        In a CV these point at an employer, a client or a team, not at the
+        subject. A check that fires here fires on nearly every real document,
+        and that is how a good check gets switched off."""
+        text = ("The product owner sits inside the client, and works with them, their\n"
+                "operations teams and their management on intake, priority and release.\n")
+        self.assertNotIn("THIRD PERSON", run(text)[1])
+
+    def test_the_and_other_embedded_matches_are_not_flagged(self):
+        """'there', 'the', 'usher', 'this', 'other' each contain a pronoun as a
+        substring -- her, he, she, his, her. Word boundaries must hold."""
+        text = "There the usher moved this other file across the shared platform.\n"
+        out = run(text)[1]
+        self.assertEqual(out.count("THIRD PERSON"), 0, out)
+
+    def test_a_clean_cv_stays_clean(self):
+        """Every cover letter in the vault scored zero. So must this."""
+        self.assertNotIn("THIRD PERSON", run(CLEAN)[1])
+
+
 class ExitStatus(unittest.TestCase):
     def test_findings_exit_one_so_it_can_gate_a_build(self):
         self.assertEqual(run("Spearheaded it.\n")[0], 1)
