@@ -918,7 +918,7 @@ Python.**
 | 🔴 `last_verified` | **Non-negotiable.** An employer changes ATS and the entry returns nothing — **which looks exactly like "no jobs this week"** |
 | 🔴 `verified_returned` | **How many roles it returned when last checked.** *Returned 0* and *returned 214* are different health states and a date alone cannot tell them apart |
 | 🟢 `publishes_salary` | Rare and valuable. Deel publishes a band on every role, which takes PAY out of `TBC` before any call happens |
-| `careers_url` | The human page. **It is what the user actually finds and hands over**, and it is what a later verifier re-derives the endpoint from if the API moves |
+| 🔴 `careers_url` | **Always the company's own page — `stripe.com/careers/search`, never `boards.greenhouse.io/stripe`.** It is what a person actually pastes, and **it is the recovery key: when an employer switches ATS the endpoint dies and the careers page does not**, so that URL is how the replacement gets found. The ATS address belongs in `params` |
 
 🔴 **Seeded, not comprehensive. Twenty verified entries beat five hundred guessed.** Board tokens are
 frequently just the company name, which makes guessing work *often enough to be dangerous* — it produces
