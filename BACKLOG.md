@@ -813,10 +813,21 @@ is right.**
 
 ---
 
-### 🟢 A shared employer registry — the one thing in this repo that is communal
+### 🟡 A shared employer registry — SEEDED, not yet wired in
 
-**Status: designed 2026-08-25, not built. The highest-leverage missing piece, because the adapters exist
-and have nothing to point at.**
+**Status: `tools/radar/employers.json` seeded 2026-08-25 with five verified entries. The adapters do not
+read it yet, and there is no verifier. The design below is unchanged.**
+
+🟢 **Every entry was verified by calling it**, not copied from a page: State Street (1,347 open),
+SS&C (352), JPMorganChase (7,354), Grant Thornton Ireland (152), Deel (300). **Roughly 9,500 roles now
+reachable from one file that previously lived in five places and one person's memory.**
+
+🔴 **Still to build, and the second is not optional:**
+
+- **Make the adapters read it.** Right now it is documentation. `config.json` should be able to name an
+  employer and have the endpoint resolved from here.
+- 🔴 **`tools/registry_check.py`.** Without it this rots into the silent-zero failure — see below.
+- **Seed more.** Five is a proof, not a starter set.
 
 **The adapters know how to speak Greenhouse, Lever, Workday and Oracle. What nobody has is the list of
 which employer uses which, and under what identifier.** Every user starts from
