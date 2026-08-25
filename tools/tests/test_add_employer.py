@@ -91,7 +91,7 @@ class SendingOnlyOneFile(unittest.TestCase):
             ae.one_file_staged = real
 
     def test_the_only_permitted_path_is_the_registry(self):
-        self.assertEqual(ae.REL, "tools/radar/employers.json")
+        self.assertEqual(ae.REL, "tools/radar/ats_registry.json")
 
 
 class Verification(unittest.TestCase):
@@ -105,7 +105,7 @@ class Verification(unittest.TestCase):
 
     def test_it_knows_how_to_verify_every_ats_the_registry_uses(self):
         used = {e["ats"] for e in json.load(
-            open(os.path.join(ROOT, "tools", "radar", "employers.json"), encoding="utf-8"))["employers"]}
+            open(os.path.join(ROOT, "tools", "radar", "ats_registry.json"), encoding="utf-8"))["employers"]}
         for ats in used:
             with self.assertRaises(Exception) as c:   # network fails; ValueError would mean no rule
                 ae.verify(ats, {"host": "127.0.0.1:9", "tenant": "t", "site": "s", "token": "t",

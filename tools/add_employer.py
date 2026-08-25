@@ -29,8 +29,8 @@ import argparse, json, os, re, subprocess, sys, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
-REGISTRY = os.path.join(HERE, "radar", "employers.json")
-REL = "tools/radar/employers.json"
+REGISTRY = os.path.join(HERE, "radar", "ats_registry.json")
+REL = "tools/radar/ats_registry.json"
 UPSTREAM = "sachajackson/career-wiki"
 
 # What an ATS looks like when it is fronted by an employer's own careers page.

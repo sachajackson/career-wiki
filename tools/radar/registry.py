@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """registry -- turn `"watch": ["State Street"]` into the config the adapters expect.
 
-The registry (employers.json) knows which ATS an employer uses and under what
+The registry (ats_registry.json) knows which ATS an employer uses and under what
 identifier. The adapters know how to speak each ATS. Nothing joined the two, so
 a user had to know that watching Stripe means writing a Greenhouse board token,
 and that watching State Street means writing a host, a tenant and a site.
@@ -27,7 +27,7 @@ so watching an employer somebody already listed by hand does not fetch twice.
 import json, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REGISTRY = os.path.join(HERE, "employers.json")
+REGISTRY = os.path.join(HERE, "ats_registry.json")
 
 # ats -> (config key, list key, which params the adapter needs)
 SHAPES = {

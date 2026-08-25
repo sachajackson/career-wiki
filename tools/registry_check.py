@@ -34,7 +34,7 @@ output confident and sometimes wrong, which is worse than making someone look.
 import argparse, json, os, sys, time, urllib.request, datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REGISTRY = os.path.join(HERE, "radar", "employers.json")
+REGISTRY = os.path.join(HERE, "radar", "ats_registry.json")
 COLLAPSE = 4          # "now < previous/4" is a collapse; anything less is churn
 
 

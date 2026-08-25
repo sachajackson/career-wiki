@@ -98,7 +98,7 @@ how `config.json` behaves:**
 
 | File | What it does to you |
 |---|---|
-| **`tools/radar/employers.json`** | **15 employers, ~13,000 roles**, every entry verified by calling it. Not code — a contributor adds an object |
+| **`tools/radar/ats_registry.json`** | **15 employers, ~13,000 roles**, every entry verified by calling it. Not code — a contributor adds an object |
 | **`tools/radar/registry.py`** | 🔴 **`config.json` now supports `"watch": ["Stripe"]`**, expanded into the shapes your adapters already expect. **`load_config()` calls it.** No adapter was changed |
 | **`tools/radar/adapters/custom.py`** | A sixth adapter, for employers running their own API. **Registered in `ADAPTERS`.** Driven by a field map in the registry, not by code per employer |
 | **`tools/registry_check.py`** | Calls every entry. Wired into `/career-lint` |
@@ -849,7 +849,7 @@ is right.**
 
 ### 🟡 A shared employer registry — SEEDED, not yet wired in
 
-**Status: `tools/radar/employers.json` seeded 2026-08-25 with five verified entries. The adapters do not
+**Status: `tools/radar/ats_registry.json` seeded 2026-08-25 with five verified entries. The adapters do not
 read it yet, and there is no verifier. The design below is unchanged.**
 
 🟢 **Every entry was verified by calling it**, not copied from a page: State Street (1,347 open),
@@ -906,7 +906,7 @@ still worth doing, because right now what somebody found is lost the moment thei
 
 ## The schema
 
-**`tools/radar/employers.json`. Data, not code — contributing means adding an object, never touching
+**`tools/radar/ats_registry.json`. Data, not code — contributing means adding an object, never touching
 Python.**
 
 ```json
@@ -1040,7 +1040,7 @@ thing standing between a helpful impulse and a published CV.
 
 **The design, in order of strictness:**
 
-1. 🔴 **Stage exactly one path — `tools/radar/employers.json` — and refuse if anything else is staged.**
+1. 🔴 **Stage exactly one path — `tools/radar/ats_registry.json` — and refuse if anything else is staged.**
    Not "warn": refuse. `git status --porcelain` must show that file and nothing else before the flow
    proceeds.
 2. 🔴 **Show the user the exact diff and get a yes**, before anything leaves the machine. It is four lines

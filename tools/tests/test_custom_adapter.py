@@ -140,7 +140,7 @@ class Wiring(unittest.TestCase):
         self.assertIs(ADAPTERS.get("custom"), custom)
 
     def test_the_shipped_deel_entry_maps_all_locations_not_the_first_one(self):
-        reg = json.load(open(os.path.join(ROOT, "tools", "radar", "employers.json"), encoding="utf-8"))
+        reg = json.load(open(os.path.join(ROOT, "tools", "radar", "ats_registry.json"), encoding="utf-8"))
         deel = [e for e in reg["employers"] if e["employer"] == "Deel"][0]
         self.assertEqual(deel["params"]["map"]["loc"], "attributes.all_locations")
 

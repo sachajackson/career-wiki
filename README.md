@@ -765,7 +765,7 @@ State Street means writing a host, a tenant and a site.** So you do not:
 "watch": ["Stripe", "State Street", "Deel"]
 ```
 
-**A shipped registry — [`tools/radar/employers.json`](tools/radar/employers.json) — knows which ATS each
+**A shipped registry — [`tools/radar/ats_registry.json`](tools/radar/ats_registry.json) — knows which ATS each
 employer uses**, and the endpoint is looked up at run time. **Fifteen employers, around 13,000 live roles,
 every entry verified by calling it.**
 

@@ -34,6 +34,15 @@ config.json
 # second-hand.
 !tools/radar/employers.example.json
 
+# ...and the ATS endpoint registry, which is the opposite kind of file and was
+# nearly lost to the rule above. employers.json is one user's private positions
+# on named companies and must stay ignored. ats_registry.json is a list of
+# public careers endpoints, identical for everyone, and is the ONE file here a
+# stranger can contribute to with no privacy risk. Two names because they had
+# one, and the safety rule that correctly hides the first silently hid the
+# second for a day.
+!tools/radar/ats_registry.json
+
 .DS_Store
 __pycache__/
 *.pyc

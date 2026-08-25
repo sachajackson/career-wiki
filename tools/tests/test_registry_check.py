@@ -115,7 +115,7 @@ class TransientFailures(unittest.TestCase):
 
 class TheRealRegistry(unittest.TestCase):
     def test_it_parses_and_every_entry_has_what_the_checker_needs(self):
-        reg = json.load(open(os.path.join(ROOT, "tools", "radar", "employers.json"), encoding="utf-8"))
+        reg = json.load(open(os.path.join(ROOT, "tools", "radar", "ats_registry.json"), encoding="utf-8"))
         for e in reg["employers"]:
             self.assertTrue(e.get("careers_url", "").startswith("http"), e["employer"])
             self.assertIn(e["ats"], ("workday", "oracle", "greenhouse", "lever", "custom"), e["employer"])
@@ -125,7 +125,7 @@ class TheRealRegistry(unittest.TestCase):
 
     def test_careers_url_is_the_company_not_the_ats(self):
         """The careers page is the recovery key. An ATS link expires exactly when it is needed."""
-        reg = json.load(open(os.path.join(ROOT, "tools", "radar", "employers.json"), encoding="utf-8"))
+        reg = json.load(open(os.path.join(ROOT, "tools", "radar", "ats_registry.json"), encoding="utf-8"))
         for e in reg["employers"]:
             for ats_host in ("myworkdayjobs.com", "myworkdaysite.com", "oraclecloud.com",
                              "boards.greenhouse.io", "jobs.lever.co"):
@@ -136,7 +136,7 @@ class TheRealRegistry(unittest.TestCase):
 class CommandLine(unittest.TestCase):
     def test_it_does_not_rewrite_the_registry_unless_asked(self):
         d = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, d, True)
-        path = os.path.join(d, "employers.json")
+        path = os.path.join(d, "ats_registry.json")
         reg = {"version": 1, "_endpoints": {}, "employers": [entry(params={"list": "https://127.0.0.1:9/"})]}
         with open(path, "w") as fh:
             json.dump(reg, fh)
@@ -146,7 +146,7 @@ class CommandLine(unittest.TestCase):
 
     def test_a_failure_exits_one_so_it_can_gate(self):
         d = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, d, True)
-        path = os.path.join(d, "employers.json")
+        path = os.path.join(d, "ats_registry.json")
         with open(path, "w") as fh:
             json.dump({"version": 1, "_endpoints": {},
                        "employers": [entry(params={"list": "https://127.0.0.1:9/unreachable"})]}, fh)

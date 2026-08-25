@@ -101,7 +101,7 @@ def load_config():
     if not os.path.exists(CONFIG):
         sys.exit(f"No config.json. Copy config.example.json to {CONFIG} and fill it in.")
     cfg = json.load(open(CONFIG))
-    # `watch` names employers; employers.json knows which ATS each uses. Expand
+    # `watch` names employers; ats_registry.json knows which ATS each uses. Expand
     # one into the other, and print what could not be expanded -- an employer
     # silently dropped for want of an adapter looks exactly like a quiet week.
     if cfg.get("watch"):

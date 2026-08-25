@@ -1,0 +1,254 @@
+{
+  "_README": [
+    "Employer careers endpoints. Public, non-personal, and identical for everyone who looks them up --",
+    "which makes this the one file in this repository a stranger can contribute to with no privacy risk.",
+    "",
+    "An entry here says only that somebody verified this employer's board is machine-readable. It is NOT",
+    "a watchlist, a recommendation, or a record of anyone's applications. Add employers freely.",
+    "",
+    "careers_url is ALWAYS the company's own page -- stripe.com/careers/search, never",
+    "boards.greenhouse.io/stripe. It is the human link, it is what a person actually pastes, and it is",
+    "the recovery key: when an employer switches ATS the endpoint dies and the careers page does not, so",
+    "that URL is how the new endpoint gets found. The ATS address belongs in params.",
+    "",
+    "Adding one: put the careers page in front of the agent and ask it to find the endpoint. Set",
+    "last_verified to the day you checked and verified_returned to what came back. An entry with a stale",
+    "date is a guess, and an endpoint that has quietly started returning nothing looks exactly like a",
+    "quiet week -- which is the failure this file has to avoid being the cause of.",
+    "",
+    "Seeded 2026-08-25. Every entry was verified by calling it -- and one was wrong anyway.",
+    "",
+    "canary is a requisition id that must appear in the list response. It is how an entry is checked",
+    "on a platform that fails open. A canary can go stale when the job is filled -- registry_check.py",
+    "reports that as something to look at, not as a failure, because it cannot tell a wrong endpoint",
+    "from a closed vacancy and should not pretend to.",
+    "",
+    "VERIFY BY KNOWN-JOB PRESENCE, NOT BY STATUS CODE OR COUNT. Oracle returns 200 and a plausible",
+    "number for a siteNumber that does not exist. The Grant Thornton entry was seeded from a 200 and a",
+    "count of 152, and was pointing at the wrong site: the right one returns 55 and is the only one",
+    "containing their experienced-hires postings. A check that cannot fail is not a check."
+  ],
+  "version": 1,
+  "employers": [
+    {
+      "employer": "Anthropic",
+      "ats": "greenhouse",
+      "params": {
+        "token": "anthropic"
+      },
+      "careers_url": "https://www.anthropic.com/careers",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 536
+    },
+    {
+      "employer": "Cloudflare",
+      "ats": "greenhouse",
+      "params": {
+        "token": "cloudflare"
+      },
+      "careers_url": "https://www.cloudflare.com/careers/jobs/",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 306
+    },
+    {
+      "employer": "Databricks",
+      "ats": "greenhouse",
+      "params": {
+        "token": "databricks"
+      },
+      "careers_url": "https://www.databricks.com/company/careers/open-positions",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 824
+    },
+    {
+      "employer": "Datadog",
+      "ats": "greenhouse",
+      "params": {
+        "token": "datadog"
+      },
+      "careers_url": "https://careers.datadoghq.com/",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 454
+    },
+    {
+      "employer": "Deel",
+      "ats": "custom",
+      "params": {
+        "list": "https://www.deel.com/api/deel-ats/jobs/",
+        "detail": "https://www.deel.com/api/deel-ats/jobs/{id}/",
+        "url_prefix": "https://www.deel.com",
+        "map": {
+          "id": "attributes.ashby_id",
+          "title": "attributes.title",
+          "loc": "attributes.all_locations",
+          "date": "attributes.ashby_published_date",
+          "pay": "attributes.compensation_tier_summary",
+          "url": "attributes.slug",
+          "body": "attributes.full_job_description"
+        },
+        "_map_note": "loc is all_locations, NOT location_name. location_name carries only the first of thirty countries -- 'Israel' -- so mapping it would drop every Deel role on a location filter for a user eligible for all of them, and say nothing about it"
+      },
+      "careers_url": "https://www.deel.com/careers/",
+      "publishes_salary": true,
+      "last_verified": "2026-08-25",
+      "verified_returned": 300,
+      "notes": "Ashby underneath -- every row carries an ashby_id -- but the public Ashby board returns empty, so this must target deel.com. Publishes a salary band on every role, which is rare and takes PAY out of TBC before any call"
+    },
+    {
+      "employer": "Figma",
+      "ats": "greenhouse",
+      "params": {
+        "token": "figma"
+      },
+      "careers_url": "https://www.figma.com/careers/",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 159
+    },
+    {
+      "employer": "GitLab",
+      "ats": "greenhouse",
+      "params": {
+        "token": "gitlab"
+      },
+      "careers_url": "https://about.gitlab.com/jobs/",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 210
+    },
+    {
+      "employer": "Grant Thornton Ireland",
+      "ats": "oracle",
+      "params": {
+        "host": "ehzq.fa.us2.oraclecloud.com",
+        "site": "CX_1001"
+      },
+      "careers_url": "https://www.grantthornton.ie/careers/experienced-hires/",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 55,
+      "canary": "115289",
+      "canary_note": "Data & AI Internal Product Team, Associate Director. If this disappears the job may simply have closed -- re-pick one before assuming the entry is broken",
+      "notes": "The tenant is an opaque code, not a company name -- it has to be read off their careers URL. CORRECTED 2026-08-25: this was first seeded as CX_1, which returns 152 jobs and does NOT contain their experienced-hires postings. See the fails-open warning under _endpoints.oracle"
+    },
+    {
+      "employer": "JPMorganChase",
+      "ats": "oracle",
+      "params": {
+        "host": "jpmc.fa.oraclecloud.com",
+        "site": "CX_1001"
+      },
+      "careers_url": "https://careers.jpmorgan.com/global/en/home",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 7354,
+      "canary": "210768893",
+      "canary_note": "Lead Technical Program Manager, Dublin. Re-pick if it closes",
+      "notes": "Oracle hosts vary: some are <tenant>.fa.<region>.oraclecloud.com, this one has no region segment. Take the host from the employer's own apply link rather than assuming a pattern"
+    },
+    {
+      "employer": "MongoDB",
+      "ats": "greenhouse",
+      "params": {
+        "token": "mongodb"
+      },
+      "careers_url": "https://www.mongodb.com/company/careers",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 407
+    },
+    {
+      "employer": "Monzo",
+      "ats": "greenhouse",
+      "params": {
+        "token": "monzo"
+      },
+      "careers_url": "https://monzo.com/careers",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 70
+    },
+    {
+      "employer": "Reddit",
+      "ats": "greenhouse",
+      "params": {
+        "token": "reddit"
+      },
+      "careers_url": "https://www.redditinc.com/careers",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 149
+    },
+    {
+      "employer": "SS&C Technologies",
+      "ats": "workday",
+      "params": {
+        "host": "wd1.myworkdaysite.com",
+        "tenant": "ssctech",
+        "site": "SSCTechnologies"
+      },
+      "careers_url": "https://www.ssctech.com/careers/join-ssc",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 352,
+      "notes": "Shared host style: wd<N>.myworkdaysite.com/recruiting/<tenant>/<site>. An adapter that derives the host from the tenant misses every employer on this style, which is why host, tenant and site are three fields and not one"
+    },
+    {
+      "employer": "State Street",
+      "ats": "workday",
+      "params": {
+        "host": "statestreet.wd1.myworkdayjobs.com",
+        "tenant": "statestreet",
+        "site": "Global"
+      },
+      "careers_url": "https://careers.statestreet.com/global/en",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 1347,
+      "canary_note": "No canary needed: Workday 404s on a wrong site, so a 200 is already proof the identifier is right",
+      "notes": "Per-tenant host style: <tenant>.wd<N>.myworkdayjobs.com"
+    },
+    {
+      "employer": "Stripe",
+      "ats": "greenhouse",
+      "params": {
+        "token": "stripe"
+      },
+      "careers_url": "https://stripe.com/jobs/search",
+      "publishes_salary": false,
+      "last_verified": "2026-08-25",
+      "verified_returned": 583
+    }
+  ],
+  "_endpoints": {
+    "_comment": "How to call each ats. Kept here so an adapter and a human read the same thing.",
+    "workday": {
+      "list": "POST https://{host}/wday/cxs/{tenant}/{site}/jobs",
+      "body": {
+        "appliedFacets": {},
+        "limit": 20,
+        "offset": 0,
+        "searchText": ""
+      },
+      "detail": "GET https://{host}/wday/cxs/{tenant}/{site}{externalPath}",
+      "note": "The detail call carries the requisition id, the real posting date and the additional locations the listing hides",
+      "fails_closed": "Unlike Oracle, Workday 404s on a wrong site with an explicit Job_Posting_Site_ID message. A 200 here is real evidence"
+    },
+    "oracle": {
+      "list": "GET https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList&finder=findReqs;siteNumber={site},limit=200",
+      "detail": "GET https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails?expand=all&finder=ById;Id=\"{job_id}\",siteNumber=\"{site}\"",
+      "note": "The quotes around the finder values are required. Without them it returns 400",
+      "WARNING_FAILS_OPEN": "An unrecognised siteNumber does NOT error. It returns 200 with the tenant's UNFILTERED job list, which looks like a plausible answer. Grant Thornton returns 152 for CX_1, 55 for CX_1001 and 258 for any nonsense value -- and the 55 is the one that actually contains their experienced-hires postings. NEVER verify an Oracle entry by status code or job count. Verify by checking a known requisition id is present in the response."
+    },
+    "greenhouse": {
+      "list": "GET https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"
+    },
+    "lever": {
+      "list": "GET https://api.lever.co/v0/postings/{handle}?mode=json"
+    }
+  }
+}
