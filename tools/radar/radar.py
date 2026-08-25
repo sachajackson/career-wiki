@@ -108,15 +108,68 @@ def tally_of(text):
     return sum(w for rx, w in POS + NEG if re.search(rx, t))
 
 
-def location_ok(cfg, loc, title):
-    where = f"{loc} {title}".lower()
+REMOTE = re.compile(r"\b(fully\s+|100%\s+|partially\s+)?remote(ly)?\b", re.I)
+EDGES = r"^[\s\-–—,:;()/|]+|[\s\-–—,:;()/|]+$"
+
+
+def parse_location(loc):
+    """Split a location string into (is_remote, scope). The scope is the point.
+
+    "Remote" is country-scoped almost everywhere -- Remote - UK, Remote - Texas,
+    Remote, Australia -- and the suffix is the whole meaning. Read as though the
+    word alone meant "anywhere", a search widens into roles the applicant cannot
+    legally take: right to work, tax residency and payroll entity all sit behind
+    that word and none of them appear in a listing.
+
+    An unqualified "Remote" returns an empty scope, which means UNKNOWN and not
+    global. Usually it means remote within whatever country the requisition was
+    raised in.
+    """
+    s = (loc or "").strip()
+    if not REMOTE.search(s):
+        return False, s
+    scope = REMOTE.sub(" ", s)
+    scope = re.sub(r"\(\s*\)", " ", scope)          # "Dublin (Remote)" -> "Dublin"
+    scope = re.sub(EDGES, "", re.sub(r"\s{2,}", " ", scope)).strip()
+    return True, scope
+
+
+def assess_location(cfg, loc, title):
+    """-> (keep, scope_unknown). Exclusions are never waived by the word remote.
+
+    They used to be: any occurrence of "remote" -- in the location OR THE TITLE
+    -- skipped the exclusion list entirely, so "Remote - London" survived a
+    filter that excluded London. That is exactly backwards. A role advertised as
+    remote *within* an excluded geography is still in that geography, and it is
+    the case the word was supposed to help with.
+
+    The title is still read for exclusions as well as for matches, because
+    location fields are employer-entered and often wrong while the title
+    frequently names the real city. What the title may no longer do is EXCUSE a
+    role from the exclusion list, which is the only thing it was doing before.
+    """
     L = cfg.get("location", {})
-    if any(b in where for b in L.get("bad", [])) and "remote" not in where:
-        return False
-    if any(e in where for e in L.get("edge", [])):
-        return False
+    is_remote, scope = parse_location(loc)
+
+    # Exclusions are judged on where the role actually is. For a remote role
+    # that is its scope; for an unqualified remote role there is nothing to
+    # judge, and inventing a geography is what the old code effectively did.
+    place = scope if is_remote else (loc or "")
+    against = f"{place} {title}".lower()
+    if any(b and b in against for b in L.get("bad", [])):
+        return False, False
+    if any(e and e in against for e in L.get("edge", [])):
+        return False, False
+
     ok = L.get("ok", [])
-    return (not ok) or any(o in where for o in ok)
+    if not ok:
+        return True, is_remote and not scope
+    if any(o and o in f"{loc} {title}".lower() for o in ok):
+        # An unqualified remote role kept only because "remote" is on the ok
+        # list is kept on TRUST, not on evidence. Flagged so nobody reports it
+        # as a role in the user's country without checking the requisition.
+        return True, is_remote and not scope
+    return False, False
 
 
 def main():
@@ -177,8 +230,10 @@ def main():
     # filter
     keep, dropped = [], {"loc": 0, "title": 0, "avoid": 0}
     for c in found.values():
-        if not location_ok(cfg, c["loc"], c["title"]):
+        keep_it, scope_unknown = assess_location(cfg, c["loc"], c["title"])
+        if not keep_it:
             dropped["loc"] += 1; continue
+        c["loc_tbc"] = scope_unknown
         if NEVER.search(c["title"]) or IC_TITLE.match(c["title"].strip()):
             dropped["title"] += 1; continue
         # Before the description is fetched, so an employer already ruled out
@@ -311,8 +366,10 @@ def main():
                 # down before -- a note, never a filter, because a role declined
                 # on a commute or a start date can legitimately come back.
                 who = c["company"][:28] + (" †" if c.get("_note") else "")
+                # "Remote" with no country after it is unknown, not global.
+                where = c["loc"][:22] + (" (scope TBC)" if c.get("loc_tbc") else "")
                 f.write(f"| {c['signal']} | {posted} | {who} | "
-                        f"{c['title'][:62]} | {c['loc'][:22]} | {c['pay']} | [link]({c['url']}) |\n")
+                        f"{c['title'][:62]} | {where} | {c['pay']} | [link]({c['url']}) |\n")
             notes = sorted({c["_note"] for c in rows if c.get("_note")})
             for n in notes:
                 f.write(f"\n† {n}\n")

@@ -173,10 +173,14 @@ Real defects, found by running it. Two of them silently discarded good roles.
   was behind it. **Narrower queries are the only way to see past a cap** — not more pages, which the cap
   ignores.
 - **Roles posted only on employer sites** not covered by an enabled adapter.
-- 🔴 **"Remote" is country-scoped almost everywhere.** *Remote - UK*, *Remote - Texas*, *Remote -
-  Luxembourg*. **Parse the suffix; it is the whole meaning.** Treat an unqualified *"Remote"* as `TBC`, not
-  as global, and **never widen the search geography on the word alone** — right to work and tax residency
-  sit behind it and appear in no listing.
+- 🔴 **Judge an unqualified `Remote` for you.** *Remote - UK*, *Remote - Texas*, *Remote - Luxembourg* —
+  the suffix is the whole meaning, and the radar now parses it: a remote role scoped to an excluded
+  place is dropped like any other. **What it cannot resolve is `Remote` with nothing after it**, which is
+  shown as **`(scope TBC)`** in the Location column. **That means unknown, never global.** It usually
+  means remote within whatever country the requisition was raised in. **Never widen the search geography
+  on the word alone, and never report such a role as being in the user's country** — right to work, tax
+  residency and payroll entity all sit behind it and appear in no listing. Confirm against the
+  requisition, or leave it open.
 - 🟢 **Miss an employer that runs Workday.** It covers a large share of enterprise careers sites, including
   ones that look bespoke. **It also carries three things no aggregator does**: the requisition number, the
   employer's own posting date, and the extra locations behind a listing that says *"4 Locations"* — which

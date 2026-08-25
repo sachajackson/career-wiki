@@ -26,6 +26,7 @@ radar = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(radar)
 
 from adapters import adzuna, greenhouse, lever, linkedin      # noqa: E402
+from adapters import _titles                                  # noqa: E402
 
 
 class FakeAdapter:
@@ -299,6 +300,124 @@ class TheAvoidList(unittest.TestCase):
         with Run([], {"fake": fake}) as r:
             self.assertNotIn("avoid list", r.out)
             self.assertNotIn("Skipped", r.out)
+
+
+class RemoteIsCountryScoped(unittest.TestCase):
+    """"Remote" almost always means remote WITHIN somewhere, and the suffix is
+    the whole meaning. Read as "anywhere", a search widens into roles the
+    applicant cannot legally take -- right to work, tax residency and payroll
+    entity all sit behind that word and none appear in a listing.
+    """
+
+    CFG = {"location": {"ok": ["<home>", "remote"], "bad": ["<far>"], "edge": ["<maybe>"]}}
+
+    def test_the_scope_is_parsed_off_every_common_phrasing(self):
+        for text, scope in [("Remote - <far>", "<far>"), ("Remote, <far>", "<far>"),
+                            ("<home> (Remote)", "<home>"), ("Fully Remote - <far>", "<far>"),
+                            ("Remote", ""), ("100% Remote", "")]:
+            is_remote, got = radar.parse_location(text)
+            self.assertTrue(is_remote, text)
+            self.assertEqual(got, scope, text)
+
+    def test_a_plain_location_is_not_remote(self):
+        self.assertEqual(radar.parse_location("<home>"), (False, "<home>"))
+
+    def test_remote_no_longer_waives_an_exclusion(self):
+        """The defect. Any "remote" anywhere skipped the exclusion list, so a
+        role advertised as remote WITHIN an excluded place survived a filter
+        that existed to exclude that place."""
+        self.assertEqual(radar.assess_location(self.CFG, "Remote - <far>", "Head of Delivery"),
+                         (False, False))
+
+    def test_the_word_in_the_title_cannot_waive_one_either(self):
+        """It read location out of the title too, so a title containing the word
+        exempted a role sitting squarely in an excluded city."""
+        keep, _ = radar.assess_location(self.CFG, "<far>", "Remote Delivery Lead")
+        self.assertFalse(keep)
+
+    def test_an_excluded_city_named_only_in_the_title_still_drops_the_role(self):
+        """Location fields are employer-entered and often wrong; the title
+        frequently names the real city. The title may not EXCUSE a role from
+        the exclusion list, but it can still put it on one."""
+        # The location must be acceptable, or the row is dropped by the ok list
+        # instead and the test proves nothing about the title.
+        keep, _ = radar.assess_location(self.CFG, "<home>", "Delivery Manager, <far>")
+        self.assertFalse(keep)
+        self.assertTrue(radar.assess_location(self.CFG, "<home>", "Delivery Manager")[0])
+
+    def test_unqualified_remote_is_unknown_even_with_no_ok_list_configured(self):
+        """The no-filter path is the one a fresh config takes, so it needs the
+        same honesty as the filtered one."""
+        self.assertEqual(radar.assess_location({"location": {}}, "Remote", "Head of Delivery"),
+                         (True, True))
+        self.assertEqual(radar.assess_location({"location": {}}, "Remote - <home>", "x"),
+                         (True, False))
+
+    def test_a_remote_role_scoped_to_an_acceptable_place_is_kept_plainly(self):
+        self.assertEqual(radar.assess_location(self.CFG, "Remote - <home>", "Head of Delivery"),
+                         (True, False))
+
+    def test_an_unqualified_remote_role_is_kept_but_marked_unknown(self):
+        """Not dropped -- that loses real roles. Not trusted either: it is kept
+        on the strength of a word, and the word does not say where."""
+        self.assertEqual(radar.assess_location(self.CFG, "Remote", "Head of Delivery"),
+                         (True, True))
+
+    def test_an_edge_location_still_excludes_a_remote_role(self):
+        keep, _ = radar.assess_location(self.CFG, "Remote - <maybe>", "Head of Delivery")
+        self.assertFalse(keep)
+
+    def test_the_shortlist_says_scope_tbc_rather_than_implying_anywhere(self):
+        body = "regulated bank portfolio roadmap adoption upskill mentor stakeholder"
+        rows = [posting(id="a", loc="Remote", body=body),
+                posting(id="b", loc="Remote - <home>", title="Delivery Lead", body=body)]
+        with Run([], {"fake": FakeAdapter(rows)}, config={"queries": ["d"],
+                 "location": {"ok": ["<home>", "remote"]}}) as r:
+            self.assertIn("Remote (scope TBC)", r.out)
+            self.assertNotIn("Remote - <home> (scope TBC)", r.out)
+
+
+class BoardTitleFilter(unittest.TestCase):
+    """A board returns everything an employer has open, so it needs its own
+    relevance filter. This one matched the FIRST word of the query.
+    """
+
+    def test_it_no_longer_matches_on_the_least_informative_word(self):
+        """"head of delivery" matched on "head": every Head of Anything kept,
+        every Delivery Manager dropped. Wrong in both directions at once."""
+        self.assertTrue(_titles.matches("head of delivery", "Delivery Manager"))
+        self.assertFalse(_titles.matches("head of delivery", "Head of Legal"))
+
+    def test_it_discriminates_on_the_domain_word_not_the_seniority_word(self):
+        """Boards are full of Managers. They are not full of Delivery."""
+        self.assertTrue(_titles.matches("delivery manager", "Service Delivery Manager"))
+        self.assertFalse(_titles.matches("delivery manager", "Account Manager"))
+
+    def test_an_all_generic_query_falls_back_to_requiring_every_word(self):
+        """Nothing distinctive to ask for, so ask for all of it. "senior
+        manager" deserves strict -- loose, it would return the whole board."""
+        self.assertTrue(_titles.matches("senior manager", "Senior Manager, Tax"))
+        self.assertFalse(_titles.matches("senior manager", "Senior Accountant"))
+        self.assertFalse(_titles.matches("senior manager", "Category Manager"))
+
+    def test_stopwords_are_not_evidence(self):
+        self.assertFalse(_titles.matches("head of delivery", "Director of Legal"))
+
+    def test_an_empty_query_keeps_the_board(self):
+        """No query is not a reason to drop an employer being watched."""
+        self.assertTrue(_titles.matches("", "Anything At All"))
+        self.assertTrue(_titles.matches("of the", "Anything At All"))
+
+    def test_the_adapters_actually_use_it(self):
+        payload = [{"id": 1, "title": "Delivery Manager", "content": "x",
+                    "location": {"name": "<city>"}, "updated_at": "2026-08-01",
+                    "absolute_url": "u"},
+                   {"id": 2, "title": "Head of Legal", "content": "x",
+                    "location": {"name": "<city>"}, "updated_at": "2026-08-01",
+                    "absolute_url": "u"}]
+        greenhouse.get_json = lambda url, headers=None: {"jobs": payload}
+        got = greenhouse.fetch({"greenhouse": {"boards": ["t"]}}, "head of delivery", None)
+        self.assertEqual([g["title"] for g in got], ["Delivery Manager"])
 
 
 # --------------------------------------------------------------------------

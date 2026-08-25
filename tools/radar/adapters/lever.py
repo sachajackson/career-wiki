@@ -4,7 +4,7 @@ Company handle from the careers URL: jobs.lever.co/<handle>
 """
 from ._http import get_json, fetch_json
 import re
-from . import _verdicts as V
+from . import _titles, _verdicts as V
 
 NAME = "lever"
 TRUNCATED = False   # whole board, one call: never capped
@@ -21,7 +21,7 @@ def fetch(cfg, query, days):
     handles = cfg.get("lever", {}).get("companies", [])
     if not handles:
         return []
-    q = query.lower()
+    q = query
     out = []
     for handle in handles:
         data = get_json(POSTINGS.format(handle=handle))
@@ -29,7 +29,7 @@ def fetch(cfg, query, days):
             continue
         for j in data:
             title = j.get("text", "")
-            if q and q.split()[0] not in title.lower():
+            if not _titles.matches(q, title):
                 continue
             body = re.sub(r"<[^>]+>", " ", j.get("descriptionPlain") or j.get("description", "") or "")
             out.append({

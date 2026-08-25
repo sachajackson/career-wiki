@@ -49,12 +49,17 @@ reasoning is worth keeping — **but do not re-implement them:**
 | Do not answer a tie by lengthening the ruler | same |
 | Score against the user's baseline, not the field | same, plus `career-init` |
 | The internal move as a third option | `CLAUDE.md` |
-| "Remote" is country-scoped | `role-radar` |
+| ~~"Remote" is country-scoped~~ 🟢 **now a control, 2026-08-25** | `radar.py`, and it was doing the *reverse* |
 | The why-X answers and values-with-three-examples | `build-application` Step 0.4 |
 
 🔴 **A rule is not a control.** Several of these are the same class of thing as *"never wrap inside
 `[[ ]]`"*, which failed three times in one session before it became a check. **Where a rule can be made
 mechanical, that is still work outstanding** — it just is not *starting* work.
+
+🔴 **And one of these nine turned out to be worse than merely undocumented in code.** *"Remote is
+country-scoped"* was listed here as handled while `location_ok` was **waiving every location exclusion
+whenever the word appeared** — the reverse of the rule. Found 2026-08-25 by reading the code rather than
+the list. **Check the rest against their code before trusting this table.**
 
 ### 2. Do the cold-start run before building anything else
 
@@ -460,9 +465,59 @@ line instead of a number to take on faith.
 and **mark it TBC where no full posting was ingested.** Most rows will be TBC, which usefully flags which
 scores came from a summary.
 
-### 🔴 "Remote" is country-scoped almost everywhere, and reading it as location-free widens the search wrongly
+### ✅ "Remote" is country-scoped, and the filter was waiving exclusions on the word — FIXED
 
-**Status: found 2026-08-24 against a real employer board.**
+**Status: ✅ fixed 2026-08-25 in code, with 11 tests. Until then it was one of the "nine documented
+rules" at the top of this file — and it was not only undone by the code, the code did the opposite.**
+
+🔴 **What was actually happening.** `location_ok` skipped the exclusion list entirely whenever the word
+*remote* appeared **anywhere in the location or the title**:
+
+| Location | Config | Was | Now |
+|---|---|---|---|
+| `Remote - <excluded city>` | that city on `bad` | **kept** | dropped |
+| `<excluded city>`, title *"Remote Delivery Lead"* | same | **kept** | dropped |
+| `Remote` | — | kept, silently as though global | kept, **marked `(scope TBC)`** |
+
+**A role advertised as remote *within* an excluded geography is still in that geography** — and that is
+precisely the case the word was supposed to help with.
+
+🟢 **Now**: `parse_location()` splits the string into *is remote* and *scope*, exclusions are judged on the
+scope, and an unqualified `Remote` is carried as **unknown rather than global** and shown as `(scope TBC)`
+in the shortlist. **Not dropped** — that loses real roles — **and not trusted either.**
+
+🔴 **The lesson is the one at the top of this file, proved again: a rule is not a control.** This rule was
+written down, listed as *documented behaviour*, and the code underneath it was doing the reverse the whole
+time. **A documented rule with contradicting code is worse than no rule**, because the file says it is
+handled.
+
+### 🟢 Greenhouse yield is low — PREFILTER FIXED, and it was a bug not a tuning problem
+
+**Status: ✅ fixed 2026-08-25 as [`adapters/_titles.py`](tools/radar/adapters/_titles.py), shared by
+Greenhouse and Lever, with 6 tests.**
+
+**Eleven boards produced 756 roles in one country and one role worth reading.** The prefilter was
+`query.split()[0] in title` — **the FIRST word of the query**, which is almost always the least
+informative one:
+
+| Query | Title | Old | New |
+|---|---|---|---|
+| *head of delivery* | **Delivery Manager** | 🔴 dropped | ✅ kept |
+| *head of delivery* | Head of Legal | 🔴 kept | ✅ dropped |
+| *delivery manager* | Account Manager | ✅ dropped | ✅ dropped |
+| *senior manager* | Senior Accountant | 🔴 kept | ✅ dropped |
+
+**Wrong in both directions at once**, which is why the yield looked like a tuning problem and was not.
+
+🟢 **What discriminates on a board is the domain word, not the seniority word.** Boards are full of
+Managers, Leads and Directors; they are not full of *Delivery*. So a query is split into generic role
+nouns and distinctive ones and a title must match something distinctive — **falling back to requiring
+every word where a query is nothing but role nouns**, since *"senior manager"* has nothing distinctive to
+ask for and deserves to be strict.
+
+**The original write-up follows.**
+
+#### The original entry
 
 An employer advertising 354 roles listed **11 as remote — and every one was bounded to a country or a US
 state**: *Remote - UK*, *Remote - Luxembourg*, *Remote - Texas*, *Remote - Arizona*, *Remote, Australia*.
@@ -742,10 +797,23 @@ human-verified claims only would be the single highest-value addition.**
 Negotiation is second: the framework already holds the salary floor, the anchors and the priced-vs-hard
 veto distinction, so **comparing two offers is a scoring problem it can already do.**
 
-### Job search is LinkedIn-only in practice
+### Job search source coverage — CORRECTED 2026-08-25, this entry had gone stale
 
-The adapter architecture exists and Adzuna, Greenhouse and Lever are written. **Only LinkedIn has been
-exercised.** Indeed is confirmed unavailable — `401` on job pages, `403` on search, tested 2026-08-23.
+🔴 **This said "only LinkedIn has been exercised" and that is no longer true**, which is the drift this
+file warns about: an entry that has gone stale sends work at a problem that no longer exists.
+
+| Source | Exercised? |
+|---|---|
+| **Workday** | 🟢 Verified against two live tenants, one of each hosting style |
+| **Oracle Cloud CX** | 🟢 Verified against three live tenants |
+| **Greenhouse** | 🟢 A real board resolved live via `sources_check` |
+| **LinkedIn** | 🟢 The original, and still the only one exercised at volume |
+| **Lever** | 🟡 Written and unit-tested; **no live board has been read** |
+| **Adzuna** | 🔴 **Still needs a real key and a real run.** The only remaining unexercised adapter that needs credentials |
+
+**The original entry follows.**
+
+The adapter architecture exists and Adzuna, Greenhouse and Lever are written. Indeed is confirmed unavailable — `401` on job pages, `403` on search, tested 2026-08-23.
 **Adzuna needs a real key and a real run before the adapter can be called working.**
 
 ### 🟡 Employer research — BUILT as `build-application` Step 0.4, two details outstanding
@@ -1376,6 +1444,13 @@ untested.
   minutes found two defects that recorded fixtures could not, because **a fixture asserts the shape the
   code already produces.** The fixtures are still worth having — they are what keeps the fix from
   regressing — but they cannot be the first contact with reality.
+- 🔴 **A documented rule with contradicting code is worse than no rule.** *"Remote is country-scoped"* was
+  written down here as handled — and the filter underneath it was waiving every exclusion whenever the
+  word appeared, which is the reverse of the rule. **Because the file said it was handled, nobody looked.**
+  When listing a rule as documented behaviour, check the code agrees with it.
+- 🟡 **A filter that is wrong in both directions looks like a tuning problem.** A board prefilter matching
+  the first word of the query kept the irrelevant and dropped the relevant, and the symptom — poor yield —
+  reads as "the thresholds need work". **Check what a filter actually matches on before tuning it.**
 - 🔴 **A scoring term only some inputs can earn is a measurement of the input pipeline.** The radar's
   tally added 3 for a visible salary — and only one of six adapters returns a structured salary field, so
   the same role fetched two ways scored two different ways, by enough to cross a band. **Ask of any term:

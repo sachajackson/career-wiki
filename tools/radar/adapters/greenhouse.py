@@ -5,7 +5,7 @@ Find a board token in the careers URL: boards.greenhouse.io/<token>
 """
 from ._http import get_json, fetch_json
 import re
-from . import _verdicts as V
+from . import _titles, _verdicts as V
 
 NAME = "greenhouse"
 TRUNCATED = False   # whole board, one call: never capped
@@ -22,7 +22,7 @@ def fetch(cfg, query, days):
     tokens = cfg.get("greenhouse", {}).get("boards", [])
     if not tokens:
         return []
-    q = query.lower()
+    q = query
     out = []
     for token in tokens:
         data = get_json(BOARD.format(token=token))
@@ -30,7 +30,7 @@ def fetch(cfg, query, days):
             continue
         for j in data.get("jobs", []):
             title = j.get("title", "")
-            if q and q.split()[0] not in title.lower():
+            if not _titles.matches(q, title):
                 continue
             body = re.sub(r"<[^>]+>", " ", j.get("content", "") or "")
             out.append({
