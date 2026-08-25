@@ -28,8 +28,15 @@ blocked=""
 # silently swallowed two files that needed to ship. A list maintained by hand
 # fails the moment somebody adds a file and does not think to update it. A
 # boundary does not.
+# The one exception is a README. The vault's folders ship so that somebody who
+# downloads this knows where to put their CV without reading documentation
+# first, and a folder with no explanation in it is a question, not an answer.
+# Those READMEs are the system's words about the folder, never the user's words
+# in it -- and they are still scanned by the content heuristic below, so a
+# personal note pasted into one is caught by rule 2 rather than waved through.
 while IFS= read -r f; do
   case "$f" in
+    vault/*/README.md|vault/README.md) ;;
     vault/*)
       blocked+="  $f  (vault/ is the user's, and must never be committed)"$'\n' ;;
   esac

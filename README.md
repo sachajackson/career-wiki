@@ -35,7 +35,7 @@ wrong text. Every layer here exists because of that.
 | **[`tools/cv_lint.py`](tools/cv_lint.py)** — mechanical | Catches the tells: **banned AI vocabulary, participial tails, suspiciously round numbers, repetitive cadence,** non-ASCII punctuation that breaks applicant tracking systems |
 | **[`tools/known.py`](tools/known.py)** — against the agent itself | Answers *"does this knowledge base already know this?"* in **three ways rather than two**: settled, present, established absence, or genuinely nothing. **Searching for evidence and finding none returns the same result whether a thing was never investigated or investigated and ruled out** — and those mean opposite things. It exists because an agent got that wrong three times in one session, and re-asked questions the user had already answered |
 | **[`tools/wikilinks.py`](tools/wikilinks.py)** — structural | Finds links that go nowhere: **split across two lines** by a wrapping convention, **pointing at a missing page**, or **pointing at a heading that has been renamed.** None of the three looks broken while you are reading, and a knowledge base whose failure mode is silence is one you stop being able to trust |
-| **[`vault/oversight/`](oversight/)** — independent | The document is reviewed by **a different vendor's model**, in a fresh session, working from a restricted export. **Cross-model review rather than self-review** — and the export is allow-listed, so the reviewer only ever sees what you would see |
+| **`vault/oversight/`** — independent | The document is reviewed by **a different vendor's model**, in a fresh session, working from a restricted export. **Cross-model review rather than self-review** — and the export is allow-listed, so the reviewer only ever sees what you would see |
 
 🟢 **And the checkers have their own checks.** [`tools/tests/`](tools/tests/) is **several hundred tests,
 stdlib only, and it runs in seconds** — `python3 tools/tests/run.py`. Several encode bugs that were live in a shipped version:
@@ -243,7 +243,7 @@ and negotiation are not in it yet.
 
 ### `/career-init` — run once, first
 
-Reads whatever you put in `sources/`. Tells you what it noticed, including gaps and contradictions in your
+Reads whatever you put in `vault/sources/`. Tells you what it noticed, including gaps and contradictions in your
 own documents. Scaffolds the wiki. Runs the first interview round. Then elicits the two things nothing
 else can work without: **your career anchors** and **your salary floor** — including what that floor is
 actually for, which changes how it behaves.
@@ -665,13 +665,19 @@ cd ~/Documents/career-wiki
 
 ### 5. Add your CV
 
-Copy your CV into the `sources` folder inside `career-wiki`. Dragging and dropping is fine.
+Copy your CV into **`vault/sources/`** inside `career-wiki`. Dragging and dropping is fine.
 
 **It does not need tidying up first.** A messy CV is more useful than a polished one, because the gaps are
 informative. If you can also export your LinkedIn profile and drop that in, do — the two disagree
 surprisingly often, and every disagreement is worth knowing about.
 
-Nothing in `sources` is ever uploaded anywhere or committed to git. It stays on your machine.
+**If you have a pile of other material and no idea what is worth keeping**, put all of it in
+`vault/migration/` instead and say so when you start. The agent reads it, files what it recognises, and
+tells you what it could not place. You should not have to learn a folder structure before you can begin.
+
+🔴 **`vault/` is the only folder that is yours, and none of it is ever uploaded or committed.** Everything
+else in this repo is the system, which means an update can replace all of it without touching a word you
+wrote. There is a `README.md` in each folder explaining what belongs there.
 
 ### 6. Start
 

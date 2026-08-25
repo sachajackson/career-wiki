@@ -1,29 +1,34 @@
 # ---------------------------------------------------------------------------
-# THE MOST IMPORTANT FILE IN THIS REPO -- and as of 2026-08-25, one rule.
+# THE MOST IMPORTANT FILE IN THIS REPO.
 #
 # Everything about, belonging to, or specific to a user lives under vault/.
 # Nothing else in this repository is theirs. That is the whole boundary, and it
 # is what makes an update possible: the system outside vault/ can be replaced
 # wholesale without touching a year of somebody's working life.
 #
-# WHY THIS USED TO BE COMPLICATED, AND WHY THAT MATTERED
+# The rule below is a PATTERN, not a list. That distinction is the entire
+# lesson: this file used to carry eight rules with `!` carve-outs naming
+# individual files, and the rule they carved out of had already swallowed two
+# files that needed to ship -- each found only because somebody noticed a clone
+# was broken. A list has to be maintained by hand and fails the moment somebody
+# adds a file and does not think to update it.
 #
-# There were eight rules, because user data sat inside tools/. One of them,
-# `tools/radar/*.json`, silently swallowed TWO files that had to ship -- an
-# example config and the ATS registry -- and each was found only because someone
-# noticed a clone was broken. The carve-outs that fixed them were `!` lines
-# added one filename at a time, and the next file into that directory would have
-# been swallowed too.
+# WHY README FILES ARE TRACKED, AND NOTHING ELSE IS
 #
-# One rule cannot do that. If something is the user's, it goes in vault/. If it
-# is not, it ships. There is no third case and no list to maintain.
+# A user who downloads this has to know where to put their CV without reading
+# documentation first. So the folders ship, with a README in each explaining
+# what belongs there. The READMEs are the system's words, not the user's.
+#
+# tools/tests/test_boundary.py asserts that the ONLY tracked files under vault/
+# are README.md, and the pre-commit hook blocks everything else regardless. If
+# you find yourself wanting to add another exception here, that is the signal
+# that something is in the wrong folder.
 # ---------------------------------------------------------------------------
 
-vault/
-
-# tools/tests/test_boundary.py fails the build if user data appears outside
-# vault/, or if anything under vault/ is tracked. The rule above is the
-# intention; that test is the enforcement.
+vault/**
+!vault/**/
+!vault/**/README.md
+!vault/README.md
 
 .DS_Store
 __pycache__/
