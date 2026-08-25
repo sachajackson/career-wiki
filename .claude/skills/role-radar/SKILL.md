@@ -74,12 +74,27 @@ that user's table had been posted fourteen days before the run — the radar cou
 user sent the link by hand.**
 
 🔴 **But `--all-open` is not a superset of `--days`, and treating it as one is the next version of the same
-mistake.** Sources cap a query at roughly 100 results whatever the window, so the two are a trade:
+mistake.** A run has a fixed page budget per query, so spreading it across months makes it sparser:
 
 | | |
 |---|---|
-| `--days 7` | **Dense recent coverage** — 100 results from one week |
-| `--all-open` | **Sparse historical sweep** — 100 results across three months |
+| `--days 7` | **Dense recent coverage** — the whole budget spent on one week |
+| `--all-open` | **Sparse historical sweep** — the same budget spread across months |
+
+🔴 **Corrected 2026-08-26. This used to say "sources cap a query at roughly 100 results whatever the
+window", and for LinkedIn that was wrong by about seven times.** Measured on one query over a 7-day
+window: `pages=4` returned 40 rows and reported capped, `pages=40` returned 400 and still reported
+capped, and **`pages=80` returned 710 and finally ran dry.**
+
+🔴 **So "capped" in the output usually means OUR budget ran out, not that the source stopped answering** —
+and those read identically while meaning opposite things. **The lever is `pages` for that adapter in
+`vault/settings/search.json`**, which is why the cap notice says to raise it.
+
+🟡 **Depth is not free, and check the adapter before spending it.** The tail is **mixed, not junk** — one
+query's rows past 260 held an unrelated Compliance Manager *and* a precisely on-target senior role. But
+**only the board adapters (`greenhouse`, `workday`, `lever`) title-filter their rows**; `linkedin`,
+`oracle` and `custom` do not, on the assumption that a search API already matched. **LinkedIn's guest
+search matches loosely**, so on that source every extra page reaches scoring unfiltered.
 
 **So: a frequent windowed run for freshness, and a periodic unfiltered sweep for the standing backlog of
 still-open roles.** Dedup handles the overlap and already works.

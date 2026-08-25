@@ -2664,7 +2664,15 @@ The tool built to find roles was structurally incapable of finding the best one 
 
 #### The fix is not "drop the filter"
 
-**The endpoint caps every query at roughly 100 results regardless of window**, so no-filter is **not a
+🔴 **Corrected 2026-08-26 — the number below was our own budget, misread as the source's.** Re-measured
+on one query over a 7-day window: `pages=4` → 40 rows *capped*, `pages=16` → 160 *capped*, `pages=40` →
+400 *capped*, **`pages=80` → 710 and it ran dry.** The "100" in the table above is what `pages=10`
+returns, not a limit LinkedIn imposes. **The conclusion below still holds and the reasoning for it
+changes**: a fixed *page budget* spread across months is sparser than the same budget over one week, so
+the two runs remain a genuine trade — but the cap is ours and it is a setting. The original entry is
+left as written; only this note is new.
+
+~~**The endpoint caps every query at roughly 100 results regardless of window**~~, so no-filter is **not a
 superset** of a windowed run. It is a different trade:
 
 | | |

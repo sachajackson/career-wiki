@@ -29,9 +29,29 @@ BROWSER_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.3
 def fetch(cfg, query, days):
     """days=None omits f_TPR entirely, which returns everything still open.
 
-    The endpoint caps a query at roughly 100 results whatever the window, so
-    unfiltered is not a superset of windowed -- it is a sparse sweep across
-    months instead of dense coverage of a week. Both are needed.
+    MEASURED 2026-08-26, and the number this docstring used to carry was wrong.
+
+    It said the endpoint caps a query at roughly 100 results whatever the
+    window. It does not. One broad query, 7-day window, one country:
+
+        pages=4  ->  40 rows, truncated      pages=40 -> 400 rows, truncated
+        pages=16 -> 160 rows, truncated      pages=80 -> 710 rows, RAN DRY
+
+    So the binding limit is `pages` -- our own budget, ten results a page --
+    and not the source. That matters because "capped" in the runner's output
+    means OUR budget ran out, which reads as "the source stopped answering"
+    and is a different thing entirely.
+
+    Unfiltered is still not a superset of windowed: a fixed page budget spread
+    across months is sparser than the same budget over one week, so both runs
+    are still needed. The trade is real; it is just OUR cap being traded, and
+    it is a setting rather than a fact about LinkedIn.
+
+    Two things before raising it. The tail is mixed rather than junk -- one
+    query's rows past 260 held both an unrelated Compliance Manager and a
+    precisely on-target senior role -- so depth does buy real roles. And
+    LinkedIn rows never pass through _titles.matches, unlike the board
+    adapters, so that noise reaches scoring unfiltered.
     """
     global TRUNCATED
     TRUNCATED = False
