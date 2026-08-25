@@ -29,6 +29,14 @@
     "country": "<iso-2, e.g. gb>", "where": "<your city>", "distance": 40, "pages": 2
   },
 
+  "_watch_comment": [
+    "Name employers here and the endpoint is looked up in employers.json -- no need to know whether",
+    "they use Greenhouse, Workday or Oracle. Anything that cannot be resolved is reported at the",
+    "start of every run rather than quietly skipped. Run `python3 tools/radar/registry.py NAME` to",
+    "test a name, and `python3 tools/registry_check.py` to confirm the endpoints still answer."
+  ],
+  "watch": ["State Street", "Grant Thornton Ireland"],
+
   "greenhouse": {
     "_comment": "Board tokens of employers you want watched directly. Find one in their careers URL: boards.greenhouse.io/<token>",
     "boards": []

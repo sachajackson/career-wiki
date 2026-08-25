@@ -824,10 +824,15 @@ reachable from one file that previously lived in five places and one person's me
 
 🔴 **Still to build, and the second is not optional:**
 
-- **Make the adapters read it.** Right now it is documentation. `config.json` should be able to name an
-  employer and have the endpoint resolved from here.
+- ✅ **A resolver — built 2026-08-25** as `tools/radar/registry.py`, 14 tests. `"watch": ["State Street"]`
+  expands into the `host`/`tenant`/`site` shape the Workday adapter wants, **merging with hand-written
+  config rather than replacing it**, and 🔴 **printing a line for every watched employer including the ones
+  it could not resolve** — an employer dropped for want of an adapter looks exactly like a quiet week.
+  **Ambiguity refuses rather than guessing**, and a substring match says what it matched on.
 - ✅ **`tools/registry_check.py` — built 2026-08-25**, wired into `/career-lint`, 11 tests. **All five entries pass.**
 - **Seed more.** Five is a proof, not a starter set.
+- 🔴 **An adapter for `custom`.** Deel is watched, resolves, and is then reported as unsearchable —
+  **which is the honest state and not a good one.** Bespoke ATSs will not be rare.
 
 **The adapters know how to speak Greenhouse, Lever, Workday and Oracle. What nobody has is the list of
 which employer uses which, and under what identifier.** Every user starts from
