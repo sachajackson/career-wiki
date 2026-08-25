@@ -2,7 +2,11 @@
 
 A posting dict is: {id, title, company, loc, date, url, body}
 `body` may be empty at listing time; the runner fills it via fetch_body if the
-adapter provides one.
+adapter provides one. fetch_body takes the WHOLE ROW, not an id: some sources
+address a posting by more than one value -- Workday needs host, tenant, site and
+path -- and packing those into the id field to fit a narrower signature is how an
+id stops being an id. An adapter may stash what it needs on the row under a
+leading-underscore key.
 
 THE `days` CONTRACT. `days` is the posting window in days, or None meaning
 "everything currently open". An adapter with a recency parameter MUST OMIT that
@@ -33,11 +37,12 @@ per query, so a run reporting a round number is usually reporting the cap.
 Adding an adapter: write the module, expose fetch(), set TRUNCATED, add it to
 ADAPTERS below.
 """
-from . import adzuna, greenhouse, lever, linkedin
+from . import adzuna, greenhouse, lever, linkedin, workday
 
 ADAPTERS = {
     "adzuna": adzuna,
     "greenhouse": greenhouse,
     "lever": lever,
     "linkedin": linkedin,
+    "workday": workday,
 }

@@ -331,6 +331,22 @@ class TheSignal(unittest.TestCase):
             self.assertIsInstance(row["tally"], int)
             self.assertEqual(row["signal"], radar.signal(row["tally"]))
 
+    def test_a_floor_date_is_marked_so_an_old_role_cannot_look_fresh(self):
+        """Some sources only say "30+ days ago", which is a floor, not a date.
+
+        A six-week-old senior requisition may already be at offer stage, so the
+        posting date is read as a prioritisation input. Printing a floor bare
+        makes an ageing role look fresh -- the same harm as an aggregator
+        re-dating a repost, arrived at from the other direction.
+        """
+        body = "regulated bank portfolio roadmap adoption upskill mentor stakeholder"
+        rows = [posting(id="a", date="2026-07-26", date_is_floor=True, body=body),
+                posting(id="b", title="Delivery Lead", date="2026-08-20", body=body)]
+        with Run([], {"fake": FakeAdapter(rows)}) as r:
+            self.assertIn("| 2026-07-26+ |", r.out)
+            self.assertIn("| 2026-08-20 |", r.out)
+            self.assertNotIn("| 2026-08-20+ |", r.out)
+
     def test_the_output_still_disclaims_what_signal_is(self):
         with Run([], {"fake": FakeAdapter([posting()])}) as r:
             self.assertIn("not an assessment", r.out)

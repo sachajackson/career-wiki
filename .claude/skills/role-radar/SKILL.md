@@ -123,6 +123,14 @@ Real defects, found by running it. Two of them silently discarded good roles.
   Luxembourg*. **Parse the suffix; it is the whole meaning.** Treat an unqualified *"Remote"* as `TBC`, not
   as global, and **never widen the search geography on the word alone** — right to work and tax residency
   sit behind it and appear in no listing.
+- 🟢 **Miss an employer that runs Workday.** It covers a large share of enterprise careers sites, including
+  ones that look bespoke. **It also carries three things no aggregator does**: the requisition number, the
+  employer's own posting date, and the extra locations behind a listing that says *"4 Locations"* — which
+  matters because the location filter runs *before* any description is read, so a role open in the user's
+  city but advertised elsewhere would otherwise be dropped unseen.
+- 🟡 **Read a date ending in `+` as a floor, not a date.** Workday will only say *"30+ days ago"*, so the
+  posting is **at least** that old and may be far older. **A six-week-old senior requisition may already be
+  at offer stage** — that is a reason to deprioritise it, and the `+` is the only thing telling you.
 - 🔴 **A shortlist is not an assessment.** Whatever the radar surfaces, **score it in the same turn it is
   found.** An unassessed role occupies attention, looks like an option, and decays. **Even an obvious no
   gets the dimensions and one sentence on what decided it** — the record of what was rejected and why is

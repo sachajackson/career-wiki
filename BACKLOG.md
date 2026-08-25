@@ -94,8 +94,9 @@ for the reasoning. **What follows is what is next.**
 
 | | Why first |
 |---|---|
-| **Workday and Oracle adapters** | The endpoints are written up in the aggregator entry. **They return the real posting date, the requisition number and hidden secondary locations**, none of which an aggregator carries |
-| **The employer watchlist as data** | Preference and exclusion lists exist as a design. They are what turn *"watch these employers"* into something the radar does |
+| **The employer watchlist as data** | Preference and exclusion lists exist as a design. They are what turn *"watch these employers"* into something the radar does — **and the Workday adapter now needs a list of employers to point at**, which is the user's to give |
+| 🟡 **Run the Workday adapter against a live tenant** | ✅ Built 2026-08-25 against verified endpoints and recorded responses, **but never yet run against a real employer from this repository.** Until it is, treat its field mapping as unproven |
+| **The Oracle Cloud CX adapter** | The remaining large ATS written up in the aggregator entry. Same argument as Workday, one endpoint, `GET` rather than `POST` |
 | **Everything after the submit button** | The system stops at submission and the process does not |
 
 🟢 **Leave the rest until the cold run says which of them matter.**
@@ -925,6 +926,32 @@ locations.** A role advertised as one city is often open in four.
 **A Workday adapter would cover a large share of enterprise employers** and is probably the highest-value
 adapter still unbuilt.
 
+✅ **Built 2026-08-25 as [`tools/radar/adapters/workday.py`](tools/radar/adapters/workday.py), with 22
+tests against recorded response shapes.** Host, tenant and site are three separate config inputs, so both
+hosting styles work; a `422` reports itself as a wrong shard rather than a generic failure; pagination
+compares what it fetched against the API's own `total`, so `TRUNCATED` is a known gap rather than a
+heuristic; and the requisition number is captured at ingest from `bulletFields`.
+
+🟢 **The hidden-locations detail call earns its place, and it is measurable.** A listing saying
+*"3 Locations"* is dropped by the location filter; expanded, the same posting keeps the city that saves
+it. **Verified as an A/B against `location_ok`, not asserted** — the filter runs before any description is
+read, so this is the only point at which the role can be rescued.
+
+🔴 **Two limitations, both stated in the code rather than discovered later:**
+
+- **It has never been run against a live tenant from this repository.** The endpoints were verified
+  against two real employers when they were written up above; the field mapping has not been. Every read
+  is guarded so an unfamiliar shape yields a thin row rather than a traceback, **but a thin row is a
+  silent failure and this should be watched on its first real run.**
+- 🟡 **Workday will only say "30+ Days Ago".** A role six months old and one exactly thirty days old
+  produce the same string, so the derived date is a **floor**. It is rendered with a trailing `+` and the
+  raw text is kept on the row — because a date that looks exact and is not is the aggregator-re-dating
+  problem arrived at from the other direction.
+
+🟢 **A contract change came with it, and it is the better design.** `fetch_body` now takes the whole row
+rather than an id: a Workday posting is addressed by four values, and packing those into the id field to
+fit a narrower signature is how an id stops being an id.
+
 **2. 🔴 Exclusions have to work at division level, not just company level.**
 
 **Found immediately in real use.** A user named a preferred employer *and* a division inside it he would
@@ -1203,6 +1230,10 @@ untested.
   true**, which is the same mechanism as the `.example` config. 🟢 **Where a fixture must stay realistic
   to be a valid test — a well-written CV, for the cadence checks — rewrite it as invented rather than
   replacing it with placeholder text, and check the measurements it exercises are unchanged.**
+- 🟢 **Mutation-test a checker before believing it.** All 22 Workday tests passed first run; deliberately
+  breaking the code found one that passed for the wrong reason, because **two code paths set the same
+  flag and removing either changed nothing.** Collapsing them to one made the test meaningful and the
+  code shorter. **A green suite proves the tests ran, not that they would have caught anything.**
 - 🔴 **A source that caps results is reporting the cap, not the match count.** Detect the difference
   between *the source ran dry* and *we hit our own limit*, and say which. Only the first proves a result
   set is complete, and **presenting a capped run as complete is the same silent failure as a filter nobody

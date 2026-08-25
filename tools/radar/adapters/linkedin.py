@@ -57,9 +57,10 @@ def fetch(cfg, query, days):
         TRUNCATED = True            # page budget exhausted, not the source
     return out
 
-def fetch_body(job_id):
+def fetch_body(row):
     """Descriptions are not in the listing response; one extra call each."""
-    h = get(DETAIL + job_id.replace("li-", ""), headers={"User-Agent": BROWSER_UA})
+    h = get(DETAIL + str(row.get("id", "")).replace("li-", ""),
+            headers={"User-Agent": BROWSER_UA})
     if not h:
         return ""
     m = re.search(r"show-more-less-html__markup(.*?)</div>", h, re.S)

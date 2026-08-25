@@ -168,7 +168,7 @@ def main():
         if not c.get("body"):
             mod = ADAPTERS.get(c.get("source", ""))
             if mod and hasattr(mod, "fetch_body"):
-                c["body"] = mod.fetch_body(c["id"]); fetched += 1
+                c["body"] = mod.fetch_body(c); fetched += 1
                 time.sleep(0.4)
         c["tally"] = tally_of(c["title"] + " " + c.get("body", ""))
         if not c.get("pay"):
@@ -241,7 +241,12 @@ def main():
             f.write(f"## {name}\n\n| SIGNAL | Posted | Company | Title | Location | Pay | Link |\n")
             f.write("|---|---|---|---|---|---|---|\n")
             for c in rows:
-                f.write(f"| {c['signal']} | {c['date']} | {c['company'][:28]} | "
+                # A "+" means the source would only say "30+ days ago", so the
+                # date is a floor: the posting is AT LEAST this old and may be
+                # far older. Showing it bare would make an ageing requisition
+                # look fresh, which is the one thing a posting date is read for.
+                posted = c["date"] + ("+" if c.get("date_is_floor") else "")
+                f.write(f"| {c['signal']} | {posted} | {c['company'][:28]} | "
                         f"{c['title'][:62]} | {c['loc'][:22]} | {c['pay']} | [link]({c['url']}) |\n")
             f.write("\n")
 

@@ -80,7 +80,7 @@ their questions will be about your division rather than your homepage.
 
 ### The rest of it
 
-- **Job search across multiple sources** — [adapters](tools/radar/adapters/) for Greenhouse, Lever, Adzuna
+- **Job search across multiple sources** — [adapters](tools/radar/adapters/) for Workday, Greenhouse, Lever, Adzuna
   and LinkedIn, plus direct Workday and Oracle recruiting endpoints, which return more than the aggregators
   do — the real posting date, the requisition number, and the additional locations a listing hides
 - **The employer's own posting is fetched in preference to any job board's copy**, because aggregators
@@ -749,10 +749,18 @@ fill in what you have. `config.json` is ignored by git, so your settings stay on
 | **adzuna** | A free API key from [developer.adzuna.com](https://developer.adzuna.com/) | Documented and supported. 🔴 **Check your country is covered before relying on it** — GB, US, NL, DE and others work; **Ireland is not covered and returns 404** |
 | **greenhouse** | Employer board names | Public data, no key. Best for watching specific target employers |
 | **lever** | Employer handles | Public data, no key. Same idea |
+| **workday** | Host, tenant and site, read off the employer's careers URL | Public data, no key. **A large share of big employers run Workday**, including where the careers site looks bespoke. Returns the requisition number and the real posting date, and expands roles advertised in one city that are open in several. 🟡 **Written from verified endpoints and tested against recorded responses, but not yet run against a live tenant from this repo** |
 | **linkedin** | Nothing | **Off by default.** Uses an undocumented endpoint, is against LinkedIn's terms of service, and will break without warning. Enable knowingly or not at all |
 
 You also set your location rules in the same file: which places are acceptable, which are not, and which
 are borderline.
+
+**One thing worth knowing about Workday**, because it is the difference between a source that works and
+one that silently misses employers: **host, tenant and site are three separate values and you cannot work
+one out from another.** There are two hosting styles — `<tenant>.wd1.myworkdayjobs.com` and the shared
+`wd1.myworkdaysite.com` — and all three values are visible in the employer's own careers URL. If a
+configured employer returns a `422`, that means the tenant sits on a different shard: try `wd3` or `wd5`
+in the host rather than changing anything else. The adapter says so when it happens.
 
 ---
 

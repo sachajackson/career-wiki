@@ -38,6 +38,26 @@
     "companies": []
   },
 
+  "workday": {
+    "_comment": [
+      "Employers whose careers site runs on Workday — a large share of big ones do,",
+      "even where the site looks bespoke. No key needed.",
+      "host, tenant and site are THREE SEPARATE VALUES and you cannot derive one from",
+      "another: there are two hosting styles and an adapter that assumes either one",
+      "misses the other silently.",
+      "  per-tenant:  <tenant>.wd1.myworkdayjobs.com   shared: wd1.myworkdaysite.com",
+      "The shard number varies (wd1/wd3/wd5). A 422 means the wrong shard, not a bad",
+      "request — the adapter says so when it sees one.",
+      "Read all three values off the employer's careers URL, which looks like:",
+      "  https://<host>/en-US/<site>/job/...",
+      "'names' is optional and only prettifies the tenant slug in the shortlist."
+    ],
+    "employers": [],
+    "names": {},
+    "pages": 5,
+    "delay": 0.3
+  },
+
   "linkedin": {
     "_comment": "OFF by default. Undocumented endpoint, against LinkedIn's terms of service. Read adapters/linkedin.py and decide for yourself.",
     "enabled": false,
