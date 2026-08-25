@@ -826,7 +826,7 @@ reachable from one file that previously lived in five places and one person's me
 
 - **Make the adapters read it.** Right now it is documentation. `config.json` should be able to name an
   employer and have the endpoint resolved from here.
-- 🔴 **`tools/registry_check.py`.** Without it this rots into the silent-zero failure — see below.
+- ✅ **`tools/registry_check.py` — built 2026-08-25**, wired into `/career-lint`, 11 tests. **All five entries pass.**
 - **Seed more.** Five is a proof, not a starter set.
 
 **The adapters know how to speak Greenhouse, Lever, Workday and Oracle. What nobody has is the list of
@@ -1027,7 +1027,21 @@ endpoint — which is how the wrong value survived being used to fetch a real jo
 > check — and both this registry and the ICON/aggregator work have now produced the same lesson from
 > different directions.
 
-## The verifier, which ships with it or it does not ship
+## ✅ The verifier — BUILT
+
+**`tools/registry_check.py`, 2026-08-25.** Verdicts: `OK`, `EMPTY!`, `COLLAPSED!`, `UNREACHABLE!` are the
+tool's own judgement; **`CANARY GONE` and `UNPROVEN` are handed to a human** because the check cannot tell
+a wrong endpoint from a filled vacancy.
+
+🔴 **It cried wolf on its first run and that was the most useful thing it did.** The canary check scanned
+the first page of results — and a board with **7,357 jobs** does not carry a given requisition in its first
+200, so a healthy JPMorganChase entry reported as broken. **Fixed by asking the source for the canary
+specifically** rather than scanning. **A false alarm on run one is exactly how a checker earns the
+reputation that gets it ignored**, and it has its own test.
+
+**The original design follows.**
+
+### The design
 
 🔴 **A registry without a checker rots into the silent-zero failure the `role-radar` skill already
 documents** — every query returns nothing and the run reports a quiet week.

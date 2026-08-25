@@ -21,6 +21,18 @@ still opens the right page and silently lands at the top.
 **`--fix` repairs the wrapped ones.** The other two need judgement: a missing page usually wants writing,
 and a renamed heading wants repointing at whatever replaced it.
 
+**And monthly, or before relying on a quiet radar run:**
+
+```
+python3 tools/registry_check.py
+```
+
+🔴 **An employer changes ATS and their entry starts returning nothing — which looks exactly like a quiet
+week.** That is the worst failure a job search can have, because the tool reports success and the user
+concludes the market is dead. **`EMPTY!` and `COLLAPSED!` are failures. `CANARY GONE` and `UNPROVEN` are
+asked of a human**, because the check cannot tell a wrong endpoint from a filled vacancy and does not
+pretend to.
+
 **And once, after any change to the tools:**
 
 ```
