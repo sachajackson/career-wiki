@@ -85,10 +85,16 @@ requires it.
 ## Before every push
 
 ```bash
-python3 tools/tests/run.py      # 65 checks, stdlib only, under a second
+python3 tools/tests/run.py      # stdlib only, about a second
 git status --porcelain          # anything unexpected staged?
 git log --oneline origin/main..HEAD
 ```
+
+🔴 **`git status` answers the wrong half of the question.** It shows what is unexpectedly *there*. It
+cannot show what is expectedly *missing* — and twice a file was written, used and pushed while an ignore
+rule kept it out of the repository, with a clean status the whole time. **`test_shipped.py` is the half
+that asks git what a clone would actually get**, which is why it runs in the suite rather than living
+here as another line to remember.
 
 🔴 **Treat `main` as published, because for some users it is.** People who run their search through this
 may reference the repository in an application, so **a stranger can arrive at `main` at any moment** —

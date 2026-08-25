@@ -125,6 +125,68 @@ how `config.json` behaves:**
   reported `UNREACHABLE!` on a connection reset and answered fine a second later. **Anything that calls a
   live endpoint needs retries before it is allowed to call something dead.**
 
+### 🔴 Two files, one letter apart, opposite privacy rules — know which is which
+
+**`tools/radar/employers.json` and `tools/radar/ats_registry.json` are not variants of each other.**
+
+| | `employers.json` | `ats_registry.json` |
+|---|---|---|
+| **Holds** | One user's **watch and avoid lists** — companies they will not work for, and why, some of it second-hand | **Public careers endpoints.** Host, tenant, token |
+| **Same for every user?** | 🔴 **No.** It is a personal document | 🟢 **Yes.** Identical for everybody |
+| **Ships?** | 🔴 **Never.** Ignored, and must stay ignored | 🟢 **Always.** A clone without it has tooling and no data |
+| **Contributions** | 🔴 Unthinkable | 🟢 **The one file here a stranger can send a PR for** |
+
+🔴 **They shared a name for a day and it cost the whole afternoon.** `ats_registry.json` was written as
+`employers.json`, matched by the `tools/radar/*.json` ignore rule, and **never committed** — every
+`git add -A` skipped it in silence while the resolver, the checker and the adapter that depend on it all
+shipped. **A clone got the tooling and no data.**
+
+🔴 **And the obvious fix was a trap.** Carving `employers.json` out of the ignore rule — exactly what was
+done a day earlier for `config.example.json` — **would have published every user's private avoid list.**
+The rule that correctly hides one file is what silently hid the other. **Renaming was the only fix; loosening the pattern was never available.**
+
+**So, for anyone touching that directory:**
+
+- **Do not "tidy" the carve-outs into `*.example.json` or a glob.** The hook's own comment explains why,
+  and this is the second file that proves it.
+- **Do not rename either file to bring them into line.** They are opposites; the names are load-bearing.
+- 🟢 **`tools/tests/test_shipped.py` now fails if a required file stops being tracked, or a private one
+  starts.** It is the only check that could have caught this — see below.
+
+### 🟢 On checklists: yes, but only the executable kind — 2026-08-25
+
+**Raised after the above: would a commit checklist have caught it?**
+
+🔴 **There already was one, it was followed, and the bug went straight through it.** `CONTRIBUTING.md`
+says *"Before every push: `git status --porcelain` — anything unexpected staged?"* **Status was clean.**
+The file was not unexpectedly *present*; it was expectedly *absent*, **and those look identical.**
+
+🔴 **Every instruction-shaped control in this repo has failed at least once.** *"Never wrap inside
+`[[ ]]`"* — three times in a day. *"Track outcomes"* — six weeks. *"Stop asking"* — ignored. **Every
+executable one has held.** A written checklist is an instruction with more steps.
+
+**And the second half of the question answers itself the same way:** a checklist that must be updated when
+functionality changes will not be, because nothing forces it. **A test lives beside the code and fails
+when the code moves.**
+
+🟢 **So the answer is a test that asks what a clone would contain, not what this machine has** —
+`tools/tests/test_shipped.py`, built 2026-08-25:
+
+- Every file the tools open by name **is tracked**
+- 🔴 Every file that must never ship **is not** — `employers.json`, `config.json`, `seen.json`, the radar's
+  working files
+- Every registered adapter has a tracked module; **every test file is tracked**, because an untracked test
+  is a check that only ever runs for its author
+- Every shipped `.json` under `tools/radar/` has **both** a `!` line in `.gitignore` **and** a carve-out in
+  the pre-commit hook — the two places that have to agree and did not
+
+🟢 **It caught something on its first run: itself.** `test_shipped.py` was not yet tracked. **The check
+that exists because of one untracked file found the next one immediately.**
+
+🟡 **Where a written checklist still earns its place: the things no test can reach.** The oversight pass,
+reading a document aloud before sending it, deciding whether a concession is honest. **Those are few, and
+they should be marked as the exception rather than the mechanism.**
+
 ### 3. Then, in this order
 
 🟢 **The first two items on this list were done on 2026-08-25** — the seven-day window is now
