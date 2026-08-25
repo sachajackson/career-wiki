@@ -6,9 +6,17 @@ from ._http import get_json
 import re
 
 NAME = "lever"
+TRUNCATED = False   # whole board, one call: never capped
+HONOURS_DAYS = False   # whole board: everything open, at any age
 POSTINGS = "https://api.lever.co/v0/postings/{handle}?mode=json"
 
 def fetch(cfg, query, days):
+    """`days` is ignored: a board returns everything currently open.
+
+    That is the point of watching a board rather than searching. It is also
+    why TRUNCATED is always False here -- there is no page budget to exhaust
+    and no recency filter to hide a still-open role behind.
+    """
     handles = cfg.get("lever", {}).get("companies", [])
     if not handles:
         return []

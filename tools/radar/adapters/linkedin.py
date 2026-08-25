@@ -18,28 +18,43 @@ import urllib.parse, re, html, time
 from ._http import get
 
 NAME = "linkedin"
+TRUNCATED = False
+HONOURS_DAYS = True   # search endpoint: takes a recency filter
 SEARCH = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
 DETAIL = "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/"
 BROWSER_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
 
 def fetch(cfg, query, days):
+    """days=None omits f_TPR entirely, which returns everything still open.
+
+    The endpoint caps a query at roughly 100 results whatever the window, so
+    unfiltered is not a superset of windowed -- it is a sparse sweep across
+    months instead of dense coverage of a week. Both are needed.
+    """
+    global TRUNCATED
+    TRUNCATED = False
     c = cfg.get("linkedin", {})
     if not c.get("enabled"):
         return []
     where = c.get("location", "")
     out = []
     for start in range(0, int(c.get("pages", 4)) * 10, 10):
-        url = SEARCH + "?" + urllib.parse.urlencode(
-            {"keywords": query, "location": where, "f_TPR": f"r{days*86400}", "start": start})
+        params = {"keywords": query, "location": where, "start": start}
+        if days is not None:          # 0 is a window, not a request for everything
+            params["f_TPR"] = f"r{days * 86400}"
+        url = SEARCH + "?" + urllib.parse.urlencode(params)
         h = get(url, headers={"User-Agent": BROWSER_UA, "Accept-Language": "en"})
         if h is None:
+            TRUNCATED = True        # a page failed; no idea what was behind it
             break
         cards = _parse(h)
         if not cards:
-            break
+            break                   # the source ran dry -- this set IS complete
         out.extend(cards)
         time.sleep(float(c.get("delay", 0.8)))
+    else:
+        TRUNCATED = True            # page budget exhausted, not the source
     return out
 
 def fetch_body(job_id):

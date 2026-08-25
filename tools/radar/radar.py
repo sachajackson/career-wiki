@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
 """Role Radar — find job postings, filter them, and tier them for an agent to read.
 
-    python3 radar.py --days 7
-    python3 radar.py --score-only      # re-tier the cache without refetching
+    python3 radar.py --days 7          # dense recent coverage
+    python3 radar.py --all-open        # sparse sweep of everything still open
+    python3 radar.py --retier          # re-tier the cache without refetching
     python3 radar.py --reset           # forget what has been seen
 
 Writes shortlist.md, raw.json and seen.json alongside this file. All three are
 gitignored and regenerated; nothing here is a record of anything durable.
 
-WHAT THIS IS NOT: the tier is a keyword tally, not a judgement, and it has no
-relationship to the scoring framework's number. Its only job is to decide what
-is worth an agent reading. See the failure modes in the role-radar skill --
-in particular, good roles DO land in tier B, so tier B always gets read.
+WHAT THIS IS NOT: SIGNAL is a keyword tally rendered as a word, not a judgement,
+and it has no relationship to the scoring framework's number. Its only job is to
+decide what is worth an agent reading. See the failure modes in the role-radar
+skill -- in particular, good roles DO land in MED, so MED always gets read.
+
+--all-open IS NOT A SUPERSET OF --days. Sources cap results per query regardless
+of the window, so a windowed run and an unfiltered run are a trade, not a
+ladder: 100 results from one week, or 100 results across three months. Both are
+needed -- frequent windowed runs for freshness, a periodic unfiltered sweep for
+the standing backlog of still-open roles. Dedup handles the overlap.
 """
 import json, os, re, sys, time, datetime
 
@@ -57,6 +64,25 @@ NEG = [(r"hands.on (coding|engineering|development)|write code daily", -5),
        (r"on.?call 24|24x7|weekend rota", -4),
        (r"\b(4|5) days? (per week )?(in|from) (the )?office", -3)]
 
+# The two cut-points of the keyword tally. Above HIGH_AT is worth reading first;
+# above MED_AT is worth reading. Below that the posting is not surfaced at all.
+HIGH_AT, MED_AT = 18, 10
+
+
+def signal(tally):
+    """Render the keyword tally as HIGH / MED / LOW, deliberately not a number.
+
+    This column used to print the raw tally under the heading "Score", and a
+    radar output of 21 was duly reported to a user as a framework score -- which
+    is impossible, since that scale stops at 15. The user caught it. A warning
+    was added and the confusion recurred anyway.
+
+    A word cannot be mistaken for a score out of 15 even by accident, and that is
+    the entire reason this is not a number. The tally survives in raw.json for
+    tuning; it does not reach anything a human reads.
+    """
+    return "HIGH" if tally >= HIGH_AT else "MED" if tally >= MED_AT else "LOW"
+
 
 def load_config():
     if not os.path.exists(CONFIG):
@@ -64,7 +90,7 @@ def load_config():
     return json.load(open(CONFIG))
 
 
-def tier_score(text):
+def tally_of(text):
     t = re.sub(r"\s+", " ", (text or "").lower())
     return sum(w for rx, w in POS + NEG if re.search(rx, t))
 
@@ -82,16 +108,21 @@ def location_ok(cfg, loc, title):
 
 def main():
     argv = sys.argv
-    days = int(argv[argv.index("--days") + 1]) if "--days" in argv else 7
+    # --all-open means "no recency filter at all". It beats --days if both are
+    # given, because it is the more explicit of the two.
+    all_open = "--all-open" in argv
+    days = None if all_open else (
+        int(argv[argv.index("--days") + 1]) if "--days" in argv else 7)
     only = argv[argv.index("--adapter") + 1] if "--adapter" in argv else None
-    reset, score_only = "--reset" in argv, "--score-only" in argv
+    reset = "--reset" in argv
+    retier = "--retier" in argv or "--score-only" in argv   # old name still works
 
     cfg = load_config()
     seen = {} if reset or not os.path.exists(SEEN) else json.load(open(SEEN))
     today = datetime.date.today().isoformat()
-    dead, dupes = [], 0
+    dead, capped, dupes = [], [], 0
 
-    if score_only and os.path.exists(RAW):
+    if retier and os.path.exists(RAW):
         found = json.load(open(RAW))
     else:
         found = {}
@@ -104,6 +135,11 @@ def main():
                     rows = mod.fetch(cfg, q, days)
                 except Exception as e:
                     dead.append(f"{name}/{q}: {type(e).__name__}"); continue
+                # The adapter tells us whether it stopped because the source ran
+                # dry or because it ran out of its own page budget. Only the
+                # first proves the result set is complete.
+                if getattr(mod, "TRUNCATED", False):
+                    capped.append(f"{name}/{q}")
                 for r in rows:
                     key = re.sub(r"\W+", "", r["title"].lower())[:40] + "|" + r["loc"].lower()[:12]
                     if r["id"] in found or r["id"] in seen or any(
@@ -134,45 +170,93 @@ def main():
             if mod and hasattr(mod, "fetch_body"):
                 c["body"] = mod.fetch_body(c["id"]); fetched += 1
                 time.sleep(0.4)
-        c["tier_score"] = tier_score(c["title"] + " " + c.get("body", ""))
+        c["tally"] = tally_of(c["title"] + " " + c.get("body", ""))
         if not c.get("pay"):
             m = MONEY.search(c["title"])
             c["pay"] = m.group(0) if m else ""
         if c["pay"]:
-            c["tier_score"] += 3
+            c["tally"] += 3
+        c["signal"] = signal(c["tally"])
     if fetched:
         print(f"  read {fetched} descriptions", file=sys.stderr)
 
     json.dump(found, open(RAW, "w"), indent=1)
-    keep.sort(key=lambda x: (-x["tier_score"], x["date"]))
-    A = [c for c in keep if c["tier_score"] >= 18]
-    B = [c for c in keep if 10 <= c["tier_score"] < 18]
+    keep.sort(key=lambda x: (-x["tally"], x["date"]))
+    high = [c for c in keep if c["signal"] == "HIGH"]
+    med  = [c for c in keep if c["signal"] == "MED"]
+
+    # The window applies only to sources that were asked for one. A board adapter
+    # returns everything currently open at any age, so a file carrying board rows
+    # cannot claim a window -- and this header is the only thing telling a reader
+    # how old the postings below can be. Derived from the rows rather than from
+    # which adapters ran, so it stays true under --retier as well.
+    srcs = sorted({c.get("source", "") for c in keep})
+    boards   = [n for n in srcs if not getattr(ADAPTERS.get(n), "HONOURS_DAYS", False)]
+    windowed = [n for n in srcs if getattr(ADAPTERS.get(n), "HONOURS_DAYS", False)]
+
+    if days is None:
+        window = "all open postings"
+    elif not srcs or not boards:
+        window = f"{days}-day window"
+    elif not windowed:
+        window = f"watched boards only — everything open, the {days}-day window applied to nothing"
+    else:
+        window = f"{days}-day window on searched sources"
 
     with open(OUT, "w") as f:
-        f.write(f"# Radar shortlist — {today} ({days}-day window)\n\n")
+        f.write(f"# Radar shortlist — {today} ({window})\n\n")
         f.write(f"{len(found)} fetched, {dupes} duplicates suppressed. "
                 f"Dropped {dropped['loc']} on location, {dropped['title']} on title. "
-                f"**Tier A {len(A)}, Tier B {len(B)}.**\n\n")
+                f"**HIGH {len(high)}, MED {len(med)}.**\n\n")
+        if days is not None and boards:
+            f.write("> **The window does not apply to every source in this file.** "
+                    f"{', '.join(boards)} return{'s' if len(boards) == 1 else ''} whole boards — "
+                    f"everything currently open, at any "
+                    f"age — so a row below can be far older than {days} days. "
+                    + (f"Only {', '.join(windowed)} was asked for the last {days} days.\n\n"
+                       if windowed else
+                       f"Nothing here was asked for the last {days} days.\n\n"))
         if dead:
             f.write(f"> **FETCH FAILURES — this run is incomplete:** {dead}\n\n")
-        f.write("> The score below is a keyword tally, not an assessment. **Read Tier B too** — a "
-                "posting with a thin description scores low regardless of how good the role is.\n\n")
-        for name, rows in (("Tier A", A), ("Tier B", B)):
-            f.write(f"## {name}\n\n| Score | Posted | Company | Title | Location | Pay | Link |\n")
+        if capped:
+            one = len(capped) == 1
+            f.write(f"> **NOT THE COMPLETE SET — {len(capped)} quer{'y' if one else 'ies'} hit "
+                    f"the source's cap rather than running out of results, so there is more "
+                    f"behind {'it' if one else 'them'}.** Raise `pages` for "
+                    "that adapter in `config.json`, or narrow the query. A run that reports a "
+                    "round number is usually reporting the cap, not the match count.\n>\n"
+                    f"> {', '.join(capped[:12])}"
+                    f"{f' … and {len(capped) - 12} more' if len(capped) > 12 else ''}\n\n")
+        if days is None:
+            f.write("> **This is a backlog sweep, not a weekly shortlist.** An unfiltered run "
+                    "surfaces every still-open role at once, which can be dozens. Triage the "
+                    "batch with the `role-triage` agent rather than assessing each in turn.\n\n")
+        f.write("> SIGNAL is a keyword tally, not an assessment, and it is unrelated to the "
+                "Role Scoring Framework's score. **Read MED too** — a posting with a thin "
+                "description signals low regardless of how good the role is.\n\n")
+        # The per-row SIGNAL repeats its section heading on purpose: these rows
+        # get lifted out of the file and pasted elsewhere, and a row has to carry
+        # its own label once it is separated from the heading above it.
+        for name, rows in (("HIGH signal", high), ("MED signal", med)):
+            f.write(f"## {name}\n\n| SIGNAL | Posted | Company | Title | Location | Pay | Link |\n")
             f.write("|---|---|---|---|---|---|---|\n")
             for c in rows:
-                f.write(f"| {c['tier_score']} | {c['date']} | {c['company'][:28]} | "
+                f.write(f"| {c['signal']} | {c['date']} | {c['company'][:28]} | "
                         f"{c['title'][:62]} | {c['loc'][:22]} | {c['pay']} | [link]({c['url']}) |\n")
             f.write("\n")
 
-    if not score_only:
+    if not retier:
         for c in found.values():
             c.pop("_k", None)
             seen[c["id"]] = {"title": c["title"], "company": c["company"], "first_seen": today}
         json.dump(seen, open(SEEN, "w"), indent=1)
 
-    print(f"\n{len(found)} fetched | Tier A {len(A)} | Tier B {len(B)} | "
-          f"failures: {dead or 'none'}\n-> {OUT}", file=sys.stderr)
+    print(f"\n{len(found)} fetched | HIGH {len(high)} | MED {len(med)} | "
+          f"failures: {dead or 'none'}", file=sys.stderr)
+    if capped:
+        print(f"  !! {len(capped)} query/queries hit the source cap -- this is NOT the "
+              f"complete set of open roles.", file=sys.stderr)
+    print(f"-> {OUT}", file=sys.stderr)
 
 
 if __name__ == "__main__":

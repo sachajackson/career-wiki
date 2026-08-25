@@ -262,9 +262,20 @@ round. Everything else in the system is downstream of this.
 ### `/role-radar` — find roles
 
 Searches job sources through pluggable adapters, filters on your location rules, reads the full
-description of everything that survives, and tiers them. A separate `role-triage` agent does the reading,
-so your main session does not fill up with job adverts, and hands back a ranked shortlist carrying the
-reasoning and the strongest objection for each role.
+description of everything that survives, and marks each one `HIGH`, `MED` or `LOW`. A separate
+`role-triage` agent does the reading, so your main session does not fill up with job adverts, and hands
+back a ranked shortlist carrying the reasoning and the strongest objection for each role.
+
+**Two kinds of run, and you want both.** A windowed run — the last week — gives dense coverage of what is
+new. **An open run drops the date filter and sweeps everything still open**, which matters more than it
+sounds: for a long time the search only ever looked at the last seven days, and a role posted a fortnight
+earlier was invisible to it no matter how good it was. **Neither run is a superset of the other**, because
+sources cap how much they will return per search, so the open sweep trades depth of one week for a thin
+slice of three months. Ask for whichever you want — *"check the last week"* or *"sweep everything still
+open"*.
+
+**It tells you when it was cut off.** If a search hits the source's limit rather than running out of
+results, the output says so, and the agent is told not to describe that run as everything that is open.
 
 ### `/build-application` — one role, one pack
 
@@ -691,6 +702,12 @@ If you would rather watch it run, the desktop app has a built-in terminal: **Vie
 
 ```bash
 python3 tools/radar/radar.py --days 7
+```
+
+Or, to sweep everything still open rather than only the last week:
+
+```bash
+python3 tools/radar/radar.py --all-open
 ```
 
 ### 7. Optional but recommended — read the wiki in Obsidian

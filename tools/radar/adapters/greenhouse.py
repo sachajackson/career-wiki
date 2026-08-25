@@ -7,9 +7,17 @@ from ._http import get_json
 import re
 
 NAME = "greenhouse"
+TRUNCATED = False   # whole board, one call: never capped
+HONOURS_DAYS = False   # whole board: everything open, at any age
 BOARD = "https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"
 
 def fetch(cfg, query, days):
+    """`days` is ignored: a board returns everything currently open.
+
+    That is the point of watching a board rather than searching. It is also
+    why TRUNCATED is always False here -- there is no page budget to exhaust
+    and no recency filter to hide a still-open role behind.
+    """
     tokens = cfg.get("greenhouse", {}).get("boards", [])
     if not tokens:
         return []

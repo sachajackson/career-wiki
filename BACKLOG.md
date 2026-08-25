@@ -75,18 +75,25 @@ looking handled.
 
 | Entry | Was | Actually |
 |---|---|---|
-| **The radar's SIGNAL number** | *"Done: the column is now `SIGNAL`"* | 🔴 **Never true of this repository.** That rename happened in a private copy. `radar.py` still writes `\| Score \|` — **the exact word that caused the confusion.** Corrected, and it is still the fix to make |
+| **The radar's SIGNAL number** | *"Done: the column is now `SIGNAL`"* | 🔴 **Never true of this repository.** That rename happened in a private copy. `radar.py` still writes `\| Score \|` — **the exact word that caused the confusion.** Corrected — and 🟢 **actually done 2026-08-25**, as `HIGH`/`MED`/`LOW` rather than as a second integer |
 | **Employer research** | *"designed, not built"* | 🟢 **Built** as `build-application` Step 0.4. Retitled, with the two details that genuinely did not make it |
 
 **Nothing else claims to be done that is not.** The nine rules listed above are documented rather than
 mechanical, and say so.
 
+🟢 **Two of those nine stopped being merely documented on 2026-08-25.** *"'Remote' is country-scoped"* and
+the rest are still instructions; but the SIGNAL vocabulary and the search window are now code with tests
+behind them. **The distinction this table exists to police is the one to keep applying: a rule is not a
+control.**
+
 ### 3. Then, in this order
+
+🟢 **The first two items on this list were done on 2026-08-25** — the seven-day window is now
+`--all-open`, and the radar's number is now `HIGH`/`MED`/`LOW`. Both entries are marked ✅ below and kept
+for the reasoning. **What follows is what is next.**
 
 | | Why first |
 |---|---|
-| 🔴 **The radar's seven-day window** | **`radar.py` still defaults to `--days 7` and has no way to ask for everything currently open.** In real use this hid 51 live roles, including the one that ended up top of the table. **It is a few lines, and everything else about search quality is downstream of it** |
-| 🔴 **The SIGNAL number** | Still a bare integer that reads like a framework score. **The instruction not to confuse them has already failed once**, so it needs a structural fix — `HIGH`/`MED`/`LOW` — not a stronger warning |
 | **Workday and Oracle adapters** | The endpoints are written up in the aggregator entry. **They return the real posting date, the requisition number and hidden secondary locations**, none of which an aggregator carries |
 | **The employer watchlist as data** | Preference and exclusion lists exist as a design. They are what turn *"watch these employers"* into something the radar does |
 | **Everything after the submit button** | The system stops at submission and the process does not |
@@ -97,28 +104,74 @@ mechanical, and say so.
 
 ## 🔴 Defects — things that behave wrongly
 
-### The radar's SIGNAL number reads like a framework score
+### ✅ The radar's SIGNAL number read like a framework score — MADE NON-NUMERIC
 
-**Status: partially fixed 2026-08-22. The confusion is real and recurred in practice.**
+**Status: ✅ fixed 2026-08-25, with tests. The record of why follows, because the lesson generalises.**
 
-`radar.py` produces an unbounded keyword tally. The Role Scoring Framework produces a score out of 20.
+`radar.py` produced an unbounded keyword tally. The Role Scoring Framework produces a score out of 15.
 **Both were called "score", and a radar output of 21 was reported to the user as though it were a
 framework score of 21 — which is impossible, and the user rightly caught it.**
 
-🔴 **Corrected 2026-08-24: "the column is now `SIGNAL`" was never true of this repository.** That rename
-happened in a private copy and the claim was written here as though it applied to both. **`radar.py` still
-writes `| Score |`** — the exact word that caused the confusion.
+**The first two attempts at this were both instructions**, and both failed: a warning line in every
+shortlist header, then the same warning in the module docstring and the skill. **The confusion recurred
+anyway**, which is the whole argument for the third attempt being structural.
 
-**What is actually done:** every shortlist carries a header line saying the number is a keyword tally
-rather than an assessment, and the module docstring says the same.
+**Now:** the column is `SIGNAL` and the value is `HIGH` / `MED` / `LOW`. 🟢 **A word cannot be mistaken for
+a score out of 15 even by accident** — there is no reading of `HIGH` that produces a number. The raw tally
+survives in `raw.json` for tuning and reaches nothing a human reads. Section headings, the stderr summary
+and the skill all moved to the same vocabulary, because half a rename leaves two names for one thing.
 
-**Still to do:**
-- 🔴 **Rename the column.** `tools/radar/radar.py`, the header written around line 161 and the row written
-  around line 164. **Two lines.**
-- **Better, and the reason this is still open: make it non-numeric.** `HIGH`/`MED`/`LOW` cannot be
-  confused with a score out of 15 even by accident. **An instruction that has already failed once needs a
-  structural fix**, not a stronger instruction — and the `role-radar` skill's warning is that instruction.
-- `verify.py` and `cv_lint.py` also print counts. Check nothing else looks like a score.
+🟢 **The per-row `SIGNAL` deliberately repeats its section heading.** Rows get lifted out of the shortlist
+and pasted elsewhere, and a row separated from its heading has to carry its own label.
+
+🔴 **A second reason the number was wrong, found afterwards while building a before-and-after fixture, and
+worth more than the original one.** Two roles printed an identical `23`. They were not the same 23: one was
+20 keyword points plus the **+3 the tally adds for a salary appearing in the title**, the other was 23
+keyword points and no salary. **The number asserted the two roles were equal, which the tally cannot
+support** — and it asserted it in a format that invites arithmetic nobody should be doing on a keyword
+count. **`HIGH` and `HIGH` make the weaker, true claim: both are worth reading first.**
+
+🟢 **That generalises past this repo.** A displayed value that sums a signal with a bonus implies a
+precision it does not have, and **the display format is what decides whether anyone notices.** A word
+cannot be averaged, differenced, or ranked to two significant figures.
+
+**Checked at the same time, and clean:** `verify.py` and `cv_lint.py` print `N finding(s)`, which reads as
+a count of problems rather than a rating. `verify.py` has an internal `score` used to rank coverage
+suggestions; it is a sort key and is never printed.
+
+🟢 **The generalisable rule: when a number and a different number share a name, renaming the column is the
+smaller half of the fix.** Making one of them non-numeric is what ends it.
+
+### 🟡 The salary bonus in the radar tally measures the adapter, not the role
+
+**Status: found 2026-08-25 while building a before-and-after fixture for the SIGNAL change. Not fixed.**
+
+The tally adds **+3 when a salary is visible** — either supplied by the feed or matched in the title.
+Two problems, and the second is the one that makes it a defect rather than a design choice.
+
+1. **It is a different dimension inside the same number.** Everything else in the tally measures whether
+   the role's *content* matches. *"This posting disclosed a salary"* measures how actionable it is. Both
+   are legitimate; adding them means neither can be read off the result.
+2. 🔴 **It is source-dependent, so it scores the adapter.** Aggregator adapters return a structured salary
+   field; employer-board and scraped adapters almost never do, and fall back to matching a figure in the
+   title. **The same role fetched from two sources gets two different tallies** — one of them three points
+   higher for a reason that has nothing to do with the role.
+
+**Bounded but not harmless.** `HIGH`/`MED`/`LOW` absorbs small movements, but +3 is a third of the distance
+between the two cut-points, so it can promote a role across a band on the strength of which adapter found
+it first.
+
+**Options, in rough order of preference:**
+
+- **Carry salary-visible as a separate column**, not as points. The shortlist already has a `Pay` column
+  doing exactly this, which makes the +3 largely redundant to a reader.
+- **Normalise it at the adapter boundary** so every source reports salary-visible the same way, and the
+  bonus at least stops depending on the route.
+- **Drop it.** The framework scores PAY properly and treats an unpublished band as `TBC`; the radar does
+  not need an opinion.
+
+🟢 **The general shape is worth keeping in mind for any scoring tool here: a term that only some inputs can
+earn is a measurement of the input pipeline.**
 
 ### ✅ Line-wrapped wikilinks silently do not resolve — CHECK BUILT
 
@@ -969,7 +1022,30 @@ Tested for Ireland, and recorded so nobody repeats it:
 **Worth building**: a `sources check` command that probes every configured adapter for the user's country
 and reports what actually works, before they invest in any of it.
 
-### 🔴 The search only ever covered the last seven days, and nobody noticed
+### ✅ The search only ever covered the last seven days — `--all-open` BUILT
+
+**Status: ✅ fixed 2026-08-25 as `--all-open`, with the cap now reported and 17 tests.
+The record of why follows, because the lesson at the end is worth more than the flag.**
+
+**What was built:**
+
+- **`--all-open` passes `days=None` to every adapter**, and the adapter contract now says an adapter with
+  a recency parameter must **omit** it rather than substitute a large number — a big `--days` asks the
+  source a different question and gets a differently-wrong answer. Documented in `adapters/__init__.py`.
+- 🔴 **Truncation is detected and reported.** Every adapter sets `TRUNCATED` on each call: true when it
+  exhausted its own page budget *or* a page failed, false only when the source itself ran dry — **which is
+  the only thing that proves a result set is complete.** The shortlist and the console both say
+  `NOT THE COMPLETE SET` when it fires, and the skill tells the agent not to describe such a run as
+  everything that is open.
+- **The batch problem is answered by the triage route, not by an exemption.** An `--all-open` run prints
+  *"this is a backlog sweep, not a weekly shortlist"* and points at the `role-triage` agent. The
+  assess-every-role-immediately rule stands; the batch goes through triage first.
+- **Employer-board adapters were never affected** — they return whole boards and ignore `days` — and now
+  say so in their own docstrings rather than leaving the next reader to work it out.
+
+**The original write-up follows.**
+
+#### The defect it was built for
 
 **Found 2026-08-24 because a user asked. The most consequential defect found so far.**
 
@@ -998,18 +1074,23 @@ superset** of a windowed run. It is a different trade:
 **Both are needed.** A frequent windowed run for freshness, and a periodic unfiltered sweep for the
 standing backlog of still-open roles. **Dedup handles the overlap and already works.**
 
-**Implemented as an `--all-open` flag in the proving instance. The generalisable fixes:**
+**The generalisable fixes, all three now built:**
 
-- **Any adapter with a recency parameter needs the same treatment.** Employer boards return everything
+- ✅ **Any adapter with a recency parameter needs the same treatment.** Employer boards return everything
   open by default and are unaffected; a search API with a `posted_within` filter has this bug latent.
-- 🔴 **Where a source caps results, the cap is the real constraint and the tool should say so.** A run
+- ✅ 🔴 **Where a source caps results, the cap is the real constraint and the tool should say so.** A run
   reporting "100 results" when the true match count is higher is silently truncating. **Detect it — a page
   returning exactly the cap means there is more — and report it rather than presenting a truncated set as
   complete.**
-- **A first unfiltered sweep produces a backlog, not a shortlist.** In the proving case, **51 roles scoring
-  above the read-threshold that no previous run could have surfaced.** The *assess-every-role-immediately*
-  rule assumes a handful arriving continuously and **does not survive a fifty-one item catch-up**. Either
-  the rule needs a batch exemption or the first sweep needs its own triage step.
+- ✅ **A first unfiltered sweep produces a backlog, not a shortlist.** In the proving case, **51 roles
+  above the read-threshold that no previous run could have surfaced.** The
+  *assess-every-role-immediately* rule assumes a handful arriving continuously and **does not survive a
+  fifty-one item catch-up**. *Resolved in favour of a triage step rather than a batch exemption* — the
+  rule is load-bearing and carving an exception into it costs more than routing the batch.
+
+🟡 **One thing the fix cannot do, and it is worth knowing.** The tool can say a query *was* capped; it
+cannot say what was behind the cap. **More pages do not help — the cap ignores them.** Narrower queries are
+the only way to see past it, which is an odd inversion of the usual advice and is now in the skill.
 
 #### 🟢 The wider lesson, which is worth more than the fix
 
@@ -1092,7 +1173,28 @@ untested.
 - **Never resolve an UNSOURCED finding by adding the figure to the wiki.** That launders an invention into
   a source, and every future application then treats it as evidence.
 - **Query breadth is not how the radar improves.** Doubling from 20 to 40 terms fetched 65% more roles and
-  produced one more Tier A. **Frequency beats breadth.**
+  produced one more HIGH-signal role. **Frequency beats breadth** — and **check the filters before adding
+  queries**: fixing the time window produced fifty-one where doubling the query list produced one.
+- 🔴 **When two different numbers share a name, renaming the column is the smaller half of the fix.**
+  Making one of them non-numeric is what ends it. A keyword tally and a framework score were both called
+  *score*; two rounds of warning text failed before the tally became `HIGH`/`MED`/`LOW`. **A word cannot be
+  mistaken for a score out of 15 even by accident.**
+- 🔴 **Never display a value that sums a signal with a bonus as a bare number.** It implies a precision it
+  does not have — two roles showed an identical `23` where one was 20 points plus a salary bonus.
+  **Coarse labels state the weaker, true claim.**
+- 🔴 **Guard on the sentinel, not on truthiness.** `if days:` instead of `if days is not None:` made a
+  window of 0 silently become an unfiltered sweep — **the exact failure the None handling had just been
+  written to prevent, reintroduced two files away by the shorter spelling, in the same change that
+  documented the contract.** Found in review. A contract stated in one file and spelled loosely in
+  another is not a contract.
+- 🔴 **A header that describes a run must be true of every row under it.** The shortlist was headed
+  *"7-day window"* while board adapters contributed postings of any age. **Pre-existing and invisible
+  until the header was rewritten** — the reader had no way to know how old a row could be. Adapters now
+  declare `HONOURS_DAYS` and the header narrows itself when they disagree.
+- 🔴 **A source that caps results is reporting the cap, not the match count.** Detect the difference
+  between *the source ran dry* and *we hit our own limit*, and say which. Only the first proves a result
+  set is complete, and **presenting a capped run as complete is the same silent failure as a filter nobody
+  knew was on.**
 
 ---
 

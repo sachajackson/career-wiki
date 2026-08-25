@@ -18,9 +18,14 @@ import urllib.parse, re
 from ._http import get_json
 
 NAME = "adzuna"
+TRUNCATED = False
+HONOURS_DAYS = True   # search API: takes a recency filter
 BASE = "https://api.adzuna.com/v1/api/jobs/{country}/search/{page}"
 
 def fetch(cfg, query, days):
+    """days=None omits max_days_old, which returns everything still open."""
+    global TRUNCATED
+    TRUNCATED = False
     a = cfg.get("adzuna", {})
     if not a.get("app_id") or not a.get("app_key"):
         return []
@@ -29,14 +34,19 @@ def fetch(cfg, query, days):
         params = {
             "app_id": a["app_id"], "app_key": a["app_key"],
             "results_per_page": 50, "what": query,
-            "where": a.get("where", ""), "max_days_old": days,
+            "where": a.get("where", ""),
             "content-type": "application/json",
         }
+        if days is not None:          # 0 is a window, not a request for everything
+            params["max_days_old"] = days
         if a.get("distance"):
             params["distance"] = a["distance"]
         data = get_json(BASE.format(country=country, page=page) + "?" + urllib.parse.urlencode(params))
-        if not data or not data.get("results"):
+        if data is None:
+            TRUNCATED = True        # request failed; the rest is unknown
             break
+        if not data.get("results"):
+            break                   # the source ran dry -- this set IS complete
         for r in data["results"]:
             sal = ""
             lo, hi = r.get("salary_min"), r.get("salary_max")
@@ -54,4 +64,6 @@ def fetch(cfg, query, days):
                 "pay": sal,
                 "source": NAME,
             })
+    else:
+        TRUNCATED = True            # page budget exhausted, not the source
     return out
