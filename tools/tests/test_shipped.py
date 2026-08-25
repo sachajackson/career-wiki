@@ -162,6 +162,11 @@ class DocumentationPointsAtThingsThatExist(unittest.TestCase):
                 continue
             with open(f, encoding="utf-8") as fh:
                 text = fh.read()
+            # Documentation ABOUT links contains link-shaped text. `](#anchor)`
+            # in backticks is an example, not a link, and flagging it is the
+            # false positive that gets a check switched off -- it fired on the
+            # entry describing this very check, within a minute of it shipping.
+            text = re.sub(r"`[^`\n]*`", "`code`", text)
             # GitHub's heading anchor: lowercase, drop anything that is not word,
             # space or hyphen, then spaces to hyphens. Emoji and em-dashes vanish
             # and leave their surrounding spaces behind, which is why real
@@ -172,6 +177,15 @@ class DocumentationPointsAtThingsThatExist(unittest.TestCase):
                 if m.group(1)[1:] not in anchors:
                     broken.append(f"{rel} -> {m.group(1)}")
         self.assertEqual(broken, [], f"anchor links pointing at no heading: {broken}")
+
+    def test_a_link_shaped_example_in_backticks_is_not_a_link(self):
+        """Prose about links contains link-shaped text, and this repo's prose is
+        largely about its own checks. Fired on the entry describing this check."""
+        import re
+        text = "See `](#not-a-real-anchor)` for the shape.\n\n# Real\n\n[x](#real)\n"
+        stripped = re.sub(r"`[^`\n]*`", "`code`", text)
+        self.assertNotIn("#not-a-real-anchor", stripped)
+        self.assertIn("(#real)", stripped)
 
 
 class ThePersonalDataHeuristicScopesCorrectly(unittest.TestCase):

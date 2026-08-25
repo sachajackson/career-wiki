@@ -124,6 +124,16 @@ updates is a number that lies.** If you changed `verify.py`, `cv_lint.py` or
 `wikilinks.py`, **add a test for the behaviour you changed** — those three are the layer everything else
 leans on, and a regression in them is silent by construction.
 
+🔴 **Do not pipe the suite into anything before `&&`.**
+
+```bash
+python3 tools/tests/run.py && git push        # the exit status gates the push
+python3 tools/tests/run.py | tail -2 && git push   # 🔴 it does not. tail always succeeds
+```
+
+**A pipe replaces the exit status with the last command's**, so the readable version silently disarms
+every `&&` after it. That pushed a red suite to `main` here, from a gate that was followed exactly.
+
 🔴 **If you mutation-test, disable the bytecode cache.**
 
 ```bash

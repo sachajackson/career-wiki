@@ -355,6 +355,18 @@ covers all of it.**
 slugged the way GitHub slugs them. Two mutations caught — renaming a linked heading, and pointing at one
 that never existed.
 
+🔴 **And the check cried wolf within a minute of shipping, on the entry describing it.** The prose above
+contains a backticked example of a link, and the first version read it as a link. **Documentation about a
+pattern contains the pattern** — the same shape as `_comment` blocks in the placeholder check. Code spans
+are now stripped before scanning, with a test for the example case.
+
+🔴 **Worse, that failure reached `main`.** The pre-push gate was
+`python3 tools/tests/run.py 2>&1 | tail -2 && git push`, and **a pipe replaces the exit status with
+`tail`'s**, so `&&` saw success and pushed a red suite. **The habit of piping test output to `tail` for
+readability silently disarms every `&&` after it.** Fixed within two minutes, and recorded because the
+gate was followed exactly and still let it through — which is the whole thesis of this file, arriving in
+the one place that was supposed to be immune.
+
 🟢 **Same failure `wikilinks.py` was built for on the wiki side**, where 40 section links in one vault all
 still opened the right page and none went where they said. **It took eight days to arrive on the repo
 side, and it arrived because somebody asked a question that made me look.**
