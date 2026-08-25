@@ -156,3 +156,48 @@ weaken the code to match. **Length-preserving edits are exactly the ones a caref
 
 🟢 **A test that encodes a bug someone actually hit is worth three that cover the happy path.** Several of
 the existing ones are exactly that, and they say so in their docstrings.
+
+---
+
+## Using it and developing it in the same clone
+
+🔴 **This reversed on 2026-08-25, and the old advice is still worth knowing why.** It used to say *do not
+do both in the same directory*: the repo was public and held only scaffolding, your vault was private and
+somewhere else, and keeping them apart meant personal material had **no path** to the public remote rather
+than being ignored on the way out.
+
+**That was right, and it made an update impossible.** Improvements had to be walked across by hand by a
+script, and user data had already crept into `tools/` — a config, a watch list, three files of state and
+an API key — because there was nowhere better for it to live.
+
+**Now there is one root and one rule.** Everything of yours is under `vault/`; everything else is the
+system. `git pull` updates the system and cannot touch a file of yours. The separation is a *path*
+now rather than a *place*, which is the part that made it testable:
+
+| | |
+|---|---|
+| `.gitignore` | One pattern, plus five exact README paths that the system itself ships |
+| `githooks/pre-commit` | Inspects what is actually **staged** — so it holds against `git add -f`, which `.gitignore` never did |
+| `tools/tests/test_boundary.py` | Fails the build if either drifts, and runs the hook for real rather than checking that a rule appears in it |
+
+**The commit guard installs itself** at the start of an agent session. If you are working without one:
+
+```bash
+git config core.hooksPath githooks
+```
+
+That also installs a **push** guard, which runs the suite and refuses the push if it is failing — `main`
+is published the moment it is pushed.
+
+### After any update, ask what your vault missed
+
+```bash
+python3 tools/template_drift.py
+```
+
+Your wiki was built from the templates **once** and nothing revisits it. When a template gains a section —
+a new table the agent is told to keep, a row it is told to score — **your pages do not get it**, and the
+agent ends up looking for something that is not there. This says what is missing.
+
+**It never edits your pages.** Putting a new section into a page that already holds your history is a
+judgement, and that is the agent's job rather than a script's.

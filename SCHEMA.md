@@ -605,7 +605,7 @@ practice. **It stays in `vault/postings/`, which is gitignored, and `export_revi
 not one of the four reviewable kinds.
 
 **An unassessed role is worse than one never found** — it occupies attention, it looks like an option, and
-it decays. Even an obvious rejection gets the four dimensions, the salary if published, and one sentence on
+it decays. Even an obvious rejection gets FIT, LIFE, SEC, the salary if published, and one sentence on
 what decides it, because **the record of what was rejected and why is what stops it being re-surfaced next
 week.**
 
@@ -790,9 +790,10 @@ These exist because breaking them produces a career document that fails at inter
 6. **Internal system and project codenames** are fine inside the wiki, but describe them generically in
    any external document unless the user explicitly clears the name. Names that could identify a client
    get an explicit never-share marker and a generic reference even in conversation.
-7. **Do not let a preference masquerade as a value.** When scoring roles, the WANT dimension measures the
-   user's stated career anchors and nothing else. Everything else — technical exposure, prestige,
-   interest — is a capability or risk question and belongs elsewhere. See the scoring framework.
+7. **Do not let a preference masquerade as a value.** LIFE and SEC measure the user's two stated career
+   anchors and nothing else. Everything else — technical exposure, prestige, interest — is a capability or
+   risk question and belongs elsewhere. **A LIFE or SEC score whose justification never mentions the anchor
+   it is named after is measuring something else.** See `SCORING.md`.
 8. **Take the user's own judgement seriously.** If they overrule an assessment, they are usually
    right about their own life. Update the reasoning, do not just record the override.
 

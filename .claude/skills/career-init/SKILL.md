@@ -87,8 +87,9 @@ starting salary dominate progression, and it makes illiquid equity a poor substi
 
 ## 5. Build the scoring framework
 
-Instantiate `templates/Role Scoring Framework.md` with what they just told you: their anchors in WANT,
-their salary floor in PAY, their geography as vetoes.
+Instantiate `templates/Role Scoring Framework.md` with what they just told you: **their two anchors as
+LIFE and SEC** — rename those dimensions if their anchors are not lifestyle and security — their salary
+floor in PAY, their geography as vetoes.
 
 **Distinguish the two kinds of veto** — hard (no salary fixes a two-hour each-way commute) and priced (a
 commute they would accept for enough money). Ask which their constraints are. Most people have both and

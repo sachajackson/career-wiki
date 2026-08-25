@@ -64,19 +64,26 @@ has run the operational consequence of getting it wrong at 2am in December.
 3. **"Head of" here may sit under a commercial director rather than a technology one**, which changes
    whose priorities win.
 
-## Score: 14
+## Score: FIT 12 · LIFE 3 · SEC 4 · REQS 8/12
 
 | | | |
 |---|---|---|
+| **FIT** | **12** /15 | |
 | NEED | **5** | Stock accuracy under peak is precisely their ground, and it is what the posting is really about |
 | DELIVER | **3** | Strong on the operational half, **no evidence at all on the supplier half** |
 | EDGE | **4** | Built the alerting rather than configured a package, against a field that mostly has not |
-| WANT | **3** | Security 4 — established retailer. Lifestyle 3 — two days stated, but Manchester |
+| **LIFE** | **3** /5 | Two days stated, but Manchester. A priced veto rather than a hard one |
+| **SEC** | **4** /5 | Established retailer, and the function is core rather than discretionary |
+| **REQS** | **8** /12 | Six cleared outright, four partial, two gaps — both supplier-side |
 | PAY | **TBC** | Unstated. **Ask base separately from bonus and pension on the first call** |
 
-🔴 **Read the row, not the total.** A DELIVER of 3 with a whole half of the job unevidenced is a different
-proposition from a flat 3-3-3-3 — **and a 14 that is 5-3-4-3 is worth pursuing where a 14 that is 3-4-4-3
-usually is not.**
+🔴 **Read the row, not a total — and there is no total.** A DELIVER of 3 with a whole half of the job
+unevidenced is a different proposition from a flat 4-4-4, and **a FIT of 12 built from 5-3-4 is worth
+pursuing where a 12 built from 4-4-4 usually is not.**
+
+🟢 **The REQS count is what caught the real problem.** Both outright gaps are supplier-side, which is the
+same half of the job DELIVER was uneasy about — **two independent readings landing on one thing is a
+finding**, and it is why the first open question below sits ahead of salary.
 
 ## Open questions
 

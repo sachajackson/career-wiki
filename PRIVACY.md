@@ -13,13 +13,32 @@ None of this is a reason not to use the system. It is a reason to know what you 
 
 ## 1. Where things physically live
 
+**Everything of yours is under `vault/`. Nothing else in the repository is.** That is the whole boundary,
+and it is enforced by three things that have to agree: the ignore rule, a pre-commit guard that inspects
+what is actually staged — **so it holds even against `git add -f`** — and `tools/tests/test_boundary.py`,
+which fails the build if either drifts.
+
 | What | Where | Leaves your machine? |
 |---|---|---|
-| `sources/` — your CV and documents | Your disk. **Gitignored** | Only as part of a conversation, when the agent reads a file |
-| `wiki/` — everything the agent writes | Your disk. **Gitignored** | Same |
-| `tools/radar/*.json` — search results and history | Your disk. **Gitignored** | No |
+| `vault/sources/` — your CV and documents | Your disk. **Never committed** | Only as part of a conversation, when the agent reads a file |
+| `vault/wiki/`, `roles/`, `companies/`, `postings/` — everything the agent writes | Your disk. **Never committed** | Same |
+| `vault/applications/` — the CVs and letters themselves | Your disk. **Never committed** | Same. **And to the employer, when you send them** |
+| 🔴 `vault/AGENTS.md` — your standing instructions | Your disk. **Never committed** | Read at the start of every session, so **yes, every session** |
+| 🔴 `vault/settings/employers.json` — employers you will not work for | Your disk. **Never committed** | Only when a search runs. **See below: this is more sensitive than it looks** |
+| 🔴 `vault/secrets/.env` — your API key | Your disk. **Never committed** | **It authenticates you.** Treat a leak as a billing incident and revoke first |
+| `vault/state/` — search results and history | Your disk. **Never committed** | No. Regenerable: delete it any time |
+| `vault/oversight/<application>/` — export folders for review | Your disk | 🔴 **Yes, deliberately — to another vendor's model.** Allow-listed, so it carries only what a recruiter would receive |
 | Conversation transcripts | `~/.claude/projects/`, **in plain text**, 30 days by default | See below |
-| The repo itself | GitHub, if you forked it | **Scaffolding only.** Nothing personal is tracked |
+| The repo itself | GitHub, if you forked it | **The system only.** Five README files ship under `vault/` to say what each folder is for. Nothing else there is tracked |
+
+### 🔴 `employers.json` deserves its own line
+
+**It names companies you will not work for, and usually why** — a bad interview, something a friend told
+you, a reputation you have heard about and cannot evidence. **Some of it is second-hand, and some of it
+would be awkward if the company read it.**
+
+It is the file to check first, after `secrets/`, if you are ever sending your vault anywhere — and it is
+excluded from an oversight export for exactly this reason.
 
 **Change the local transcript retention** with `cleanupPeriodDays` in your Claude Code settings if 30 days
 in plaintext on disk is longer than you want.
@@ -31,6 +50,20 @@ in plaintext on disk is longer than you want.
 - **Think before putting this in a synced folder.** Dropbox, iCloud Drive, OneDrive and Google Drive will
   happily replicate your salary floor and your reasons for leaving to a cloud account, and possibly to a
   work-managed device. If you want sync, use a **private** repository, not a consumer sync folder.
+- 🔴 **If you do sync or back up the vault, leave `secrets/` out of it.** The rest of `vault/` is yours to
+  carry between machines. An API key in a backup is an API key in whatever that backup touches.
+
+---
+
+## 1a. There is no tier of this that is private from the model
+
+🔴 **Claude Code runs locally, but to answer anything it sends the contents of the files it reads to
+Anthropic's API.** Writing something into a file is not hiding it from the AI — **it is the opposite of
+hiding it.** Local storage is not concealment, and this is the single most misunderstood thing about how
+the system works.
+
+**What that means in practice:** say "do not record this" whenever you want, and it will be respected in
+what gets *written*. It cannot be unheard in the conversation where you said it.
 
 ---
 
@@ -174,4 +207,7 @@ respected, and the agent should tell you when it is declining to file something.
 - **Do not use `/feedback` or `/share` from a session about anything confidential.**
 - **Colleagues appear as roles, never as names**, and never in a personnel context at all.
 - **Say "do not record this" whenever you want, and it will be respected.**
-- **Nothing personal is ever committed to git** — only the scaffolding is tracked.
+- **Nothing of yours is ever committed** — everything personal is under `vault/`, and a pre-commit guard
+  refuses it even against `git add -f`.
+- 🔴 **Your API key lives in `vault/secrets/.env` and nowhere else.** Never in a settings file, never in a
+  backup you share. If you think it has leaked, revoke it first and work out how afterwards.

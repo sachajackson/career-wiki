@@ -83,7 +83,7 @@ guess.** Most of the table will be TBC, which usefully flags which rows were sco
 ## The user's own values — filled at init
 
 ```
-Anchors (WANT scores these two, and only these):
+Anchors (LIFE and SEC score these two, and only these):
   1. {{PRIMARY_ANCHOR}}
   2. {{SECONDARY_ANCHOR}}
 

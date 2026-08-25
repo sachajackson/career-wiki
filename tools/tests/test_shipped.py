@@ -140,3 +140,50 @@ class TheTwoWaysIn(unittest.TestCase):
         with open(p, encoding="utf-8") as fh:
             text = fh.read()
         self.assertIn("Do not run `/career-init`", text)
+
+
+class TheDocsAreAMapNotAPile(unittest.TestCase):
+    """README was 1034 lines with eight top-level sections, and the scoring one
+    described a model that had been replaced. Length is how a document rots:
+    nobody re-reads the middle of it."""
+
+    PAGES = ("FOR-RECRUITERS", "CHECKING", "INSTALL", "JOB-SEARCH", "SCORING",
+             "DISCLAIMER", "PRIVACY", "CONTRIBUTING", "BACKLOG", "SCHEMA", "AGENTS")
+
+    def readme(self):
+        with open(os.path.join(ROOT, "README.md"), encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_every_page_is_reachable_from_the_readme(self):
+        """A split-out page nobody links to is worse than a long README: the
+        content is still there and now nobody finds it."""
+        text = self.readme()
+        for page in self.PAGES:
+            self.assertIn(f"({page}.md)", text, f"{page}.md is orphaned")
+
+    def test_every_page_points_back(self):
+        for page in self.PAGES:
+            if page in ("BACKLOG", "SCHEMA", "AGENTS", "PRIVACY", "CONTRIBUTING"):
+                continue          # these predate the split and stand alone
+            with open(os.path.join(ROOT, f"{page}.md"), encoding="utf-8") as fh:
+                self.assertIn("README.md", fh.read(2000), f"{page}.md has no way back")
+
+    def test_the_readme_stays_short_enough_to_be_read(self):
+        n = len(self.readme().splitlines())
+        self.assertLess(n, 400, f"README is {n} lines — split something out")
+
+    def test_no_document_describes_the_replaced_scoring_model(self):
+        """FIT/LIFE/SEC/REQS replaced a single score out of 20 on 2026-08-25,
+        and README described the old one for weeks afterwards."""
+        for base, dirs, files in os.walk(ROOT):
+            dirs[:] = [d for d in dirs if d not in (".git", "__pycache__", "vault", "tests")]
+            for f in files:
+                if not f.endswith(".md") or f == "BACKLOG.md":
+                    continue
+                path = os.path.join(base, f)
+                with open(path, encoding="utf-8") as fh:
+                    text = fh.read()
+                rel = os.path.relpath(path, ROOT)
+                for line in text.splitlines():
+                    if re.search(r"\bWANT\b", line):
+                        self.fail(f"{rel}: WANT was replaced by LIFE and SEC — {line.strip()[:70]}")
