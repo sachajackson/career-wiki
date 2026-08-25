@@ -492,6 +492,10 @@ every example file in every project gets made.
 - 🟡 **Audit every `*.example.*`, `*.sample.*` and `templates/` file in a repo that is about to go public**,
   and check them against the same rules as the ignore list. **They are the files most likely to have been
   derived from something real.**
+- 🔴 **Add `tools/tests/` to that list.** Fixtures are example files under another name and were missed by
+  this entry for exactly that reason — the audit that eventually ran found a real first name, a real
+  city, and two fixtures built from the user's own history. **The naming convention is what made them
+  invisible: nothing in a filename ending `_test.py` says "read this before publishing".**
 
 🔴 **And a caveat on the remediation, because it is widely misunderstood.** The bad commit was removed by
 rebase and force-push within 25 minutes, with 0 forks and 0 stars — **and the orphaned commit remained
@@ -1191,6 +1195,14 @@ untested.
   *"7-day window"* while board adapters contributed postings of any age. **Pre-existing and invisible
   until the header was rewritten** — the reader had no way to know how old a row could be. Adapters now
   declare `HONOURS_DAYS` and the header narrows itself when they disagree.
+- 🔴 **Test fixtures are example files, and the placeholder rule applies to them too.** The rule was
+  written for `config.example.json` and never carried across. An audit found a real first name in one
+  fixture's example address, a real city in another, and two fixtures built from the user's actual
+  history — one of them restating incidents `BACKLOG.md` already describes, so the pair could be read
+  back together. **Nobody wrote those as personal files; they were written by starting from something
+  true**, which is the same mechanism as the `.example` config. 🟢 **Where a fixture must stay realistic
+  to be a valid test — a well-written CV, for the cadence checks — rewrite it as invented rather than
+  replacing it with placeholder text, and check the measurements it exercises are unchanged.**
 - 🔴 **A source that caps results is reporting the cap, not the match count.** Detect the difference
   between *the source ran dry* and *we hit our own limit*, and say which. Only the first proves a result
   set is complete, and **presenting a capped run as complete is the same silent failure as a filter nobody
