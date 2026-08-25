@@ -85,7 +85,7 @@ requires it.
 ## Before every push
 
 ```bash
-python3 tools/tests/run.py      # stdlib only, about a second
+python3 tools/tests/run.py      # stdlib only, no install step, seconds
 git status --porcelain          # anything unexpected staged?
 git log --oneline origin/main..HEAD
 ```
@@ -113,7 +113,14 @@ a private repo that you flip to public, audit the whole history first — not th
 python3 tools/tests/run.py
 ```
 
-**Stdlib only, no install step, under a second.** If you changed `verify.py`, `cv_lint.py` or
+**Stdlib only, no install step, and it runs in seconds — keep it that way.** A slow suite gets run less
+often, and this is the one control in the repo that has never failed. If a test needs to wait for
+something, give it a way not to: `registry_check.py`'s retry backoff is an environment variable for
+exactly that reason, and two tests that drive it as a subprocess were costing 4.5 seconds each.
+
+🔴 **The count is deliberately not written down here.** It was, in three places, and it was wrong in all
+three — 64, 65 and 85, against a real figure that had moved past 300. **A number in prose that nothing
+updates is a number that lies.** If you changed `verify.py`, `cv_lint.py` or
 `wikilinks.py`, **add a test for the behaviour you changed** — those three are the layer everything else
 leans on, and a regression in them is silent by construction.
 

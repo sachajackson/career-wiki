@@ -38,6 +38,15 @@ REGISTRY = os.path.join(HERE, "radar", "ats_registry.json")
 COLLAPSE = 4          # "now < previous/4" is a collapse; anything less is churn
 
 
+# Seconds between retries, times the attempt number. Overridable ONLY so the
+# tests that drive this file as a subprocess can set it to 0 -- they point it at
+# a dead port on purpose, and at the real backoff two of them cost 4.5s each and
+# made the whole suite twelve times slower than the second CONTRIBUTING promises.
+# A slow suite gets run less often, and the suite is this repo's one control that
+# has never failed. Retries still happen at zero; only the waiting goes.
+BACKOFF = float(os.environ.get("REGISTRY_CHECK_BACKOFF", "1.5"))
+
+
 def call(url, method="GET", body=None, timeout=30, tries=3):
     """Retries, because a transient reset is not a dead endpoint.
 
@@ -59,7 +68,7 @@ def call(url, method="GET", body=None, timeout=30, tries=3):
         except Exception as e:
             last = e
             if attempt + 1 < tries:
-                time.sleep(1.5 * (attempt + 1))
+                time.sleep(BACKOFF * (attempt + 1))
     raise last
 
 

@@ -37,8 +37,8 @@ wrong text. Every layer here exists because of that.
 | **[`tools/wikilinks.py`](tools/wikilinks.py)** — structural | Finds links that go nowhere: **split across two lines** by a wrapping convention, **pointing at a missing page**, or **pointing at a heading that has been renamed.** None of the three looks broken while you are reading, and a knowledge base whose failure mode is silence is one you stop being able to trust |
 | **[`oversight/`](oversight/)** — independent | The document is reviewed by **a different vendor's model**, in a fresh session, working from a restricted export. **Cross-model review rather than self-review** — and the export is allow-listed, so the reviewer only ever sees what you would see |
 
-🟢 **And the checkers have their own checks.** [`tools/tests/`](tools/tests/) is **64 tests, stdlib only,
-under a second** — `python3 tools/tests/run.py`. Several encode bugs that were live in a shipped version:
+🟢 **And the checkers have their own checks.** [`tools/tests/`](tools/tests/) is **several hundred tests,
+stdlib only, and it runs in seconds** — `python3 tools/tests/run.py`. Several encode bugs that were live in a shipped version:
 the linter reporting *"clean"* on empty input, a crash on bullets with no words, and figures being sourced
 from the very document under review, so a fabrication proved itself.
 

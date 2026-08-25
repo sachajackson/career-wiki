@@ -117,6 +117,30 @@ class TablesTheRulesPrescribe(unittest.TestCase):
                         "the template does not say to prompt for the internal move")
 
 
+class TheSuiteDoesNotClaimACount(unittest.TestCase):
+    """A number in prose that nothing updates is a number that lies.
+
+    The test count was written into README.md and CONTRIBUTING.md and was wrong
+    in both -- 64 and 65, against a real figure past 300, with a third stale
+    copy in BACKLOG.md. Nothing forces prose to move when code does. So the
+    user-facing docs describe the suite's properties, which are stable, and not
+    its size, which is not.
+
+    BACKLOG.md is exempt: its counts are dated records of what a specific piece
+    of work shipped with, not claims about the suite as it stands.
+    """
+
+    CLAIM = re.compile(r"\b\d+\s*(?:tests|checks)\b", re.I)
+
+    def test_neither_readme_nor_contributing_states_a_test_count(self):
+        for name in ("README.md", "CONTRIBUTING.md"):
+            found = self.CLAIM.search(read(os.path.join(ROOT, name)))
+            self.assertIsNone(
+                found,
+                f"{name} states a fixed test count ({found.group(0) if found else ''}) — "
+                f"it will be wrong by the next commit. Describe the suite, not its size.")
+
+
 class TheAggregatorRule(unittest.TestCase):
     """Two skills gave opposite instructions and the wrong one ran first.
 

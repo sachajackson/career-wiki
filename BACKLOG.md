@@ -195,6 +195,37 @@ that exists because of one untracked file found the next one immediately.**
 reading a document aloud before sending it, deciding whether a concession is honest. **Those are few, and
 they should be marked as the exception rather than the mechanism.**
 
+### 🔴 The suite got twelve times slower and the docs still promised a second — 2026-08-25
+
+**Found on the first action of the next session: the handover said "305 checks, about a second" and it
+took 11.9.**
+
+🔴 **Two tests cost 9.2 of that.** They drive `registry_check.py` **as a subprocess**, pointed at a dead
+port on purpose, so they pay its real retry backoff — 1.5s + 3.0s each — **and being a subprocess they
+cannot stub `time.sleep` the way the in-process retry test does.**
+
+🟢 **Fixed by making the backoff an environment variable**, set to zero by those two tests. Retries still
+happen; only the waiting goes. **11.9s → 2.9s.** And because nothing then proved the wait happens at all,
+the in-process test now asserts the backoff is **strictly increasing** — `[1.5, 1.5]` is sorted, and a flat
+retry is what hammers a host that has just reset on you.
+
+🔴 **Why this is a defect and not a nicety.** `CONTRIBUTING.md` tells every contributor to run the suite
+before every push. **A slow suite gets run less often, and the suite is the one control in this repo that
+has never failed.** Speed is not comfort here, it is whether the control gets used.
+
+### 🔴 The test count was written in three places and wrong in all three — 2026-08-25
+
+**`README.md` said 64. `CONTRIBUTING.md` said 65. A `BACKLOG.md` entry said 85. The real figure was past
+300.** Nobody had lied; **nothing forces prose to move when code does.**
+
+🟢 **Fixed by not writing it down.** The user-facing docs now describe the suite's *properties* — stdlib
+only, no install step, runs in seconds — which are stable, rather than its *size*, which is not.
+**And a test now fails if a fixed count reappears in either file.** `BACKLOG.md` is exempt: its counts are
+dated records of what one piece of work shipped with, not claims about the suite as it stands.
+
+🟢 **This is the same shape as everything else on this page.** *"Remember to update the count"* is an
+instruction. Instructions here have a perfect record of failing. **The check took four lines.**
+
 ### 3. Then, in this order
 
 🟢 **The first two items on this list were done on 2026-08-25** — the seven-day window is now
