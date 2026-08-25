@@ -1411,6 +1411,95 @@ one file.
 
 ---
 
+### 🔴 Ghost jobs are 20-33% of listings and nothing here checks — adopt from career-ops
+
+**Status: designed 2026-08-25, not built. Cheapest of the three below and the one with the strongest
+numbers behind it.**
+
+**`career-ops` runs a posting-legitimacy check as a separate block, and the design decision worth copying
+is this one: it *"never affects the score."***
+
+🟢 **A fake posting is not a low-scoring role. It is not a role.** Folding it into a fit number would make
+a scam look like a mediocre opportunity, and would let a strong-but-fake posting outrank a real mediocre
+one. **Same principle as splitting one total into FIT, LIFE and SEC: things that are not the same question
+do not go in the same number.**
+
+**The numbers are not marginal:**
+
+| | |
+|---|---|
+| Live listings estimated to be ghost jobs | **20–33%**, with one count putting **27% of LinkedIn listings** in that bracket |
+| Hiring managers admitting to posting one in the past year | **40%** — and **30%** had one live at the time of asking |
+| US postings never filled | **At least 1 in 5** (Greenhouse). BLS: 7.4m openings against 5.2m hires — **roughly one in three never produces a hire** |
+
+🟢 **The signals are already in this system and are not being used as signals:**
+
+- 🔴 **The employer's real posting date, from their own API.** In real use an aggregator showed a
+  ten-week-old requisition as *"posted yesterday"*, and another was three weeks out. **Age is the single
+  best ghost-job predictor and it is already being fetched.**
+- **Whether the requisition is still live on the employer's own site**, rather than only on an aggregator.
+  `registry_check.py` already knows how to ask that question about one job — it is what a canary is.
+- **Repeated reposting of the same requisition id**, which `seen.json` already records.
+- **A posting with no requisition number at all**, on an employer known to use an ATS that issues them.
+
+**Report it as its own line on the role page, never as a score adjustment**, and let the user decide. **A
+role can be worth applying to even at 30% odds of being real, and that is their call, not the tool's.**
+
+---
+
+### 🟡 Bound the expensive pass to the delta — adopt from career-ops
+
+**Status: designed 2026-08-25, not built. Touches the radar fetch loop.**
+
+**`career-ops` splits its scan in two: trust the ATS feed for everything, then run a browser liveness check
+*"only against new offers (after dedup), so the cost stays bounded."***
+
+🔴 **This radar fetches a description for everything that survives filtering, every run** — 132 of them in
+one real run. **Most of those were fetched last week and the week before.**
+
+**Cheap pass over everything, expensive pass over the delta.** It is the same principle already applied one
+layer up — *"do not research an employer below the build threshold"* — moved earlier in the pipeline.
+
+🟡 **The thing to be careful of, and the reason this is not a two-line change:** a description that was
+fetched once is cached in `raw.json`, but **a role's description can change after posting** — a salary band
+added, a requirement softened. **Never re-fetching is a different failure from re-fetching everything.** A
+sensible rule is to re-read anything the user is about to act on, and trust the cache for triage.
+
+---
+
+### 🔴 There is no way for a user to take an update — and every day makes it worse
+
+**Status: designed 2026-08-25, not built. Architectural, and the one that compounds.**
+
+**A user clones this, fills `wiki/` and `sources/` with a year of their working life, and then cannot take
+an improvement.** `sync-to-vault.sh` moves things the other way. **The honest current answer to *"how do I
+get the new verifier?"* is *"hand-merge it, good luck."***
+
+🔴 **That is fine at fifteen users and fatal at fifty**, and it gets worse every time this repo improves —
+which is daily.
+
+**The shape of the problem is a boundary nobody has drawn:**
+
+| Clearly the system's | Clearly the user's | 🔴 **Genuinely ambiguous** |
+|---|---|---|
+| `tools/`, `.claude/skills/`, `githooks/` | `wiki/`, `sources/`, `oversight/<employer>/` | **`config.json`** — the user's queries and geography, in a file whose *schema* is the system's |
+| `templates/` | `tools/radar/employers.json` | **`CLAUDE.md`** — the schema, which the user is invited to co-evolve |
+| `ats_registry.json` | | **`.claude/skills/`** if a user has tuned one |
+
+**The ambiguous column is the whole problem.** A naive `git pull` clobbers a tuned skill; a naive "never
+touch user files" means the schema can never be improved.
+
+🟢 **`career-ops` is solving this publicly right now** — *"[Umbrella] User/System boundary: make
+personalization legible and update-safe"* is their second-most-reacted issue, and their `update-system.mjs`
+already has a **"SAFETY VIOLATION on pre-existing dirty user file"** guard. **Watch how they land it before
+building ours.** This is the one place where being second is an advantage.
+
+🔴 **Whatever is built, the rule from everywhere else in this file applies: an update that silently drops a
+user's change is the same class of failure as an ignore rule that silently drops a file.** It must fail
+loudly and name what it could not merge.
+
+---
+
 ### 🟡 A user guide — not yet, and the trigger is specific
 
 **Status: raised 2026-08-25. Deliberately deferred.**
