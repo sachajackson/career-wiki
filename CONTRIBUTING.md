@@ -36,7 +36,7 @@ git config core.hooksPath githooks      # run once, per clone
 ```
 
 `githooks/pre-commit` inspects what is actually staged, at the last moment before it becomes history, and
-refuses anything under `sources/`, `wiki/` or an application's `oversight/` folder — **including a forced
+refuses anything under `sources/`, `wiki/` or an application's `vault/oversight/` folder — **including a forced
 add** — plus anything that reads as a personal email address, a real LinkedIn URL, or a salary line
 wherever it sits. It is deliberately noisy: a false positive costs one `--no-verify`, a false negative is
 public forever.

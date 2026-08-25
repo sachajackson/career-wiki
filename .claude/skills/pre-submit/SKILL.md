@@ -106,7 +106,7 @@ and sending the wiki to a third-party API would be a serious privacy escalation 
 
 **The portable route, and the one to prefer** — no API key, and the applicant sees the review happen.
 
-**The folder already exists.** `oversight/` is rebuilt on every write by the hook, so it is always
+**The folder already exists.** `vault/oversight/` is rebuilt on every write by the hook, so it is always
 current. It sits **outside the wiki**, holds one subfolder per application with only the posting and the
 outgoing documents, and carries `OVERSIGHT.md` at its root so it can be opened once and left open across
 several applications.

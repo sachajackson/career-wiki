@@ -36,7 +36,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib
 import paths  # noqa: E402
 
 OVERSIGHT_DIR = paths.OVERSIGHT
-TEMPLATE = os.path.join(OVERSIGHT_DIR, "OVERSIGHT.md")
+# The brief is system content -- it instructs the reviewer -- so it ships in
+# templates/ and is copied into each export. It used to live in oversight/,
+# which is the user's folder, and that is why oversight/ needed a carve-out in
+# every ignore rule it appeared in.
+TEMPLATE = os.path.join(paths.REPO, "templates", "OVERSIGHT.md")
 
 ALLOWED = [
     (re.compile(r"posting", re.I), "the job advertisement"),
@@ -137,8 +141,8 @@ def main():
         # The canonical brief already sits at the root of oversight/. Copy it
         # into the subfolder too, so a single application folder sent on its own
         # still carries its instructions. Same source, so they cannot drift.
-        if os.path.abspath(out_root) != os.path.abspath(OVERSIGHT_DIR):
-            shutil.copy2(TEMPLATE, os.path.join(out_root, "OVERSIGHT.md"))
+        paths.ensure(out_root)
+        shutil.copy2(TEMPLATE, os.path.join(out_root, "OVERSIGHT.md"))
     else:
         print(f"WARNING: {TEMPLATE} missing -- the reviewer will have no brief", file=sys.stderr)
 

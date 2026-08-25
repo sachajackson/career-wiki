@@ -1738,7 +1738,7 @@ names the path in prose.
 | `radar/employers.py` | `employers.json` | 🔴 The private avoid list. **Never ships** |
 | `doctor.py` | `sources/`, `wiki/`, `.git/`, both `config.json`s, `employers.json`, `ats_registry.json` | **Seven paths in one file** — the most concentrated place the move will show up, and the one that will silently report `OPTIONAL` for everything if a root changes under it |
 | `registry.py`, `registry_check.py`, `add_employer.py` | `ats_registry.json` | 🟢 System-side. Ships, and stays where it is |
-| `export_review.py` | `oversight/` | User-side |
+| `export_review.py` | `vault/oversight/` | User-side |
 | `verify.py`, `known.py`, `wikilinks.py`, `template_drift.py` | `--wiki`, defaulting to `wiki` | 🟢 **Already parameterised.** These need nothing |
 
 🟢 **The pattern worth keeping**: the four that take `--wiki` are the ones that will survive the move

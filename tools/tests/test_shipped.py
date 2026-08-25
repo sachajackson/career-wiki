@@ -50,7 +50,7 @@ REQUIRED = [
     "tools/wikilinks.py",
     "tools/known.py",
     "tools/export_review.py",
-    "oversight/OVERSIGHT.md",
+    "templates/OVERSIGHT.md",
     ".claude/settings.json",
     ".claude/hooks/verify-artefact.sh",
     "githooks/pre-commit",

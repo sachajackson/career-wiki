@@ -140,7 +140,7 @@ class ThingsThatReallyAreMissing(unittest.TestCase):
 
     def test_a_readme_in_sources_is_not_a_cv(self):
         with Home() as h:
-            h.write("vault/sources/README.md", "# put your CV here")
+            h.write("vault/templates/sources-README.md", "# put your CV here")
             self.assertEqual(doctor.check_sources()[0], doctor.MISSING)
 
     def test_a_provider_whose_key_is_not_in_the_shell(self):
