@@ -123,7 +123,7 @@ would be ranked within a week.
 
 ### The watchlist — who to watch, and who to skip
 
-`tools/radar/employers.json` (copy `employers.example.json`) holds the user's standing positions. **It is
+`vault/settings/employers.json` (copy `employers.example.json`) holds the user's standing positions. **It is
 optional; without it nothing changes.** With it:
 
 | List | What it does |
@@ -143,9 +143,9 @@ optional; without it nothing changes.** With it:
 
 🔴 **The contents never leave the machine.** Not into a CV, a cover letter or an oversight export, and
 **never suggest the user repeats a reason to anyone.** *"It is not the right fit for me"* is the whole
-answer. See `CLAUDE.md`.
+answer. See `SCHEMA.md`.
 
-Needs `tools/radar/config.json` — copy `config.example.json` and add an Adzuna key from
+Needs `vault/settings/search.json` — copy `search.example.json` and add an Adzuna key from
 [developer.adzuna.com](https://developer.adzuna.com/). Without it, only the employer-board adapters run.
 
 Writes `shortlist.md`, `raw.json` (cached descriptions) and `seen.json` in `tools/radar/`. All three are
@@ -165,7 +165,7 @@ Then:
    🔴 **Within this run only.** `raw.json` is overwritten every run with that run's NEW roles, and
    `seen.json` drops everything already known before it gets there — so after the next run it is empty.
    **Measured: run the radar twice against one board and the second run reads zero descriptions and
-   writes a 2-byte `raw.json`.** The archive in `wiki/postings/` is the durable copy, and
+   writes a 2-byte `raw.json`.** The archive in `vault/postings/` is the durable copy, and
    `tools/radar/refresh.py` re-reads one when somebody is about to act on it.
    🔴 **But an aggregator's cached description is not the posting.** LinkedIn and Adzuna truncate, and the
    truncation is asymmetric: it removes qualifiers (*"at least one of"*), alternatives (*"or internal
@@ -231,7 +231,7 @@ Real defects, found by running it. Two of them silently discarded good roles.
   at offer stage** — that is a reason to deprioritise it, and the `+` is the only thing telling you.
 - 🔴 **A shortlist is not an assessment.** Whatever the radar surfaces, **score it in the same turn it is
 
-🔴 **And archive the posting text when you score it**, to `wiki/postings/<Employer>.txt`. **The cached description is already in `raw.json` and that file is regenerated every run** — so a role assessed today and looked at again in six weeks has nothing behind it unless the text was saved at the time.
+🔴 **And archive the posting text when you score it**, to `vault/postings/<Employer>.txt`. **The cached description is already in `raw.json` and that file is regenerated every run** — so a role assessed today and looked at again in six weeks has nothing behind it unless the text was saved at the time.
   found.** An unassessed role occupies attention, looks like an option, and decays. **Even an obvious no
   gets the dimensions and one sentence on what decided it** — the record of what was rejected and why is
   what stops it being re-surfaced next week.

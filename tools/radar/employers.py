@@ -35,9 +35,13 @@ option or re-opens a closed one. So declined entries annotate; they do not
 filter.
 """
 import datetime, json, os, re
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-FILE = os.path.join(HERE, "employers.json")
+sys.path.insert(0, os.path.join(HERE, "..", "lib"))
+import paths  # noqa: E402
+
+FILE = paths.EMPLOYERS
 
 # Legal-form suffixes carry no identity: "Acme" and "Acme Group plc" are one
 # employer, and a user writing the short form should not silently miss the long.

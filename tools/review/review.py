@@ -32,7 +32,7 @@ deterministically, against the wiki, without a network call.
 
 CONFIGURE
 
-  cp tools/review/config.example.json tools/review/config.json
+  cp templates/settings/review.example.json vault/settings/review.json
 
 and set a key for one provider. config.json is gitignored. No key, no review --
 the script says so and exits rather than degrading silently.
@@ -105,7 +105,10 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="print the prompt and send nothing")
     args = ap.parse_args()
 
-    cfg_path = os.path.join(HERE, "config.json")
+    sys.path.insert(0, os.path.join(HERE, "..", "lib"))
+    import paths
+    paths.load_env()          # vault/secrets/.env, without overwriting the shell
+    cfg_path = paths.REVIEW
     cfg = json.load(open(cfg_path)) if os.path.exists(cfg_path) else {}
     provider = args.provider or cfg.get("provider")
 
@@ -123,7 +126,7 @@ def main():
         return
 
     if not provider:
-        sys.exit("No provider configured. Copy config.example.json to config.json and set one.\n"
+        sys.exit("No provider configured. Copy search.example.json to config.json and set one.\n"
                  "Use --dry-run to see the prompt and paste it into any chat interface yourself --\n"
                  "that works just as well and costs nothing.")
 

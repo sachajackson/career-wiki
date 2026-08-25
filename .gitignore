@@ -1,59 +1,31 @@
 # ---------------------------------------------------------------------------
-# THE MOST IMPORTANT FILE IN THIS REPO.
+# THE MOST IMPORTANT FILE IN THIS REPO -- and as of 2026-08-25, one rule.
 #
-# This system ingests CVs, salary floors, family circumstances and, if you use
-# it honestly, things you would not say out loud at work. None of that belongs
-# in version control on a public host.
+# Everything about, belonging to, or specific to a user lives under vault/.
+# Nothing else in this repository is theirs. That is the whole boundary, and it
+# is what makes an update possible: the system outside vault/ can be replaced
+# wholesale without touching a year of somebody's working life.
 #
-# Everything you or the agent generates is ignored by default. The repo tracks
-# scaffolding only. If you WANT history for your own wiki, make it a separate
-# private repo inside wiki/ rather than loosening these rules.
+# WHY THIS USED TO BE COMPLICATED, AND WHY THAT MATTERED
+#
+# There were eight rules, because user data sat inside tools/. One of them,
+# `tools/radar/*.json`, silently swallowed TWO files that had to ship -- an
+# example config and the ATS registry -- and each was found only because someone
+# noticed a clone was broken. The carve-outs that fixed them were `!` lines
+# added one filename at a time, and the next file into that directory would have
+# been swallowed too.
+#
+# One rule cannot do that. If something is the user's, it goes in vault/. If it
+# is not, it ships. There is no third case and no list to maintain.
 # ---------------------------------------------------------------------------
 
-sources/*
-!sources/.gitkeep
-!sources/README.md
+vault/
 
-wiki/*
-!wiki/.gitkeep
-
-# Radar working files: regenerated every run, and seen.json records what you
-# have been shown, which is itself a record of your job search.
-tools/radar/*.json
-tools/radar/shortlist.md
-config.json
-
-# ...but the example config MUST ship, or a fresh clone cannot run the radar
-# at all. README, radar.py and the role-radar skill all tell the user to copy
-# it. Caught 2026-08-24 by checking what a clone would actually contain.
-!tools/radar/config.example.json
-
-# ...and the employer watchlist example, for the same reason. The real
-# employers.json is caught by the tools/radar/*.json rule above and MUST stay
-# caught: it names companies the user will not work for and why, some of it
-# second-hand.
-!tools/radar/employers.example.json
-
-# ...and the ATS endpoint registry, which is the opposite kind of file and was
-# nearly lost to the rule above. employers.json is one user's private positions
-# on named companies and must stay ignored. ats_registry.json is a list of
-# public careers endpoints, identical for everyone, and is the ONE file here a
-# stranger can contribute to with no privacy risk. Two names because they had
-# one, and the safety rule that correctly hides the first silently hid the
-# second for a day.
-!tools/radar/ats_registry.json
+# tools/tests/test_boundary.py fails the build if user data appears outside
+# vault/, or if anything under vault/ is tracked. The rule above is the
+# intention; that test is the enforcement.
 
 .DS_Store
 __pycache__/
 *.pyc
 .env
-
-# Oversight layer: API keys
-tools/review/config.json
-
-# oversight/ -- the folder the user opens in another vendor's tool.
-# The brief is tracked so it exists from clone time and is discoverable before
-# any application is built. Everything generated beside it is a copy of the
-# user's outgoing documents and is not.
-oversight/*
-!oversight/OVERSIGHT.md

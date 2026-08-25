@@ -16,7 +16,7 @@ them the system does not retain what they say, which is the one thing it exists 
 
 🔴 **`SETTLED` or `PRESENT` means do not ask.** Read the lines, use what is there, and if it needs
 extending, **ask the narrower question the existing record raises** rather than the broad one it already
-answered. See [[CLAUDE.md]] for the verdicts and what each obliges.
+answered. See [[SCHEMA.md]] for the verdicts and what each obliges.
 
 **This is the most valuable thing in the repo.** Everything else — the scoring, the CVs, the profiles —
 is downstream of how well this is done.
@@ -96,7 +96,7 @@ role selection, and it is almost never in a CV. Record the answer, treat it as d
 
 ## Filing the answers
 
-**Follow the maintenance discipline in `CLAUDE.md`** — file in the same turn, reconcile against what is
+**Follow the maintenance discipline in `SCHEMA.md`** — file in the same turn, reconcile against what is
 already there before writing, recompute anything derived, and flag anything that contradicts a document
 already submitted. **An interview that produces good answers and files them badly is worse than no
 interview**, because it creates confident-looking pages nobody reconciled.

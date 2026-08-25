@@ -7,7 +7,7 @@ silently, for as long as somebody keeps using it.
 
 Not hypothetical: on 2026-08-25 the framework template gained a standing-gaps
 table, a known-locations table, a baseline row, an internal-move row and a
-seven-value outcome vocabulary, and CLAUDE.md -- which IS synced -- was updated
+seven-value outcome vocabulary, and SCHEMA.md -- which IS synced -- was updated
 to instruct the agent to use all five. Every vault made before that morning has
 an agent looking for tables that are not there.
 

@@ -45,6 +45,9 @@ read them. A tool that is trusted without being read is a worse failure than
 the one it replaced.
 """
 import argparse, glob, os, re, sys
+import os, sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+import paths  # noqa: E402
 
 # Phrases that mark a line as a settled negative rather than an open question.
 # Deliberately broad: a false CONFIRMED ABSENT costs one read of the lines,
@@ -106,7 +109,7 @@ def search(wiki, term):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("term", help="what you are about to assert is missing, or ask the user about")
-    ap.add_argument("--wiki", default="wiki")
+    ap.add_argument("--wiki", default=paths.WIKI)
     ap.add_argument("--all", action="store_true", help="print every matching line, not a sample")
     args = ap.parse_args()
     if not os.path.isdir(args.wiki):

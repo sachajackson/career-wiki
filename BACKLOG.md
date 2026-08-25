@@ -37,18 +37,18 @@ which is why every wiki page carries an *Open questions* section for exactly thi
 
 ### 1. Nine of these are already fixed as *documented behaviour*, not as code
 
-**Ported into `CLAUDE.md`, `templates/` and the skills on 2026-08-24.** The entry stays because the
+**Ported into `SCHEMA.md`, `templates/` and the skills on 2026-08-24.** The entry stays because the
 reasoning is worth keeping — **but do not re-implement them:**
 
 | Now a documented rule | Where |
 |---|---|
 | Fetch the employer's own posting, never the aggregator's | `build-application` Step 1 |
 | Score the journey, not the address; a transit stop is not a commute | `templates/Role Scoring Framework.md` |
-| Standing-gaps list; *not recorded* ≠ *recorded as absent* | `CLAUDE.md` |
+| Standing-gaps list; *not recorded* ≠ *recorded as absent* | `SCHEMA.md` |
 | Three scores instead of one total; the requirement count | `templates/Role Scoring Framework.md` |
 | Do not answer a tie by lengthening the ruler | same |
 | Score against the user's baseline, not the field | same, plus `career-init` |
-| The internal move as a third option | `CLAUDE.md` |
+| The internal move as a third option | `SCHEMA.md` |
 | ~~"Remote" is country-scoped~~ 🟢 **now a control, 2026-08-25** | `radar.py`, and it was doing the *reverse* |
 | The why-X answers and values-with-three-examples | `build-application` Step 0.4 |
 
@@ -113,7 +113,7 @@ how `config.json` behaves:**
 3. 🔴 **Two of your resolver tests were repointed, not deleted.** They encoded Deel as *"the ATS nothing
    speaks"*, which stopped being true when `custom.py` shipped. **The `NO ADAPTER` branch keeps its
    coverage via a fictional employer** — do not remove the stand-in thinking it is dead weight.
-4. 🔴 **`tools/radar/employers.json` (yours) and `tools/radar/ats_registry.json` (the registry) are one
+4. 🔴 **`vault/settings/employers.json` (yours) and `tools/radar/ats_registry.json` (the registry) are one
    letter apart and have opposite privacy rules.** Yours must never ship; the registry must always ship.
    **Do not tidy the `.gitignore` carve-outs into a glob and do not rename either to match the other** —
    see [the note below](#-two-files-one-letter-apart-opposite-privacy-rules--know-which-is-which). The
@@ -135,7 +135,7 @@ how `config.json` behaves:**
 
 ### 🔴 Two files, one letter apart, opposite privacy rules — know which is which
 
-**`tools/radar/employers.json` and `tools/radar/ats_registry.json` are not variants of each other.**
+**`vault/settings/employers.json` and `tools/radar/ats_registry.json` are not variants of each other.**
 
 | | `employers.json` | `ats_registry.json` |
 |---|---|---|
@@ -150,7 +150,7 @@ how `config.json` behaves:**
 shipped. **A clone got the tooling and no data.**
 
 🔴 **And the obvious fix was a trap.** Carving `employers.json` out of the ignore rule — exactly what was
-done a day earlier for `config.example.json` — **would have published every user's private avoid list.**
+done a day earlier for `search.example.json` — **would have published every user's private avoid list.**
 The rule that correctly hides one file is what silently hid the other. **Renaming was the only fix; loosening the pattern was never available.**
 
 **So, for anyone touching that directory:**
@@ -266,11 +266,11 @@ than one person's tool, and it is the gap that grows every time a template impro
 
 🔴 **`/career-init` copies `templates/` into `wiki/` ONCE and nothing ever revisits it.**
 `sync-to-vault.sh` refuses to touch `wiki/` deliberately — that directory is the person, not the tool. So
-`CLAUDE.md` and the skills move forward, and the pages they give instructions about do not.
+`SCHEMA.md` and the skills move forward, and the pages they give instructions about do not.
 
 **Demonstrated on the same day it was found.** The framework template gained a standing-gaps table, a
 known-locations table, a baseline row, an internal-move row and a seven-value outcome vocabulary — **and
-`CLAUDE.md`, which IS synced, was updated to instruct the agent to use all five.** Every vault created
+`SCHEMA.md`, which IS synced, was updated to instruct the agent to use all five.** Every vault created
 before that morning has an agent looking for tables that are not there. **A vault reconstructed from
 yesterday's templates reports all five.**
 
@@ -299,7 +299,7 @@ line, a CV in a folder and up to two API keys. `sources_check.py` answered a thi
 job sources.
 
 🔴 **The finding it exists for is the placeholder config.** A file copied from its example and never
-filled in **looks configured and returns nothing.** `config.example.json` says so in its own first line.
+filled in **looks configured and returns nothing.** `search.example.json` says so in its own first line.
 **Demonstrated rather than argued**: with an untouched example config the radar reports *"3 fetched,
 HIGH 0, MED 0"* and exits successfully. **A missing file would have been louder than a filled one.**
 
@@ -418,7 +418,7 @@ prescribes have somewhere to live?*
 
 ✅ **All six fixed 2026-08-25, and the audit itself is now a test** —
 [`tools/tests/test_templates.py`](tools/tests/test_templates.py), 8 checks, all six mutants caught. **It
-parses the outcome vocabulary out of both `CLAUDE.md` and the template and asserts they are the same set**,
+parses the outcome vocabulary out of both `SCHEMA.md` and the template and asserts they are the same set**,
 so the two copies cannot drift again, and it fails if any prescribed table is removed from the framework
 page. **This is the point: the audit found things no rule-reading could, so the audit became mechanical
 rather than something someone has to remember to repeat.**
@@ -427,11 +427,11 @@ rather than something someone has to remember to repeat.**
 |---|---|---|
 | 1 | Fetch the employer's own posting | ✅ **Fixed.** Was 🔴 **contradicted by another skill.** `role-radar` step 2 says *"read the cached description — already in `raw.json`, no refetch needed"*, then step 3 says score from it. For an aggregator row that cache **is** the truncated posting. **The truncation entry below is explicit that the employer's own posting must be fetched *before assessment*, because by packaging time the score has already been used to decide** |
 | 2 | Score the journey, not the address | ✅ **Fixed** — a *Known locations* table now exists. Was 🟡 **prescribing two things with nowhere to put them.** *"Store employment clusters once and reuse them"* and scoring from where the user actually lives — **no template has a slot for either**, so both get re-derived per role, which is the failure the rule describes |
-| 3 | Standing-gaps list | ✅ **Fixed** — the table is shipped empty. Was 🔴: **`CLAUDE.md` said to keep the table "on the framework page". The framework template has no such table.** A fresh vault starts with the instruction pointing at a section that does not exist — and this is the rule whose entire purpose is that an absence must be *recorded* rather than merely unfound |
+| 3 | Standing-gaps list | ✅ **Fixed** — the table is shipped empty. Was 🔴: **`SCHEMA.md` said to keep the table "on the framework page". The framework template has no such table.** A fresh vault starts with the instruction pointing at a section that does not exist — and this is the rule whose entire purpose is that an absence must be *recorded* rather than merely unfound |
 | 4 | Three scores, and the requirement count | 🟢 Present and consistent |
 | 5 | Do not lengthen the ruler | 🟢 Present and consistent |
 | 6 | Score against the baseline | ✅ **Fixed** — the table's first row is the current job. Was 🟡: said *"the first row of the table is the current job"* — **the table has no baseline row and no status value that could describe one** |
-| 7 | The internal move as a third option | ✅ **Fixed** — it is the table's second row, with the prompt. Was 🔴: **`CLAUDE.md` said "score it as a row in the table". The word *internal* does not appear in the framework template at all**, and nothing prompts for it — while `CLAUDE.md` itself says a user in a stable job will never raise it unprompted |
+| 7 | The internal move as a third option | ✅ **Fixed** — it is the table's second row, with the prompt. Was 🔴: **`SCHEMA.md` said "score it as a row in the table". The word *internal* does not appear in the framework template at all**, and nothing prompts for it — while `SCHEMA.md` itself says a user in a stable job will never raise it unprompted |
 | 8 | "Remote" is country-scoped | ✅ Fixed in code 2026-08-25. It had been doing the reverse |
 | 9 | Why-X answers, values with three examples | 🟢 Present and consistent |
 
@@ -441,12 +441,12 @@ rather than something someone has to remember to repeat.**
 
 | | Values |
 |---|---|
-| `CLAUDE.md` | **Submitted · Rejected by employer · Withdrew · Declined · Closed · Vetoed · Not applied** |
+| `SCHEMA.md` | **Submitted · Rejected by employer · Withdrew · Declined · Closed · Vetoed · Not applied** |
 | `templates/Role Scoring Framework.md` | *submitted, not applied, closed or vetoed* |
 
 🔴 **The template is missing exactly the three values that were added to fix the ambiguity** — *Rejected by
-employer*, *Withdrew*, *Declined* — and merges two that `CLAUDE.md` deliberately separates. **So a fresh
-vault's scoring table cannot express "the employer turned me down"**, which `CLAUDE.md` calls the single
+employer*, *Withdrew*, *Declined* — and merges two that `SCHEMA.md` deliberately separates. **So a fresh
+vault's scoring table cannot express "the employer turned me down"**, which `SCHEMA.md` calls the single
 most important question about a search and the number that says whether the level is right.
 
 **This is the SIGNAL failure in another place: one concept, two vocabularies, and the authoritative one is
@@ -734,7 +734,7 @@ commuting *into* a city it usually adds a leg rather than removing one.
 ### ✅ "Not recorded" and "recorded as absent" are indistinguishable to a search — TOOL BUILT
 
 **Status: ✅ [`tools/known.py`](tools/known.py) built 2026-08-24, with 11 tests and a hard rule in
-`CLAUDE.md`. It recurred three times in one session before it was built, which is the argument for it.**
+`SCHEMA.md`. It recurred three times in one session before it was built, which is the argument for it.**
 
 **What it does:** finds every mention of a term and sorts them into settled decisions, negatives and plain
 assertions, then returns **SETTLED / PRESENT / NEGATIVE ONLY / NOT FOUND** — and prints the lines it judged
@@ -943,7 +943,7 @@ board-specific prefilter would help.
 
 **Status: happened 2026-08-24. Caught, remediated by history rewrite, and worth a permanent rule.**
 
-`config.example.json` shipped with **one user's actual commuting geography — home county included — their
+`search.example.json` shipped with **one user's actual commuting geography — home county included — their
 real target job titles, and their geographic exclusions.** In a public repository, under their own name,
 alongside a README explaining the repo runs a job search.
 
@@ -1108,7 +1108,7 @@ point at all.**
 
 The whole value of the review layer is that the reviewer is **not** the model that wrote the documents: a
 model that invented a number while writing will find that number plausible while reviewing. **That
-guarantee was expressed as a comment in `config.example.json` and enforced by nothing.** The authoring
+guarantee was expressed as a comment in `search.example.json` and enforced by nothing.** The authoring
 vendor's adapter was selectable, and **a self-review would have printed output identical to a real one.**
 
 🔴 **Worse than useless, because it converts an absence into false assurance.** A missing review is
@@ -1134,7 +1134,7 @@ the design.
 
 **Status: rule added 2026-08-24 with a trigger. The instruction alone had already failed.**
 
-`CLAUDE.md` said *"record what happened to every application"* and *"if the user asks why nothing is
+`SCHEMA.md` said *"record what happened to every application"* and *"if the user asks why nothing is
 landing, you should already have the data to answer."* **Across seven applications and six weeks, one
 outcome was recorded.**
 
@@ -1499,7 +1499,7 @@ happened to be built. **Everything else is a URL and a score with no working beh
 4. **The requirement tally.** *"Nine of twelve"* is uncheckable once the twelve are unreadable.
 
 ✅ **Automated on the radar path 2026-08-25** — `radar.archive()`, 10 tests. **Everything shortlisted is
-written to `wiki/postings/<Employer> - <Title>.txt` before `seen.json` is updated and `raw.json` is
+written to `vault/postings/<Employer> - <Title>.txt` before `seen.json` is updated and `raw.json` is
 overwritten**, carrying the posting date, location, pay and source URL alongside the text. **Shortlisted
 rather than everything fetched**, because the shortlist is by definition what an agent reads and the
 standing rule is that everything read gets assessed — archiving all 130-odd fetched descriptions would keep
@@ -1510,7 +1510,7 @@ fetch of the same URL returns either an edited posting or a 404 page — **which
 with nothing.**
 
 🟡 **Still manual on the other two routes**: a link the user pastes, and a role assessed from an employer's
-own site. The rule is in `CLAUDE.md` and both skills; nothing enforces it.
+own site. The rule is in `SCHEMA.md` and both skills; nothing enforces it.
 
 **The original design follows.**
 
@@ -1571,7 +1571,7 @@ grep cannot read a PDF rather than because PDFs are trusted, and now says so.
 🟢 **Verified both directions:** the reworded skill line is accepted, and a deliberately personal line
 added to `README.md` is still blocked. **The guard holds everywhere a user actually writes.**
 
-🔴 **Do not widen this by filename.** That was tried once, on `config.example.json`, and the file it waved
+🔴 **Do not widen this by filename.** That was tried once, on `search.example.json`, and the file it waved
 through turned out to contain a real person's home county.
 
 ---
@@ -1678,7 +1678,7 @@ none of it is ever noticed, because the row never comes back.
 🟢 **And measuring it found a second defect: `raw.json` is not a cache.** It is overwritten each run with
 **that run's new rows only**, so the `role-radar` instruction *"read the cached description, no refetch
 needed"* stops being true the moment another run happens. Corrected in the skill, and the archive in
-`wiki/postings/` is the durable copy.
+`vault/postings/` is the durable copy.
 
 #### What was built instead
 
@@ -1723,7 +1723,7 @@ sensible rule is to re-read anything the user is about to act on, and trust the 
 happening in a separate piece of work; this is the inventory it needs, and it is here because the person
 doing it will be reading the entry below.
 
-🔴 **`wiki/postings/` is now load-bearing and it was not a week ago.** It is the **only durable copy of a
+🔴 **`vault/postings/` is now load-bearing and it was not a week ago.** It is the **only durable copy of a
 posting** — `raw.json` is overwritten every run with that run's new rows, so nothing else survives.
 `radar.archive()` writes it, defaulting to `HERE/../../wiki/postings` with a `postings_dir` override in
 `config.json`, and **`refresh.py` reads it by path** when someone is about to apply. It is already on the
@@ -1751,6 +1751,38 @@ unknown keys would break it.
 
 ---
 
+### ✅ The boundary — BUILT. Everything the user owns is under `vault/`
+
+**2026-08-25.** The update mechanism itself is still to build; **the thing that made it impossible is not.**
+
+**User data no longer sits inside `tools/`.** `vault/` holds all of it — sources, wiki, roles, companies,
+postings, applications, oversight, settings, secrets, state, and a `migration/` drop zone. **Everything
+outside `vault/` is the system and can be replaced wholesale**, which is the precondition an updater needs.
+
+🟢 **`tools/lib/paths.py` is the only file that knows where anything is.** Before it, seven paths were
+pinned in `doctor.py` alone, four in `radar.py`, more in `employers.py`, `sources_check.py`, `registry.py`
+and `export_review.py`. **Missing one is silent** — a tool reading a path nobody writes to reports *"nothing
+here"* rather than *"I am looking in the wrong place"*. `CAREER_VAULT` relocates the vault entirely;
+`paths.use()` re-roots it in process, which exists because the first thing that needed to was a test.
+
+🟢 **`.gitignore` went from eight rules with three hand-maintained carve-outs to one line: `vault/`.**
+**That rule set had already swallowed two files that needed to ship**, each found only because somebody
+noticed a clone was broken. The pre-commit hook went the same way, from five paths to one.
+
+🟢 **`AGENTS.md` is now the entry point** — the [Linux Foundation-stewarded convention](https://agents.md/)
+that 60,000+ repos use — with the schema in `SCHEMA.md` and `CLAUDE.md` reduced to a one-line
+`@AGENTS.md` import. **The instructions are vendor-neutral now.** 🔴 **The skills are not**:
+`.claude/skills/` is Claude Code's system and nothing else reads it. That is a separate and larger piece
+of work.
+
+🟡 **Four kinds inside the vault, and a bundler has to tell them apart:** knowledge and settings travel;
+**`secrets/` and `state/` never do.** Carrying an API key or a 2MB cache is how a key ends up in a zip
+somebody emails. `paths.CARRY` and `paths.NEVER` name them, and `test_boundary.py` asserts it.
+
+**Still to build:** the merge itself — what happens when the system wants to update a file the user has
+edited. **That is the part that benefits from watching how `career-ops` lands it**, and from one real
+cold-start user.
+
 ### 🔴 There is no way for a user to take an update — and every day makes it worse
 
 **Status: designed 2026-08-25, not built. Architectural, and the one that compounds.**
@@ -1767,7 +1799,7 @@ which is daily.
 | Clearly the system's | Clearly the user's | 🔴 **Genuinely ambiguous** |
 |---|---|---|
 | `tools/`, `.claude/skills/`, `githooks/` | `wiki/`, `sources/`, `oversight/<employer>/` | **`config.json`** — the user's queries and geography, in a file whose *schema* is the system's |
-| `templates/` | `tools/radar/employers.json` | **`CLAUDE.md`** — the schema, which the user is invited to co-evolve |
+| `templates/` | `vault/settings/employers.json` | **`SCHEMA.md`** — the schema, which the user is invited to co-evolve |
 | `ats_registry.json` | | **`.claude/skills/`** if a user has tuned one |
 
 **The ambiguous column is the whole problem.** A naive `git pull` clobbers a tuned skill; a naive "never
@@ -1866,7 +1898,7 @@ nothing yet asks for one.
 
 ### The rest of what happens after the submit button
 
-**Deliberate scope decision, recorded in `CLAUDE.md`.** Not covered: interview preparation, offer
+**Deliberate scope decision, recorded in `SCHEMA.md`.** Not covered: interview preparation, offer
 evaluation and negotiation, follow-up cadence, rejection debriefs.
 
 **Interview prep is the largest and the wiki is already sitting on everything it needs** — every claim with
@@ -2081,7 +2113,7 @@ run **after**, because a category is the half that catches employers the user ha
 cannot be judged from a company name. Pinned by a test that asserts the excluded row never reaches
 `fetch_body`.
 
-🔴 **The safety rule is now in `CLAUDE.md` rather than implied by the file filter**, as this entry asked.
+🔴 **The safety rule is now in `SCHEMA.md` rather than implied by the file filter**, as this entry asked.
 
 🟡 **One defect found while building it, worth repeating elsewhere.** Whole-word matching was written as
 `\b` + keyword + `\b`, which **silently never matches a keyword that begins or ends with punctuation** —
@@ -2498,7 +2530,7 @@ untested.
   until the header was rewritten** — the reader had no way to know how old a row could be. Adapters now
   declare `HONOURS_DAYS` and the header narrows itself when they disagree.
 - 🔴 **Test fixtures are example files, and the placeholder rule applies to them too.** The rule was
-  written for `config.example.json` and never carried across. An audit found a real first name in one
+  written for `search.example.json` and never carried across. An audit found a real first name in one
   fixture's example address, a real city in another, and two fixtures built from the user's actual
   history — one of them restating incidents `BACKLOG.md` already describes, so the pair could be read
   back together. **Nobody wrote those as personal files; they were written by starting from something

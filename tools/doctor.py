@@ -8,7 +8,7 @@ setting, a CV in a folder, and up to two API keys. Nothing answered "am I ready"
 -- `sources_check.py` answers a third of it and only about job sources.
 
 THE FAILURE THIS IS REALLY FOR. A config copied from the example and never
-filled in **looks configured and returns nothing.** `config.example.json` says
+filled in **looks configured and returns nothing.** `search.example.json` says
 so in its own first line: leave the angle-bracket values as they are and the
 location filter matches nothing, so the radar finds no roles and reports a quiet
 week. A missing file announces itself. A file full of placeholders does not, and
@@ -22,6 +22,11 @@ unconfigured thing as a fault sends people to fix something they never wanted.
 import json, os, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# Seven paths were pinned in this file, which made it the place a vault move
+# would break most quietly: a check reading the wrong path reports OPTIONAL, not
+# an error. They now come from one module.
+sys.path.insert(0, os.path.join(HERE, "lib"))
+import paths  # noqa: E402
 ROOT = os.path.dirname(HERE)
 
 OK, MISSING, PLACEHOLDER, OPTIONAL, WARN = "OK", "MISSING", "PLACEHOLDER", "OPTIONAL", "WARN"
@@ -74,7 +79,7 @@ def check_git():
 
 
 def check_sources():
-    d = os.path.join(ROOT, "sources")
+    d = paths.SOURCES
     files = [f for f in os.listdir(d) if not f.startswith(".") and f != "README.md"] \
         if os.path.isdir(d) else []
     if not files:
@@ -84,7 +89,7 @@ def check_sources():
 
 
 def check_wiki():
-    d = os.path.join(ROOT, "wiki")
+    d = paths.WIKI
     pages = [f for f in os.listdir(d) if f.endswith(".md")] if os.path.isdir(d) else []
     if not pages:
         return OPTIONAL, "no wiki yet. Run /career-init — that is the next step, not a fault"
@@ -108,7 +113,7 @@ def _config(path, name, what):
 
 
 def check_radar_config():
-    r = _config(os.path.join(HERE, "radar", "config.json"), "radar config.json",
+    r = _config(paths.SEARCH, "radar config.json",
                 "without it only the employer-board adapters run")
     if r[0] != OK:
         return r[0], r[1]
@@ -122,7 +127,7 @@ def check_radar_config():
 
 
 def check_employers():
-    p = os.path.join(HERE, "radar", "employers.json")
+    p = paths.EMPLOYERS
     if not os.path.exists(p):
         return OPTIONAL, ("no watch/avoid list. Optional — without it nothing is filtered "
                           "before scoring and no employer is watched by name")
@@ -136,7 +141,7 @@ def check_employers():
 
 
 def check_oversight():
-    p = os.path.join(HERE, "review", "config.json")
+    p = paths.REVIEW
     if not os.path.exists(p):
         return OPTIONAL, ("no reviewer configured. 🟢 `review.py --dry-run` prints the prompt "
                           "to paste into any other vendor's chat window, which costs nothing "

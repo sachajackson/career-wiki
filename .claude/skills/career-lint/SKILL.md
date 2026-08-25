@@ -41,7 +41,7 @@ python3 tools/template_drift.py --wiki wiki
 🔴 **`/career-init` copies `templates/` into `wiki/` once and nothing ever revisits it**, and
 `sync-to-vault.sh` refuses to touch `wiki/` on purpose — that directory is the person, not the tool. So
 the tool improves and the vault does not. **In one real change the framework template gained two tables,
-two seeded rows and a longer status vocabulary, and `CLAUDE.md` was updated to instruct the agent to use
+two seeded rows and a longer status vocabulary, and `SCHEMA.md` was updated to instruct the agent to use
 all of them** — leaving every older vault with an agent looking for tables that are not there.
 
 🔴 **Two of those five were rows inside a table the vault already had**, which is why the check compares
@@ -115,7 +115,7 @@ until someone reads two of them side by side.
 period. Attribution drift happens when a bullet is written from the angle rather than from the page.
 
 **5. Sensitive data.** 🔴 **Rank this first when it finds anything.** Scan for material that should not
-be there under `CLAUDE.md`:
+be there under `SCHEMA.md`:
 
 - **Named individuals other than the user.** Any proper noun in a personnel, performance or team-structure
   context. Rewrite to the role, or remove.

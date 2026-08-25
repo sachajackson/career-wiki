@@ -1,4 +1,4 @@
-"""The templates a fresh vault gets must contain what CLAUDE.md tells it to use.
+"""The templates a fresh vault gets must contain what SCHEMA.md tells it to use.
 
 An audit on 2026-08-25 found six of nine "documented rules" were not in force.
 All nine were written where the backlog said they were -- which is what the
@@ -18,7 +18,7 @@ force until page Y has an empty table of X on it.
 import os, re, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CLAUDE = os.path.join(ROOT, "CLAUDE.md")
+CLAUDE = os.path.join(ROOT, "SCHEMA.md")
 FRAMEWORK = os.path.join(ROOT, "templates", "Role Scoring Framework.md")
 RADAR_SKILL = os.path.join(ROOT, ".claude", "skills", "role-radar", "SKILL.md")
 
@@ -31,7 +31,7 @@ def read(path):
 class TheOutcomeVocabulary(unittest.TestCase):
     """One concept, two files. They drifted, and the user saw the broken one.
 
-    CLAUDE.md closed this set specifically because "Rejected" was ambiguous
+    SCHEMA.md closed this set specifically because "Rejected" was ambiguous
     between the employer turning someone down and the applicant choosing not to
     apply -- two rows four days apart had carried the same word for opposite
     facts. The template then shipped "submitted, not applied, closed or vetoed",
@@ -42,7 +42,7 @@ class TheOutcomeVocabulary(unittest.TestCase):
 
     def statuses_in_claude(self):
         m = re.search(r"closed set:\s*\*\*(.+?)\.\*\*", read(CLAUDE), re.S)
-        self.assertIsNotNone(m, "CLAUDE.md no longer states a closed set of outcomes")
+        self.assertIsNotNone(m, "SCHEMA.md no longer states a closed set of outcomes")
         # The source is hard-wrapped markdown, so a value can straddle a newline.
         return {re.sub(r"\s+", " ", s).strip().strip("*` ") for s in m.group(1).split("·")}
 
@@ -78,7 +78,7 @@ class TablesTheRulesPrescribe(unittest.TestCase):
         return rows[0]
 
     def test_the_standing_gaps_table_exists(self):
-        """CLAUDE.md: "keep an explicit table, ON THE FRAMEWORK PAGE, of every
+        """SCHEMA.md: "keep an explicit table, ON THE FRAMEWORK PAGE, of every
         capability found to be absent". There was no such table."""
         header = self._table_after(r"## .*Standing gaps")
         for column in ("gap", "Status", "Resolved", "Demanded", "substitute"):
@@ -108,7 +108,7 @@ class TablesTheRulesPrescribe(unittest.TestCase):
                         "the scoring table has no row for the internal move")
 
     def test_the_internal_move_is_prompted_for_not_just_mentioned(self):
-        """CLAUDE.md: a user in a stable job will not raise this unprompted, and
+        """SCHEMA.md: a user in a stable job will not raise this unprompted, and
         the employer's internal job site carries requisitions the public one
         does not. \W tolerates the markdown emphasis inside the phrase."""
         self.assertTrue(re.search(r"(?i)internal\W{0,3}(job site|board)", self.body),

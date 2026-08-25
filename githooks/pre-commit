@@ -20,42 +20,18 @@ staged=$(git diff --cached --name-only --diff-filter=ACMR)
 blocked=""
 
 # 1. Paths that are the user's by definition.
+#
+# ONE RULE, as of 2026-08-25: everything the user owns lives under vault/.
+#
+# This block used to name five paths with three carve-outs added one filename at
+# a time -- and the rule they carved out of, tools/radar/*.json, had already
+# silently swallowed two files that needed to ship. A list maintained by hand
+# fails the moment somebody adds a file and does not think to update it. A
+# boundary does not.
 while IFS= read -r f; do
   case "$f" in
-    sources/*)
-      [ "$f" = "sources/README.md" ] && continue
-      blocked+="  $f  (sources/ is the user's own documents)"$'\n' ;;
-    wiki/*)
-      blocked+="  $f  (wiki/ is generated from a real person's history)"$'\n' ;;
-    oversight/*)
-      [ "$f" = "oversight/OVERSIGHT.md" ] && continue
-      blocked+="  $f  (a copy of documents being submitted)"$'\n' ;;
-    */application.json|application.json)
-      blocked+="  $f  (per-application config, may name a real employer)"$'\n' ;;
-    tools/radar/*.json|tools/radar/shortlist.md|config.json)
-      # The example files must ship, or a fresh clone cannot run the radar.
-      # Same carve-outs as .gitignore, and DELIBERATELY ONE FILENAME AT A TIME.
-      #
-      # The obvious tidy-up is `*.example.json`, and it is the wrong fix. The
-      # leak this whole hook exists for was a working config with `.example` in
-      # its name -- so a pattern that waves through anything called .example is
-      # the exact hole that was already fallen into once. Listing them
-      # individually means adding a new one is a moment where somebody has to
-      # open the file, which is the point.
-      #
-      # config.example.json   added 2026-08-24 after this rule blocked it
-      # employers.example.json added 2026-08-25, likewise; read in full first,
-      #                        every value is a <placeholder>
-      # ats_registry.json     added 2026-08-25. NOT an example file and not a
-      #                        personal one: public careers endpoints, the same
-      #                        for every user, and the one file here a stranger
-      #                        can contribute to. Read in full before touching
-      #                        this line -- it sits one letter from
-      #                        employers.json, which must NEVER ship.
-      case "$f" in
-        */config.example.json|*/employers.example.json|*/ats_registry.json) continue ;;
-      esac
-      blocked+="  $f  (search results and history)"$'\n' ;;
+    vault/*)
+      blocked+="  $f  (vault/ is the user's, and must never be committed)"$'\n' ;;
   esac
 done <<< "$staged"
 
@@ -85,7 +61,7 @@ for f in $staged; do
     # THE SCOPE IS DELIBERATE AND NARROW. A user's own material never lands in
     # these three directories -- it lives in wiki/ and sources/, which this rule
     # still scans and which .gitignore already blocks. Widening it further, or
-    # to a filename, is what let config.example.json through with a real
+    # to a filename, is what let search.example.json through with a real
     # person's home county in it. Do not.
     .claude/skills/*|templates/*|tools/*) continue ;;
   esac

@@ -33,8 +33,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from adapters import ADAPTERS, SEVERITY, NOT_CONFIGURED, OK       # noqa: E402
 
-CONFIG = os.path.join(HERE, "config.json")
-EMPLOYERS = os.path.join(HERE, "employers.json")
+sys.path.insert(0, os.path.join(HERE, "..", "lib"))
+import paths  # noqa: E402
+
+CONFIG    = paths.SEARCH
+EMPLOYERS = paths.EMPLOYERS
 
 MARK = {"OK": "OK  ", "EMPTY": "??  ", "NOT CONFIGURED": "--  ",
         "NO COVERAGE": "!!  ", "BAD CREDENTIALS": "!!  ", "BLOCKED": "!!  ",

@@ -11,7 +11,7 @@ it.
 
 That is not hypothetical. On 2026-08-25 the framework template gained a standing
 gaps table, a known locations table, a baseline row, an internal-move row and a
-seven-value outcome vocabulary. `CLAUDE.md` -- which IS synced -- was updated to
+seven-value outcome vocabulary. `SCHEMA.md` -- which IS synced -- was updated to
 instruct the agent to use all five. Every vault created before that morning has
 an agent looking for tables that are not there.
 
@@ -35,6 +35,8 @@ template section whose contents changed reads as fine here.
 import argparse, difflib, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, "lib"))
+import paths  # noqa: E402
 TEMPLATES = os.path.join(os.path.dirname(HERE), "templates")
 
 # Pages only. cv.html and the example JSON are not wiki pages.
@@ -82,7 +84,7 @@ def seeded_rows(body):
 
     A blank row is a place to write; a filled one is content the page is
     supposed to carry. The framework's scoring table seeds two -- the current
-    job and the internal move -- and both are rows that `CLAUDE.md` instructs
+    job and the internal move -- and both are rows that `SCHEMA.md` instructs
     the agent to score. Ship the empty table, and ship the row that is not empty.
     """
     out = []
@@ -128,7 +130,7 @@ def compare(template_text, page_text):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--wiki", default="wiki")
+    ap.add_argument("--wiki", default=paths.WIKI)
     ap.add_argument("--templates", default=TEMPLATES)
     args = ap.parse_args()
 

@@ -234,7 +234,7 @@ careers page** — large employers run a separate one carrying internal-only req
 
 ### Status — a closed set
 
-**Use exactly these. `CLAUDE.md` is the authority and this list must match it.**
+**Use exactly these. `SCHEMA.md` is the authority and this list must match it.**
 
 | | Meaning |
 |---|---|

@@ -24,9 +24,12 @@ week: the run succeeds, the roles are missing, and nothing says so.
 It merges with hand-written config rather than replacing it, and deduplicates,
 so watching an employer somebody already listed by hand does not fetch twice.
 """
-import json, os
+import json, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, "..", "lib"))
+import paths  # noqa: E402
+
 REGISTRY = os.path.join(HERE, "ats_registry.json")
 
 # ats -> (config key, list key, which params the adapter needs)
@@ -159,7 +162,7 @@ def listing(registry=None):
                    f"{e.get('last_verified', '?'):10}  {pay}")
     out.append(f"\n  Add one:   python3 tools/add_employer.py \"Name\" https://their-careers-page")
     out.append(f"  Check all: python3 tools/registry_check.py")
-    out.append(f"  Watch one: add the name to `watch` in config.json")
+    out.append(f"  Watch one: add the name to `watch` in vault/settings/search.json")
     return "\n".join(out)
 
 
@@ -168,7 +171,7 @@ if __name__ == "__main__":
     if "--list" in sys.argv or not sys.argv[1:]:
         print(listing())
     else:
-        cfg_path = os.path.join(HERE, "config.json")
+        cfg_path = paths.SEARCH
         cfg = json.load(open(cfg_path)) if os.path.exists(cfg_path) else {"watch": sys.argv[1:]}
         _, rep = resolve(cfg)
         print(format_report(rep) or "  nothing in `watch`")

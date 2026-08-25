@@ -28,10 +28,17 @@ from adapters import ADAPTERS                                    # noqa: E402
 import employers as EMP                                          # noqa: E402
 import legitimacy as LEGIT                                       # noqa: E402
 
-CONFIG = os.path.join(HERE, "config.json")
-RAW    = os.path.join(HERE, "raw.json")
-SEEN   = os.path.join(HERE, "seen.json")
-OUT    = os.path.join(HERE, "shortlist.md")
+# Paths come from one place, so moving the vault touches one file. Before this
+# they were pinned here, in employers.py, and seven times in doctor.py -- and
+# missing one is silent: a tool reading a path nobody writes to reports "nothing
+# here" rather than "I am looking in the wrong place".
+sys.path.insert(0, os.path.join(HERE, "..", "lib"))
+import paths  # noqa: E402
+
+CONFIG = paths.SEARCH
+RAW    = paths.RAW
+SEEN   = paths.SEEN
+OUT    = paths.SHORTLIST
 
 # Titles that resolve to an individual-contributor role. Matched against the
 # WHOLE title, anchored -- "Senior Developer" is out, but "Director of
@@ -121,7 +128,7 @@ def archive(rows, cfg, history=None):
     time, and a later fetch of the same URL can return an edited posting -- or a
     404 page, which would replace the evidence with nothing.
     """
-    where = cfg.get("postings_dir") or os.path.join(HERE, "..", "..", "wiki", "postings")
+    where = cfg.get("postings_dir") or paths.POSTINGS
     where = os.path.abspath(where)
     try:
         os.makedirs(where, exist_ok=True)
@@ -154,7 +161,7 @@ def archive(rows, cfg, history=None):
 
 def load_config():
     if not os.path.exists(CONFIG):
-        sys.exit(f"No config.json. Copy config.example.json to {CONFIG} and fill it in.")
+        sys.exit(f"No config.json. Copy search.example.json to {CONFIG} and fill it in.")
     cfg = json.load(open(CONFIG))
     # `watch` names employers; ats_registry.json knows which ATS each uses. Expand
     # one into the other, and print what could not be expanded -- an employer
@@ -341,6 +348,7 @@ def main():
         skipped.append(f"{c['title'][:60]} — {c['_drop']}")
     keep = [c for c in keep if not c.get("_drop")]
 
+    paths.ensure(paths.STATE)
     json.dump(found, open(RAW, "w"), indent=1)
     keep.sort(key=lambda x: (-x["tally"], x["date"]))
     high = [c for c in keep if c["signal"] == "HIGH"]
@@ -364,6 +372,7 @@ def main():
     else:
         window = f"{days}-day window on searched sources"
 
+    paths.ensure(paths.STATE)
     with open(OUT, "w") as f:
         f.write(f"# Radar shortlist — {today} ({window})\n\n")
         f.write(f"{len(found)} fetched, {dupes} duplicates suppressed. "

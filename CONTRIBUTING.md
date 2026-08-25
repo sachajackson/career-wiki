@@ -56,7 +56,7 @@ tools/sync-to-vault.sh ~/Documents/my-career
 It copies skills, agents, hooks, `tools/`, `templates/` and the oversight brief. **It does not read or
 write `sources/`, `wiki/` or `oversight/<application>/`** — nothing in it looks at your content.
 
-**`CLAUDE.md` is never overwritten.** A working vault's schema gets customised — other life sections,
+**`SCHEMA.md` is never overwritten.** A working vault's schema gets customised — other life sections,
 house rules, your own writing standard — and copying over it would silently discard all of that. The
 script reports the differences and leaves the merge to you. **Your vault's version is authoritative for
 anything you have changed.**

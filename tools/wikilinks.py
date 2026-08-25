@@ -35,6 +35,9 @@ Exit status is 1 if anything was flagged, so it can gate a build.
 """
 import argparse, os, re, sys, glob
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+import paths  # noqa: E402
+
 LINK = re.compile(r"\[\[(.+?)\]\]", re.S)
 HEADING = re.compile(r"^#{1,6}\s+(.*?)\s*$")
 # Deliverables and anything path-like are not wiki pages and are not our business.
@@ -128,7 +131,7 @@ def fix_wrapped(root):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("root", nargs="?", default="wiki", help="folder to scan (default: wiki)")
+    ap.add_argument("root", nargs="?", default=paths.WIKI, help="folder to scan (default: the vault wiki)")
     ap.add_argument("--fix", action="store_true", help="join links split across lines, then re-check")
     ap.add_argument("--only", help="report findings in this file only. The scan still reads the whole "
                                    "folder, because a link's validity depends on every other page -- but "

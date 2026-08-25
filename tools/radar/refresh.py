@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Re-read one archived posting and say what has changed since it was assessed.
 
-    python3 tools/radar/refresh.py wiki/postings/"<file>.txt"
+    python3 tools/radar/refresh.py vault/postings/"<file>.txt"
     python3 tools/radar/refresh.py --all wiki/postings
 
 WHY THIS AND NOT A CHEAPER RADAR LOOP. The radar was already bounded to the

@@ -27,7 +27,7 @@ It should tell them something about their own document they did not know.
 
 Copy `templates/` into `wiki/`, filling in what the sources support. Create `index.md`, `log.md`,
 `Career.md`, `Operating Model.md`, `CV.md`, `Standing Answers.md` and a `roles/` folder. OKF frontmatter on everything, per
-`CLAUDE.md`.
+`SCHEMA.md`.
 
 **Mark everything drawn from a document as unverified** — no `verified` key. It becomes human-reviewed
 only when the user confirms it in conversation. Most of it will turn out to be slightly wrong.

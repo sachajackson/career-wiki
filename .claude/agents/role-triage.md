@@ -13,9 +13,9 @@ return only what survives.
 
 ## Your inputs
 
-- `tools/radar/raw.json` — cached postings, keyed by job id, each with `title`, `company`, `loc`, `date`,
+- `vault/state/raw.json` — cached postings, keyed by job id, each with `title`, `company`, `loc`, `date`,
   `url` and `body`. **The descriptions are already fetched. Do not re-fetch anything.**
-- `tools/radar/shortlist.md` — the script's keyword tiering
+- `vault/state/shortlist.md` — the script's keyword tiering
 - `wiki/Role Scoring Framework.md` — **the actual rubric. Read this first and score against it**
 - `wiki/Operating Model.md` — what the person actually does
 - `wiki/Role Scoring Framework.md` also carries the table of roles already assessed

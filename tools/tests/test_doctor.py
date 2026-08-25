@@ -5,7 +5,7 @@ CV in a folder and up to two API keys. Nothing answered "am I ready" --
 sources_check.py answers a third of it, and only about job sources.
 
 The failure it is really for: a config copied from the example and never filled
-in LOOKS CONFIGURED AND RETURNS NOTHING. config.example.json says so in its own
+in LOOKS CONFIGURED AND RETURNS NOTHING. search.example.json says so in its own
 first line -- leave the angle-bracket values and the location filter matches
 nothing. Run for real with an untouched example config, the radar reports
 "3 fetched, HIGH 0, MED 0" and exits successfully. That is a quiet week that
@@ -30,15 +30,18 @@ class Home:
 
     def __enter__(self):
         self.dir = tempfile.mkdtemp()
-        for d in ("sources", "wiki", "tools/radar", "tools/review"):
+        for d in ("vault/sources", "vault/wiki", "vault/settings", "tools/radar", "tools/review"):
             os.makedirs(os.path.join(self.dir, d))
         self.write("tools/radar/ats_registry.json", {"version": 1, "employers": [{}, {}]})
-        self._saved = (doctor.ROOT, doctor.HERE)
+        self._saved = (doctor.ROOT, doctor.HERE, doctor.paths.VAULT)
         doctor.ROOT, doctor.HERE = self.dir, os.path.join(self.dir, "tools")
+        # One re-root instead of patching every path doctor happens to read.
+        doctor.paths.use(os.path.join(self.dir, "vault"))
         return self
 
     def write(self, rel, obj):
         p = os.path.join(self.dir, rel)
+        os.makedirs(os.path.dirname(p), exist_ok=True)
         with open(p, "w", encoding="utf-8") as fh:
             fh.write(obj if isinstance(obj, str) else json.dumps(obj))
 
@@ -49,7 +52,8 @@ class Home:
         return code, buf.getvalue()
 
     def __exit__(self, *a):
-        doctor.ROOT, doctor.HERE = self._saved
+        doctor.ROOT, doctor.HERE = self._saved[0], self._saved[1]
+        doctor.paths.use(self._saved[2])
         shutil.rmtree(self.dir, ignore_errors=True)
 
 
@@ -59,7 +63,7 @@ class ThePlaceholderCase(unittest.TestCase):
 
     def test_an_untouched_example_config_is_caught(self):
         with Home() as h:
-            h.write("tools/radar/config.json",
+            h.write("vault/settings/search.json",
                     {"queries": ["<a job title you would take>"],
                      "location": {"ok": ["<your city>"], "bad": []}})
             verdict, detail = doctor.check_radar_config()
@@ -68,7 +72,7 @@ class ThePlaceholderCase(unittest.TestCase):
 
     def test_a_filled_config_is_ready(self):
         with Home() as h:
-            h.write("tools/radar/config.json",
+            h.write("vault/settings/search.json",
                     {"queries": ["head of delivery"], "location": {"ok": ["<city>".strip("<>")]}})
             self.assertEqual(doctor.check_radar_config()[0], doctor.OK)
 
@@ -76,7 +80,7 @@ class ThePlaceholderCase(unittest.TestCase):
         """Every example file documents itself in _comment blocks full of
         angle brackets. Flagging those would make the check unusable."""
         with Home() as h:
-            h.write("tools/radar/config.json",
+            h.write("vault/settings/search.json",
                     {"_comment": ["copy this to <somewhere>", "set <your city>"],
                      "queries": ["delivery manager"], "location": {"ok": ["dublin"]}})
             self.assertEqual(doctor.check_radar_config()[0], doctor.OK)
@@ -87,7 +91,7 @@ class ThePlaceholderCase(unittest.TestCase):
 
     def test_a_config_with_no_queries_searches_for_nothing(self):
         with Home() as h:
-            h.write("tools/radar/config.json", {"queries": [], "location": {}})
+            h.write("vault/settings/search.json", {"queries": [], "location": {}})
             verdict, detail = doctor.check_radar_config()
             self.assertEqual(verdict, doctor.PLACEHOLDER)
             self.assertIn("nothing to search for", detail)
@@ -122,7 +126,7 @@ class OptionalIsNotMissing(unittest.TestCase):
 
     def test_but_a_broken_config_is_not_optional(self):
         with Home() as h:
-            h.write("tools/radar/config.json", "{not json")
+            h.write("vault/settings/search.json", "{not json")
             self.assertEqual(doctor.check_radar_config()[0], doctor.MISSING)
 
 
@@ -136,12 +140,12 @@ class ThingsThatReallyAreMissing(unittest.TestCase):
 
     def test_a_readme_in_sources_is_not_a_cv(self):
         with Home() as h:
-            h.write("sources/README.md", "# put your CV here")
+            h.write("vault/sources/README.md", "# put your CV here")
             self.assertEqual(doctor.check_sources()[0], doctor.MISSING)
 
     def test_a_provider_whose_key_is_not_in_the_shell(self):
         with Home() as h:
-            h.write("tools/review/config.json",
+            h.write("vault/settings/review.json",
                     {"provider": "openai", "openai": {"api_key_env": "NOT_SET_ANYWHERE_XYZ"}})
             verdict, detail = doctor.check_oversight()
             self.assertEqual(verdict, doctor.MISSING)
@@ -159,7 +163,7 @@ class TheReport(unittest.TestCase):
 
     def test_it_leads_with_what_needs_doing(self):
         with Home() as h:
-            h.write("tools/radar/config.json", {"queries": ["<a title>"], "location": {}})
+            h.write("vault/settings/search.json", {"queries": ["<a title>"], "location": {}})
             code, out = h.run()
             self.assertLess(out.index("PLACEHOLDER"), out.index("OPTIONAL"))
             # Deliberately a pair where alphabetical order DISAGREES with
@@ -173,13 +177,13 @@ class TheReport(unittest.TestCase):
     def test_only_optional_findings_still_exit_zero(self):
         """Nothing here is wrong. Exiting 1 would make this unusable in a gate."""
         with Home() as h:
-            h.write("sources/CV.pdf", "x")
+            h.write("vault/sources/CV.pdf", "x")
             code, out = h.run()
             self.assertEqual(code, 0, out)
 
     def test_a_check_that_raises_does_not_kill_the_report(self):
         with Home() as h:
-            h.write("sources/CV.pdf", "x")
+            h.write("vault/sources/CV.pdf", "x")
             def boom():
                 raise RuntimeError("x")
             saved = doctor.CHECKS
@@ -195,7 +199,7 @@ class TheReport(unittest.TestCase):
         """It reads files. Implying it proved a source answers would be the
         README line that started sources_check, said again."""
         with Home() as h:
-            h.write("sources/CV.pdf", "x")
+            h.write("vault/sources/CV.pdf", "x")
             _, out = h.run()
             self.assertIn("no network calls", out)
             self.assertIn("sources_check.py", out)

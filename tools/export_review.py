@@ -32,7 +32,10 @@ additional exposure.
 import hashlib, os, re, shutil, sys, datetime
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OVERSIGHT_DIR = os.path.join(HERE, "oversight")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+import paths  # noqa: E402
+
+OVERSIGHT_DIR = paths.OVERSIGHT
 TEMPLATE = os.path.join(OVERSIGHT_DIR, "OVERSIGHT.md")
 
 ALLOWED = [

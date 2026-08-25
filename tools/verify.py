@@ -26,6 +26,9 @@ means "nothing provably wrong", not "good".
 Exit status is 1 if anything is flagged, so it can gate a build.
 """
 import argparse, json, os, re, sys, glob, datetime
+import os, sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+import paths  # noqa: E402
 from collections import defaultdict
 
 # A number worth tracing: percentages, money, counts of 3+ digits or with
@@ -213,7 +216,7 @@ def relevance(record, terms):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("document", help="outgoing text, or - for stdin")
-    ap.add_argument("--wiki", default="wiki")
+    ap.add_argument("--wiki", default=paths.WIKI)
     ap.add_argument("--ban", default="", help="comma-separated terms that must not appear")
     ap.add_argument("--spelling", choices=["uk", "us"], help="employer's convention for program(me)")
     ap.add_argument("--config", help="an application.json holding employer, employers, posting, ban and "

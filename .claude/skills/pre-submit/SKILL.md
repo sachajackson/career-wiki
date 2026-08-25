@@ -163,7 +163,7 @@ the reviewer is checking impressions.
 
 ## 4. Confidentiality
 
-Run the sensitive-data rules from `CLAUDE.md` over **the outgoing documents**, not the wiki:
+Run the sensitive-data rules from `SCHEMA.md` over **the outgoing documents**, not the wiki:
 
 - **No named individuals** other than the applicant.
 - **No client-identifying names**, and no internal codenames left un-genericised.

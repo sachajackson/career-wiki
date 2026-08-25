@@ -22,7 +22,7 @@ resolve it, ask the user to check while logged in.
 for:**
 
 ```bash
-python3 tools/radar/refresh.py "wiki/postings/<Employer> - <Title>.txt"
+python3 tools/radar/refresh.py "vault/postings/<Employer> - <Title>.txt"
 ```
 
 **The radar is bounded to the delta and never re-reads anything**, so the text and the date behind an
@@ -175,9 +175,9 @@ prioritisation input.
 Create a role page in `wiki/roles/`. Capture the **requisition number and posting URL** — both are often
 only on the employer's own site, and the aggregator listing will vanish.
 
-🔴 **And save the posting text itself to `wiki/postings/<Employer>.txt`.** The URL is not enough: postings
+🔴 **And save the posting text itself to `vault/postings/<Employer>.txt`.** The URL is not enough: postings
 are deleted, and **in one real vault five of forty-one had already gone, including the role a pack had been
-built for and the role the user was rejected from.** See [[CLAUDE.md]]. **The requisition number is also
+built for and the role the user was rejected from.** See [[SCHEMA.md]]. **The requisition number is also
 what makes an output filename unique.**
 
 Then work out what they are actually anxious about. A job description is a wish list; the role exists
@@ -466,7 +466,7 @@ not have to.
 vocabulary, cadence. `tools/verify.py` checks whether it is *true*.
 
 🔴 **`verify.py` runs automatically on every write** via the hook, and its findings land in your context
-whether you asked for them or not. **Fix them by the rules in `CLAUDE.md`, and after three failed rounds
+whether you asked for them or not. **Fix them by the rules in `SCHEMA.md`, and after three failed rounds
 stop and ask the user rather than continuing to satisfy the checker.** `cv_lint.py` is the one you have to
 remember to run.
 

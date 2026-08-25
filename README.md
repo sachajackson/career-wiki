@@ -631,7 +631,7 @@ irm https://claude.ai/install.ps1 | iex
 ```
 
 **You can use both**, on the same folder, at the same time. They keep separate conversation histories but
-share the same `CLAUDE.md` and the same wiki. To move a terminal session into the desktop app, type
+share the same `SCHEMA.md` and the same wiki. To move a terminal session into the desktop app, type
 `/desktop`.
 
 ### 3. Check you have Python
@@ -757,7 +757,7 @@ already had. Run `/interview` a few more times first.
 
 ## Setting up job search
 
-Search runs through adapters in `tools/radar/adapters/`. Copy `config.example.json` to `config.json` and
+Search runs through adapters in `tools/radar/adapters/`. Copy `search.example.json` to `config.json` and
 fill in what you have. `config.json` is ignored by git, so your settings stay on your machine.
 
 | Adapter | What it needs | Notes |
