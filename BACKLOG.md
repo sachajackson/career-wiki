@@ -1411,6 +1411,91 @@ one file.
 
 ---
 
+### 🔴 The posting is the evidence for everything, and it is the one input that reliably disappears
+
+**Status: found 2026-08-25 by testing the links, not by reasoning about them.**
+
+**A job posting is the source document behind the score, the requirement tally, the angle the CV takes and
+the stories chosen for the interview. It is also the only input in the whole system that is guaranteed to
+be deleted**, usually at the exact moment it becomes most useful: when the employer has finished hiring
+and is about to interview.
+
+🔴 **Tested against four assessed roles in a real vault:**
+
+| | |
+|---|---|
+| A role scored 14 with a full application pack built | **410 Gone.** The requirements it was scored against no longer exist anywhere |
+| The role the user was **rejected from** | **401.** There is nothing left to read for a post-mortem |
+| Two others | 200, and 429 rate-limited |
+
+**Half were unrecoverable, including the two that mattered most.**
+
+🔴 **And in that vault, one posting had been saved out of fifteen assessed roles** — the one where a pack
+happened to be built. **Everything else is a URL and a score with no working behind it.**
+
+**What this breaks, in order of how much it hurts:**
+
+1. 🔴 **Interview prep.** Stories were chosen against named requirements. **Weeks later the requirements
+   are gone and the reasoning cannot be reconstructed.**
+2. 🔴 **The rejection post-mortem.** *"Why did this one fail?"* is unanswerable without the thing that was
+   applied to — and a rejection with a reason is the most valuable outcome there is.
+3. **Re-scoring.** When the framework changes — and it has, twice in a week — **old rows cannot be
+   re-scored because the evidence is gone.** They quietly become unreviewable.
+4. **The requirement tally.** *"Nine of twelve"* is uncheckable once the twelve are unreadable.
+
+**The fix is small and belongs at ingest, not at pack time:**
+
+- **Save the employer's own posting text** — not the aggregator's copy, which is
+  [truncated anyway](#-aggregator-postings-are-truncated-and-the-system-reads-them-as-if-they-were-the-job)
+  — **the moment a role is assessed**, with the fetch date.
+- **Beside the role page, not in an application folder.** An application folder only exists for roles that
+  reach a pack; **most assessed roles never do, and those are the ones that vanish silently.**
+- **Record the requisition number and the real posting date with it**, since those are what let anyone find
+  the thing again on the employer's site if it is still there.
+
+🟡 **It is somebody else's text.** A private copy kept as the evidence behind a personal decision is
+ordinary practice; **publishing it is not.** `wiki/` is gitignored, which already handles it — but a system
+that starts archiving postings should say so out loud rather than leave it implicit.
+
+---
+
+### 🟡 The personal-data heuristic fires on this repo's own subject matter
+
+**Status: hit twice on 2026-08-25. A false positive, correctly investigated, and it will recur.**
+
+**The pre-commit hook blocked a skill file** on a line of generic advice telling a user **not** to disclose
+what they are currently paid. **No number, no person, no employer** — guidance in a system file.
+
+🟢 **The rule itself is well built.** It matches four specific phrases rather than bare words, which is why
+it has produced only one false positive in a repo that discusses pay constantly.
+
+🔴 **But this repo's whole subject is job applications**, so guidance about pay disclosure keeps being
+written — **and to a regex, advice telling someone not to state a figure is indistinguishable from someone
+stating one.** The negation is invisible.
+
+🔴 **And then it happened again immediately, on this entry.** Writing up the false positive meant quoting
+the phrase that caused it, which tripped the same rule a second time. **The hook already anticipates
+exactly this** — its own comment says *"this file, and the docs describing it, necessarily contain the
+patterns they look for"*, which is why the hook, `CONTRIBUTING.md` and `PRIVACY.md` are skipped.
+
+**Both were fixed by rewording rather than overriding.** The skill line reads better for it; this entry
+describes the pattern instead of reproducing it. 🟢 **That is the right first response** — and **it does
+not scale.** The next person hits the wall, reaches for `--no-verify`, and **routine overriding is how a
+good check stops being one.**
+
+**Three options, none obviously right:**
+
+| | |
+|---|---|
+| **Leave it** | One reword every few months. **Cheapest, and it depends on whoever hits it reading the flagged line rather than overriding** |
+| **Require a figure nearby** | Would miss *"mine is well above market"*, which is genuinely personal and carries no number |
+| 🟢 **Skip the content heuristic in the system directories** | `.claude/skills/`, `templates/` and `tools/` are written *about* users, never *by* them. **A user's own material never lands there** — the risk this rule guards is `wiki/` and `sources/`, which are ignored anyway. **This is the same reasoning the hook already applies to itself** |
+
+🔴 **Whatever is chosen, do not widen the exemption by filename.** That was tried once, on
+`config.example.json`, and the file it waved through turned out to contain a real person's home county.
+
+---
+
 ### 🔴 Ghost jobs are 20-33% of listings and nothing here checks — adopt from career-ops
 
 **Status: designed 2026-08-25, not built. Cheapest of the three below and the one with the strongest
