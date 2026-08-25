@@ -1113,6 +1113,80 @@ blockquote-marker case in the wikilink repair.
 
 ## 🟡 Gaps — things the system does not do yet
 
+### 🟡 No `.docx` route, and the one case that needs it is the agency application
+
+**`build-application` Step 6 produces a PDF only** — the CV is written as HTML from `templates/cv.html`
+and the user prints it from their browser. 🟢 **That choice is right and should not be undone casually:**
+it needs nothing installed, behaves identically on macOS, Windows and Linux, and gives full typographic
+control. Generating `.docx` with a library or converting via an office suite is platform-specific and
+fails on somebody else's machine.
+
+🔴 **But PDF-only cannot serve an agency recruiter, and the system does not say so anywhere.** A
+recruitment consultant reformats a candidate's CV onto their own letterhead and strips the direct
+contact details before forwarding it to the client. Handed a PDF they retype it or send it unchanged.
+**In a real vault every direct-employer application carried both a PDF and a `.docx`, and the single
+agency application carried a `.docx` and no PDF** — the user had worked this out for themselves, with a
+previous toolchain the system has now replaced.
+
+**The gap surfaces at submission time**, which is the worst moment to discover a missing artefact.
+
+**Three ways to close it, in increasing cost:**
+
+1. **Document the manual route and stop.** Step 6 gains a line: for an agency, paste the rendered HTML
+   into a word processor and save as `.docx`. Honest, free, and puts the work on the user every time.
+2. 🟢 **Write the `.docx` directly.** A `.docx` is a zip of XML — **no library and no office suite are
+   actually required**, only `zipfile`, which is in the standard library. This keeps the cross-platform
+   property that motivated the HTML route in the first place.
+3. 🔴 **Take a dependency on `python-docx`.** Rejected unless 2 proves impractical. The whole document
+   pipeline is currently dependency-free and that is worth more than the convenience.
+
+**Two things any implementation must get right, and both have already gone wrong once elsewhere:**
+
+- 🔴 **Strip the metadata.** `docProps/core.xml` and `app.xml` carry `dc:creator`, `cp:lastModifiedBy`,
+  `Company` and the authoring application — a quiet leak of the author's name and their office install
+  into every document a recruiter receives. **A real vault's fifteen `.docx` were checked and came back
+  effectively empty, but that was the previous toolchain's behaviour, not a control.** Assert it in a
+  test rather than inheriting it.
+- 🔴 **Two artefacts, one lint.** Step 7 lints text extracted from the PDF, on the reasoning that this
+  approximates what an ATS receives. **If a `.docx` is generated separately and the two ever diverge,
+  the check runs on the file that was not sent.** Either generate both from one source and test that
+  their extracted text matches, or lint both.
+
+
+### 🟡 `Migrate` is a documented operation with no log prefix
+
+**Found 2026-08-25, running `/career-migrate` on a real vault.** `SCHEMA.md` lists **Migrate** among the
+operations under *Operations*, and every operation ends *"update `index.md`, append to `log.md`."* But the
+prefix list — in `SCHEMA.md` under *Log format* and again in `templates/log.md` — is:
+
+```
+ingest · interview · radar · build · data · query · lint · fix
+```
+
+**There is no `migrate`.** The entry was written as `ingest`, which is the closest fit and is wrong: an
+ingest is one source being read into the wiki, and a migration is a hundred files being sorted, three
+deleted and one retyped. **The prefixes exist to be grepped**, and the one operation that reshapes the
+whole vault is the one that cannot be found:
+
+```bash
+grep "^## \[" vault/wiki/log.md | grep migrate
+```
+
+**Two ways to close it, and they are not equivalent:**
+
+1. **Add `migrate` to both prefix lists.** One line in each. But 🔴 **a prefix list in prose is exactly the
+   class of control this repo has watched fail** — it drifted here because two files carry the same list and
+   nothing compares them.
+2. 🔴 **Better: make the list mechanical.** One definition, and a test that fails when `SCHEMA.md`,
+   `templates/log.md` and the set of documented operations disagree. That catches this instance *and* the
+   next operation added without a prefix.
+
+**Check the false-positive case before shipping the test:** a user's own log will contain entries this
+system never wrote, and a check that rejects unknown prefixes in *their* log rather than in *our* templates
+would fire on every hand-written line. **It should compare the two shipped lists to each other, and say
+nothing about the contents of any vault.**
+
+
 ### ✅ The system modelled "leave" and "stay" and missed the third option — NOW A ROW IN THE TABLE
 
 **Status: ✅ 2026-08-25.** *An internal move* is the **second row of the scoring table** in
