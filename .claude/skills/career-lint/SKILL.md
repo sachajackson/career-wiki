@@ -39,7 +39,7 @@ python3 tools/template_drift.py --wiki wiki
 ```
 
 🔴 **`/career-init` copies `templates/` into `wiki/` once and nothing ever revisits it**, and
-`sync-to-vault.sh` refuses to touch `wiki/` on purpose — that directory is the person, not the tool. So
+An update replaces the system and never touches `vault/` — that is the whole boundary. So
 the tool improves and the vault does not. **In one real change the framework template gained two tables,
 two seeded rows and a longer status vocabulary, and `SCHEMA.md` was updated to instruct the agent to use
 all of them** — leaving every older vault with an agent looking for tables that are not there.

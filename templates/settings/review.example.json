@@ -1,5 +1,5 @@
 {
-  "_comment": "Copy to config.json (gitignored) and set ONE provider. Prefer a different vendor to whichever model wrote the application -- correlated blind spots are the thing this layer exists to avoid.",
+  "_comment": "Copy to vault/settings/review.json (never committed) and set ONE provider. Prefer a different vendor to whichever model wrote the application -- correlated blind spots are the thing this layer exists to avoid.",
 
   "provider": "openai",
 

@@ -155,6 +155,43 @@ class NothingOfTheUsersIsTracked(unittest.TestCase):
             self.assertNotIn("vault/sources/README.md", blocked)
 
 
+class NoToolNamesAFileThatMoved(unittest.TestCase):
+    """A reconciliation found sixteen live references to `config.json`, a file
+    that became vault/settings/search.json. Docs rot silently; a user follows
+    the instruction, creates the file where it says, and the tool reports
+    nothing configured -- which reads as a broken tool, not a stale doc."""
+
+    # Bare names of files that moved. A path-qualified mention is fine --
+    # `templates/settings/employers.example.json` tells the reader where it is;
+    # a bare `employers.example.json` sends them looking in the wrong folder.
+    GONE = ("config.json", "sync-to-vault")
+    BARE = ("employers.example.json", "search.example.json", "review.example.json")
+
+    def test_no_user_facing_file_names_a_path_that_moved(self):
+        offenders = []
+        for base, dirs, files in os.walk(ROOT):
+            dirs[:] = [d for d in dirs if d not in (".git", "__pycache__", "vault", "tests")]
+            for f in files:
+                if not f.endswith((".py", ".md", ".sh", ".json")):
+                    continue
+                # BACKLOG.md is a dated record of what was done; rewriting the
+                # history to match today's paths would make it a worse record.
+                if f in ("BACKLOG.md",):
+                    continue
+                path = os.path.join(base, f)
+                with open(path, encoding="utf-8", errors="ignore") as fh:
+                    text = fh.read()
+                for token in self.GONE:
+                    if token in text and "was deleted on" not in text:
+                        offenders.append(f"{os.path.relpath(path, ROOT)}: {token}")
+                for token in self.BARE:
+                    for line in text.splitlines():
+                        if token in line and f"settings/{token}" not in line:
+                            offenders.append(f"{os.path.relpath(path, ROOT)}: bare {token}")
+                            break
+        self.assertEqual(sorted(offenders), [], f"stale paths: {offenders}")
+
+
 class TheGuardInstallsItself(unittest.TestCase):
     """`git config core.hooksPath githooks` was a line in the setup docs, which
     means it was on for whoever read them. The person who skips setup is exactly

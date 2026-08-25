@@ -1,7 +1,7 @@
 """template_drift: what the template gained that a vault never got.
 
 career-init copies templates/ into wiki/ ONCE and nothing revisits it.
-sync-to-vault.sh deliberately refuses to touch wiki/, because that directory is
+an update never touches vault/wiki/, because that directory is
 the person rather than the tool. So the tool improves and the vault does not,
 silently, for as long as somebody keeps using it.
 

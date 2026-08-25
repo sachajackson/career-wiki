@@ -4,7 +4,7 @@
     python3 tools/template_drift.py --wiki wiki
 
 WHY THIS EXISTS. `/career-init` copies `templates/` into `wiki/` ONCE, and
-nothing ever revisits it. `sync-to-vault.sh` deliberately refuses to touch
+nothing ever revisits it. an update deliberately never touches
 `wiki/`, because that directory is the person and not the tool. So the tool
 improves and the vault does not, silently, for as long as somebody keeps using
 it.

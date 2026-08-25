@@ -55,7 +55,7 @@ def load(path, what):
 
 
 def main():
-    cfg, cfg_note = load(CONFIG, "config.json")
+    cfg, cfg_note = load(CONFIG, "settings/search.json")
     emp, _ = load(EMPLOYERS, "employers.json")
     if cfg_note:
         print(f"  {cfg_note}\n")

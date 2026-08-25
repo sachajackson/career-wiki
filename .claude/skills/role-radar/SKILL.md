@@ -27,7 +27,7 @@ python3 tools/radar/radar.py --all-open
 |---|---|
 | `--days N` | Posting window. **7 is the right default for a routine run** — one day returns a handful, mostly noise. **Applies only to searched sources; watched boards ignore it** |
 | 🔴 `--all-open` | **No recency filter: everything still open.** Overrides `--days`. See below — it is not a bigger `--days` |
-| `--adapter NAME` | Restrict to one source. Default: whatever `config.json` enables |
+| `--adapter NAME` | Restrict to one source. Default: whatever `vault/settings/search.json` enables |
 | `--reset` | Forget what has been seen and rebuild |
 | `--retier` | Re-tier the cached corpus without re-fetching. **Use when tuning** (`--score-only` still works) |
 
@@ -72,7 +72,7 @@ from the rows that are actually in the file.
 
 **The run hit the source's cap rather than the end of its results, so there is more behind those queries.**
 It is not a failure and there is nothing broken. **It means you must not report the run as the complete set
-of open roles** — say the search was capped, and either raise `pages` for that adapter in `config.json` or
+of open roles** — say the search was capped, and either raise `pages` for that adapter in `vault/settings/search.json` or
 narrow the query and run it again.
 
 ### 🔴 Before trusting a quiet run, check the sources answer
@@ -123,7 +123,7 @@ would be ranked within a week.
 
 ### The watchlist — who to watch, and who to skip
 
-`vault/settings/employers.json` (copy `employers.example.json`) holds the user's standing positions. **It is
+`vault/settings/employers.json` (copy `templates/settings/employers.example.json`) holds the user's standing positions. **It is
 optional; without it nothing changes.** With it:
 
 | List | What it does |
@@ -145,7 +145,7 @@ optional; without it nothing changes.** With it:
 **never suggest the user repeats a reason to anyone.** *"It is not the right fit for me"* is the whole
 answer. See `SCHEMA.md`.
 
-Needs `vault/settings/search.json` — copy `search.example.json` and add an Adzuna key from
+Needs `vault/settings/search.json` — copy `templates/settings/search.example.json` and add an Adzuna key from
 [developer.adzuna.com](https://developer.adzuna.com/). Without it, only the employer-board adapters run.
 
 Writes `shortlist.md`, `raw.json` (cached descriptions) and `seen.json` in `tools/radar/`. All three are

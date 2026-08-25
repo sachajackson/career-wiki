@@ -8,7 +8,7 @@ setting, a CV in a folder, and up to two API keys. Nothing answered "am I ready"
 -- `sources_check.py` answers a third of it and only about job sources.
 
 THE FAILURE THIS IS REALLY FOR. A config copied from the example and never
-filled in **looks configured and returns nothing.** `search.example.json` says
+filled in **looks configured and returns nothing.** `templates/settings/search.example.json` says
 so in its own first line: leave the angle-bracket values as they are and the
 location filter matches nothing, so the radar finds no roles and reports a quiet
 week. A missing file announces itself. A file full of placeholders does not, and

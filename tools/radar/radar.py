@@ -161,7 +161,7 @@ def archive(rows, cfg, history=None):
 
 def load_config():
     if not os.path.exists(CONFIG):
-        sys.exit(f"No config.json. Copy search.example.json to {CONFIG} and fill it in.")
+        sys.exit(f"No search settings. Copy templates/settings/search.example.json to {CONFIG} and fill it in.")
     cfg = json.load(open(CONFIG))
     # `watch` names employers; ats_registry.json knows which ATS each uses. Expand
     # one into the other, and print what could not be expanded -- an employer
@@ -402,7 +402,7 @@ def main():
             f.write(f"> **NOT THE COMPLETE SET — {len(capped)} quer{'y' if one else 'ies'} hit "
                     f"the source's cap rather than running out of results, so there is more "
                     f"behind {'it' if one else 'them'}.** Raise `pages` for "
-                    "that adapter in `config.json`, or narrow the query. A run that reports a "
+                    "that adapter in `vault/settings/search.json`, or narrow the query. A run that reports a "
                     "round number is usually reporting the cap, not the match count.\n>\n"
                     f"> {', '.join(capped[:12])}"
                     f"{f' … and {len(capped) - 12} more' if len(capped) > 12 else ''}\n\n")

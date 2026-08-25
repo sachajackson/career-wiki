@@ -763,8 +763,8 @@ already had. Run `/interview` a few more times first.
 
 ## Setting up job search
 
-Search runs through adapters in `tools/radar/adapters/`. Copy `search.example.json` to `config.json` and
-fill in what you have. `config.json` is ignored by git, so your settings stay on your machine.
+Search runs through adapters in `tools/radar/adapters/`. Copy `templates/settings/search.example.json` to `vault/settings/search.json` and
+fill in what you have. Nothing under `vault/` is ever committed, so your settings stay on your machine.
 
 | Adapter | What it needs | Notes |
 |---|---|---|
@@ -850,7 +850,7 @@ source answers; it cannot tell you it has *good* coverage where you live. That p
 
 ### Employers you want watched, and employers you do not
 
-Copy `employers.example.json` to `employers.json` — it is optional, and without it nothing changes.
+Copy `templates/settings/employers.example.json` to `vault/settings/employers.json` — it is optional, and without it nothing changes.
 
 **Two lists doing different jobs.** The **watch** list gives you complete coverage of an employer rather
 than whatever they choose to syndicate to job boards; you name the employer and give it whichever route

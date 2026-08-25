@@ -1,6 +1,6 @@
 {
   "_README": [
-    "Copy this to config.json, then REPLACE EVERY PLACEHOLDER. config.json is gitignored.",
+    "Copy this to vault/settings/search.json, then REPLACE EVERY PLACEHOLDER. vault/ is never committed.",
     "The angle-bracket values below are placeholders, not defaults. Left as they are,",
     "the location filter matches nothing and the radar returns nothing.",
     "Nothing in this file should describe a real person until you fill it in yourself."

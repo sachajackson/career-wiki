@@ -36,7 +36,7 @@ git config core.hooksPath githooks      # run once, per clone
 ```
 
 `githooks/pre-commit` inspects what is actually staged, at the last moment before it becomes history, and
-refuses anything under `sources/`, `wiki/` or an application's `vault/oversight/` folder — **including a forced
+refuses anything under `vault/`, bar the five README files the system itself ships — **including a forced
 add** — plus anything that reads as a personal email address, a real LinkedIn URL, or a salary line
 wherever it sits. It is deliberately noisy: a false positive costs one `--no-verify`, a false negative is
 public forever.
@@ -46,24 +46,23 @@ protection until you point git at the tracked `githooks/` directory.
 
 ## Carrying improvements across
 
-One direction, tool only:
+**There is nothing to carry.** The vault lives inside the clone, so `git pull` updates the system and
+does not touch a single file under `vault/`. That is the entire reason the boundary exists.
 
-```bash
-tools/sync-to-vault.sh ~/Documents/my-career --dry-run   # see what would change
-tools/sync-to-vault.sh ~/Documents/my-career
-```
+> **`tools/sync-to-vault.sh` was deleted on 2026-08-25.** It copied skills, hooks, `tools/` and
+> `templates/` from the repo into a separate private vault, one direction, refusing to look at
+> `sources/` or `wiki/`. It was a careful script and it was solving a problem the layout created:
+> **the vault was somewhere else, so improvements had to be walked across by hand.** Under one root,
+> the copy is the bug — a script whose job is to put system files inside a user's folder is the exact
+> shape of the mistake `vault/` was built to make impossible.
 
-It copies skills, agents, hooks, `tools/`, `templates/` and the oversight brief. **It does not read or
-write `sources/`, `wiki/` or `oversight/<application>/`** — nothing in it looks at your content.
+🔴 **`vault/AGENTS.md` is never overwritten by anything.** Your standing instructions to the agent — what
+to call you, what not to suggest, what it keeps getting wrong — are yours, and an update that replaced
+them would discard the most expensive thing in the vault: months of corrections.
 
-**`SCHEMA.md` is never overwritten.** A working vault's schema gets customised — other life sections,
-house rules, your own writing standard — and copying over it would silently discard all of that. The
-script reports the differences and leaves the merge to you. **Your vault's version is authoritative for
-anything you have changed.**
-
-Nothing syncs the other way. When your vault teaches you something worth keeping — a rule that stopped a
-mistake, a failure mode worth naming — bring the *lesson* back here by hand, written generically. **Never
-copy a file from the vault into the repo.**
+Nothing goes the other way. When your vault teaches you something worth keeping — a rule that stopped a
+mistake, a failure mode worth naming — bring the *lesson* back here by hand, written generically.
+🔴 **Never copy a file from the vault into the repo.**
 
 ## Migrating an existing wiki
 

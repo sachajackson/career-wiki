@@ -34,7 +34,7 @@ CONFIGURE
 
   cp templates/settings/review.example.json vault/settings/review.json
 
-and set a key for one provider. config.json is gitignored. No key, no review --
+and set a key for one provider. vault/settings/review.json is never committed. No key, no review --
 the script says so and exits rather than degrading silently.
 """
 import argparse, json, os, sys
@@ -126,7 +126,7 @@ def main():
         return
 
     if not provider:
-        sys.exit("No provider configured. Copy search.example.json to config.json and set one.\n"
+        sys.exit("No provider configured. Copy templates/settings/review.example.json to vault/settings/review.json and set one.\n"
                  "Use --dry-run to see the prompt and paste it into any chat interface yourself --\n"
                  "that works just as well and costs nothing.")
 
@@ -138,7 +138,7 @@ def main():
     authored = (args.authored_by or cfg.get("authored_by") or "").strip().lower()
     if not authored:
         sys.exit("Who wrote these documents? Pass --authored-by <vendor>, or set \"authored_by\" in\n"
-                 "config.json or the application's application.json.\n\n"
+                 "vault/settings/review.json or the application's application.json.\n\n"
                  "This is not bureaucracy. The reviewer being a different model is the entire value of\n"
                  "this layer, and it cannot be checked against nothing. Refusing rather than assuming,\n"
                  "because a skipped check that prints nothing reads exactly like a passed one.")
@@ -156,7 +156,7 @@ def main():
     pcfg = cfg.get(provider, {})
     key = pcfg.get("api_key") or os.environ.get(pcfg.get("api_key_env", ""), "")
     if not key:
-        sys.exit(f"No API key for {provider}. Set it in config.json or in "
+        sys.exit(f"No API key for {provider}. Set it in vault/settings/review.json or in "
                  f"${pcfg.get('api_key_env', 'THE_ENV_VAR')}.")
 
     print(f"reviewing with {provider} / {pcfg.get('model', 'default')}...\n", file=sys.stderr)

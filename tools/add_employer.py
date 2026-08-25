@@ -300,7 +300,7 @@ def main():
 
     print(f"\nAdded to {REL}:\n")
     print("\n".join("  " + l for l in json.dumps(entry, indent=2).splitlines()))
-    print(f"\nYour radar can watch them now: add \"{args.employer}\" to `watch` in config.json.")
+    print(f"\nYour radar can watch them now: add \"{args.employer}\" to `watch` in vault/settings/search.json.")
     print(f"To offer it to everyone else:  python3 tools/add_employer.py --contribute")
     return 0
 
