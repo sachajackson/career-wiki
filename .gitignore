@@ -43,6 +43,16 @@ vault/**
 !vault/sources/
 !vault/sources/README.md
 
+# Obsidian's own folder, and it is NOT just editor preferences.
+# workspace.json records which files are open and recently opened, BY PATH --
+# so it names vault/settings/employers.json, vault/AGENTS.md and whichever role
+# pages were last read. That is user data sitting outside vault/, written by
+# Obsidian rather than by the agent, which is why test_boundary.py never saw it:
+# the test checks what this repo writes, and nothing was checking what another
+# tool writes beside it. Untracked is not the same as ignored -- one `git add -A`
+# would have published it.
+.obsidian/
+
 .DS_Store
 __pycache__/
 *.pyc
