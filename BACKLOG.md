@@ -226,6 +226,39 @@ dated records of what one piece of work shipped with, not claims about the suite
 🟢 **This is the same shape as everything else on this page.** *"Remember to update the count"* is an
 instruction. Instructions here have a perfect record of failing. **The check took four lines.**
 
+### 🔴 The backlog drifted again, inside the session that had just audited it — 2026-08-25
+
+**Asked plainly: "is everything that was to be built now done?" The honest answer needed a read, not a
+recollection — and the read found this file misreporting its own state in both directions.**
+
+| | |
+|---|---|
+| 🔴 **One item appeared twice** | *Greenhouse yield is low* — once as `PREFILTER FIXED` near the top and once untouched, **1,160 lines away.** Whichever a reader found first decided whether they thought there was work to do |
+| 🔴 **Worse: the wrong body was attached** | The fixed Greenhouse entry carried **the Remote entry's original write-up** under its *"the original write-up follows"* line. Two edits in one place, and the seam was invisible |
+| 🔴 **Five entries read as open and were shipped** | The transit-stop table, the internal-move row, the baseline row, the aggregator refetch, and `sources_check.py` — **each verified against the code before being marked**, not from memory |
+| 🔴 **Two headings disagreed with their own bodies** | Recording a fix in the text while the heading still read 🔴. **Nobody reads 1,900 lines; they skim headings, so the heading IS the entry** |
+
+🔴 **"Delete an item when it is done" is the instruction, and it is written at the top of this file.** It
+has now failed three times: twice caught by audits dated above, once by being asked a direct question.
+**An instruction that has failed three times is not going to start working.**
+
+🟢 **So the two mechanical halves are now a test** —
+[`tools/tests/test_backlog.py`](tools/tests/test_backlog.py):
+
+- **No two headings describe the same item**, by similarity, ignoring the continuation headings that
+  legitimately repeat under fixed entries
+- **A heading and its own body must agree** about whether the thing is done
+
+🟢 **It found one on its first run** — an entry whose body said *"✅ Fixed, and made mechanical"* under a
+🔴 heading. **Not by reading; by running.**
+
+🟡 **What it deliberately does not check: whether an entry is ACCURATE.** That needs judgement and a test
+claiming it would be worse than no test. **The check covers the two failures that are structural, and the
+audit discipline above still covers the rest.**
+
+🟢 **And `test_shipped.py` caught the new test file untracked, in the same run** — the second time in two
+sessions that the check about untracked files has caught the person adding a check.
+
 ### 3. Then, in this order
 
 🟢 **The first two items on this list were done on 2026-08-25** — the seven-day window is now
@@ -272,7 +305,7 @@ rather than something someone has to remember to repeat.**
 | 8 | "Remote" is country-scoped | ✅ Fixed in code 2026-08-25. It had been doing the reverse |
 | 9 | Why-X answers, values with three examples | 🟢 Present and consistent |
 
-### 🔴 And one contradiction that was not on the list at all
+### ✅ And one contradiction that was not on the list at all — FIXED
 
 **The outcome vocabulary exists twice, and the copy the user sees is the broken one.**
 
@@ -453,9 +486,24 @@ because the reporting habit is to lead with the number.
 **To do:** when re-scoring after research, **diff the components and lead with the diff**, not the total.
 If any component moved by 2 or more, say so in the first line even when the total is unchanged.
 
-### 🔴 Aggregator postings are truncated, and the system reads them as if they were the job
+### ✅ Aggregator postings are truncated, and the system read them as the job — FIXED AT THE RIGHT MOMENT
 
-**Status: found 2026-08-24. This one changed a real score and should be fixed before the next pack.**
+**Status: ✅ 2026-08-25.** 🔴 **The fix that mattered was moving it earlier.** `build-application` already
+said to fetch the employer's own posting — but by then the score has already been used to decide.
+`role-radar` now says it **before scoring**, and says why the truncation is dangerous: it strips
+qualifiers and alternatives, **the parts that make a candidate more eligible**, so a system reading
+aggregators systematically under-scores its user, invisibly. It also names the sources that need **no**
+refetch — Workday, Oracle, Greenhouse, Lever are the employer's own text — because a rule that is wrong
+half the time gets dropped entirely. A test pins both halves.
+
+🟢 **The ATS-JSON half is built too**: Workday and Oracle adapters read the employer's own API directly,
+returning the real posting date, the requisition number and hidden secondary locations.
+
+**The original write-up follows.**
+
+#### The original entry
+
+**Found 2026-08-24. This one changed a real score.**
 
 A role had been assessed from a LinkedIn posting and carried a red-flagged capability gap for three days.
 Reading **the employer's own careers page** for the same requisition dissolved it:
@@ -514,9 +562,23 @@ positions.**
 
 ---
 
-### 🔴 A nearby transit stop is not a commute
+### ✅ A nearby transit stop is not a commute — KNOWN LOCATIONS TABLE SHIPPED
 
-**Status: found 2026-08-24, after the system made this exact error and the user corrected it.**
+**Status: ✅ 2026-08-25.** `templates/Role Scoring Framework.md` now ships an empty **Known locations**
+table — place, legs from origin, door to door, whether the time is usable, employers there, verdict —
+with the rule that **no row goes in without a door-to-door time; mark it `TBC` and ask.** A test fails if
+that table leaves the page. **The origin is recorded once**, as the town they commute from rather than an
+address.
+
+🟡 **What is still not mechanical**: nothing stops a location score being raised on the existence of a
+transit stop. The rule is written; the check would need the journey data the table now has somewhere to
+live. **Revisit once a real vault has filled one in.**
+
+**The original write-up follows.**
+
+#### The original entry
+
+**Found 2026-08-24, after the system made this exact error and the user corrected it.**
 
 An employer research pass found the office was a four-minute walk from a light-rail stop, concluded that a
 previous "this is a drive" note had been wrong, and **raised the score.** The user corrected it: from where
@@ -689,7 +751,29 @@ written down, listed as *documented behaviour*, and the code underneath it was d
 time. **A documented rule with contradicting code is worse than no rule**, because the file says it is
 handled.
 
-### 🟢 Greenhouse yield is low — PREFILTER FIXED, and it was a bug not a tuning problem
+**The original write-up follows.**
+
+#### The original entry
+
+An employer advertising 354 roles listed **11 as remote — and every one was bounded to a country or a US
+state**: *Remote - UK*, *Remote - Luxembourg*, *Remote - Texas*, *Remote - Arizona*, *Remote, Australia*.
+**None was globally open, and there was no remote posting for the user's own country.**
+
+🔴 **The failure this invites is expensive rather than merely wrong.** A user asking *"does remote mean I
+can stop limiting myself to my own country?"* gets a yes, the search geography widens, and **a batch of
+roles gets assessed that were never open to them.** Right-to-work, tax residency and payroll entity all sit
+behind that word and none of them appear in the listing.
+
+**Fix:**
+
+- **Parse the location string, do not just match on "remote".** *Remote - X* means *X*, and the suffix is
+  the whole meaning.
+- **Treat an unqualified "Remote" as `TBC`, not as global.** It usually means "remote within the country
+  the requisition is raised in".
+- 🔴 **Never widen the search geography on the strength of the word alone.** Confirm against the
+  requisition's country, and flag right-to-work as an open question rather than assuming it.
+
+### ✅ Greenhouse yield is low — PREFILTER FIXED, and it was a bug not a tuning problem
 
 **Status: ✅ fixed 2026-08-25 as [`adapters/_titles.py`](tools/radar/adapters/_titles.py), shared by
 Greenhouse and Lever, with 6 tests.**
@@ -717,23 +801,13 @@ ask for and deserves to be strict.
 
 #### The original entry
 
-An employer advertising 354 roles listed **11 as remote — and every one was bounded to a country or a US
-state**: *Remote - UK*, *Remote - Luxembourg*, *Remote - Texas*, *Remote - Arizona*, *Remote, Australia*.
-**None was globally open, and there was no remote posting for the user's own country.**
+**Eleven boards produced 756 roles in one country and one role worth reading.** These employers post
+everything — sales, support, legal — and the relevance filter is tuned for the LinkedIn corpus.
 
-🔴 **The failure this invites is expensive rather than merely wrong.** A user asking *"does remote mean I
-can stop limiting myself to my own country?"* gets a yes, the search geography widens, and **a batch of
-roles gets assessed that were never open to them.** Right-to-work, tax residency and payroll entity all sit
-behind that word and none of them appear in the listing.
-
-**Fix:**
-
-- **Parse the location string, do not just match on "remote".** *Remote - X* means *X*, and the suffix is
-  the whole meaning.
-- **Treat an unqualified "Remote" as `TBC`, not as global.** It usually means "remote within the country
-  the requisition is raised in".
-- 🔴 **Never widen the search geography on the strength of the word alone.** Confirm against the
-  requisition's country, and flag right-to-work as an open question rather than assuming it.
+🟢 **This is not an argument against the source.** LinkedIn shows what an employer chose to syndicate; the
+board shows everything, immediately, so a role at a watched employer can no longer be missed.
+**Completeness is the point, not hit rate.** But the noise makes the shortlist harder to read, and a
+board-specific prefilter would help.
 
 ### 🔴 Example and template files are a leak vector, because they get made by copying a real one
 
@@ -814,9 +888,19 @@ blockquote-marker case in the wikilink repair.
 
 ## 🟡 Gaps — things the system does not do yet
 
-### 🔴 The system models "leave" and "stay" and misses the third option entirely
+### ✅ The system modelled "leave" and "stay" and missed the third option — NOW A ROW IN THE TABLE
 
-**Status: raised by the user 2026-08-24. The system had never considered it.**
+**Status: ✅ 2026-08-25.** *An internal move* is the **second row of the scoring table** in
+`templates/Role Scoring Framework.md`, carrying what it costs nothing of — forfeited equity, notice, reset
+service, probation, reference risk — and 🔴 **that it usually will not reach the pay floor.** The section
+says to ask, because a user in a stable job will not raise it unprompted, and to fetch the employer's
+**internal** job site rather than only their public careers page. A test fails if the row is removed.
+
+**The original write-up follows.**
+
+#### The original entry
+
+**Raised by the user 2026-08-24. The system had never considered it.**
 
 Every role was being scored against *staying put*, as though those were the only two outcomes. **There is a
 third: moving within the current employer** — and on the dimensions this user actually cares about it is
@@ -849,9 +933,18 @@ the table rather than in the user's head.
 
 ---
 
-### 🔴 Scores have no personal baseline, so "good" gets confused with "better than what I have"
+### ✅ Scores had no personal baseline — THE CURRENT JOB IS NOW ROW ONE
 
-**Status: found 2026-08-24 after a top-ranked role was scored wrongly for three days.**
+**Status: ✅ 2026-08-25.** *Staying put — the current job* is the **first row of the scoring table**, and
+the section states that top of each scale means *no worse than this* rather than *best of what we found*.
+A test fails if the row is removed. The record-what table beside it already distinguished **contractual
+from custom**, which is the part that decides what an alternative is worth.
+
+**The original write-up follows.**
+
+#### The original entry
+
+**Found 2026-08-24 after a top-ranked role was scored wrongly for three days.**
 
 A role offering **two office days a week at a rail-accessible office** was scored **5/5 on lifestyle** and
 described as *"the best lifestyle position available anywhere."*
@@ -1710,7 +1803,7 @@ employer have a site nearer than the one advertised, and can the role be worked 
 answer as a question to ask, not an assumption** — but the upside is the difference between a two-hour
 round trip and none.
 
-### Source coverage is geography-dependent and nothing says so up front
+### ✅ Source coverage is geography-dependent — `sources_check.py` BUILT
 
 **Found the hard way 2026-08-23.** A user obtained an Adzuna key, and it turned out **Adzuna does not
 cover Ireland** — `404` on the `ie` endpoint while `gb`, `us`, `nl` and `de` all returned results. The
@@ -1853,16 +1946,6 @@ fifty-one.**
 
 **When coverage feels thin, check the filters before adding queries.** Breadth is the intuitive lever and
 it was the wrong one twice.
-
-### Greenhouse yield is low, and the filter is the wrong shape
-
-**Eleven boards produced 756 roles in one country and one role worth reading.** These employers post
-everything — sales, support, legal — and the relevance filter is tuned for the LinkedIn corpus.
-
-🟢 **This is not an argument against the source.** LinkedIn shows what an employer chose to syndicate; the
-board shows everything, immediately, so a role at a watched employer can no longer be missed.
-**Completeness is the point, not hit rate.** But the noise makes the shortlist harder to read, and a
-board-specific prefilter would help.
 
 ### 🟢 Email alerts as a universal source — designed, not built
 
