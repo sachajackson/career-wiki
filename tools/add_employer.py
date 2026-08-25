@@ -113,6 +113,38 @@ def sniff(careers_url):
                   "by hand with \"ats\": \"custom\"")
 
 
+def guess_slugs(employer):
+    """Candidate board tokens from the name. Greenhouse and Lever slugs are
+    usually the company name, lowercased and squashed."""
+    base = re.sub(r"[^a-z0-9]+", "", employer.lower())
+    words = re.sub(r"[^a-z0-9 ]+", " ", employer.lower()).split()
+    out = [base] + (["".join(words), "-".join(words), words[0]] if words else [])
+    seen, uniq = set(), []
+    for s in out:
+        if s and s not in seen:
+            seen.add(s); uniq.append(s)
+    return uniq
+
+
+def guess_ats(employer):
+    """Last resort when a careers page is JavaScript-rendered.
+
+    Guessing a token is only safe because it is verified immediately: a wrong
+    guess returns nothing and is never written. What it cannot rule out is a
+    slug collision with a different company of a similar name, so a guessed
+    entry is confirmed by a human and a sniffed one is not.
+    """
+    for slug in guess_slugs(employer):
+        for ats, params in (("greenhouse", {"token": slug}), ("lever", {"handle": slug})):
+            try:
+                n, _ = verify(ats, params)
+            except Exception:
+                continue
+            if n:
+                return ats, params, n
+    return None, None, 0
+
+
 def verify(ats, params, canary=None):
     """(count, raw) or raises. The point of the whole script."""
     if ats == "workday":
@@ -207,8 +239,21 @@ def main():
 
     print(f"reading {args.careers_url} ...")
     ats, params = sniff(args.careers_url)
+    guessed = False
     if not ats:
-        sys.exit(f"\n{params}")
+        print(f"  no ATS marker in the page (it is probably JavaScript-rendered)")
+        print(f"  trying the name as a board token ...")
+        ats, params, n_guess = guess_ats(args.employer)
+        if not ats:
+            sys.exit(f"\n{params if isinstance(params, str) else ''}\n"
+                     f"Nothing found. Open the careers page in a browser, watch the network tab for a\n"
+                     f"request returning JSON, and add the entry by hand with \"ats\": \"custom\".")
+        guessed = True
+        print(f"  {ats}/{list(params.values())[0]!r} answers with {n_guess} roles")
+        print(f"  !! that token was GUESSED from the name, not read off their page. A different\n"
+              f"     company with a similar name would look identical from here.")
+        if input(f"     Is this {args.employer}? [y/N] ").strip().lower() != "y":
+            sys.exit("  Not added. Add it by hand if you can find the right identifier.")
     unfiltered = params.pop("_unfiltered", False)
     print(f"  looks like {ats}: {params}")
     if unfiltered:

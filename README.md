@@ -756,6 +756,47 @@ fill in what you have. `config.json` is ignored by git, so your settings stay on
 You also set your location rules in the same file: which places are acceptable, which are not, and which
 are borderline.
 
+### 🟢 Name employers, not endpoints
+
+**You should not have to know that watching Stripe means writing a Greenhouse board token and watching
+State Street means writing a host, a tenant and a site.** So you do not:
+
+```json
+"watch": ["Stripe", "State Street", "Deel"]
+```
+
+**A shipped registry — [`tools/radar/employers.json`](tools/radar/employers.json) — knows which ATS each
+employer uses**, and the endpoint is looked up at run time. **Fifteen employers, around 13,000 live roles,
+every entry verified by calling it.**
+
+🔴 **Anything it cannot resolve is reported at the start of the run, by name.** An employer you thought you
+were watching, quietly not searched, looks exactly like a quiet week — which is the worst thing a job
+search tool can do to you.
+
+**Adding one is a line:**
+
+```bash
+python3 tools/add_employer.py "Monzo" https://monzo.com/careers
+```
+
+It reads their careers page, works out which ATS is behind it, **calls the endpoint to prove it works**,
+and writes the entry. If the page is JavaScript-rendered it tries the company name as a board token and
+**asks you to confirm before trusting it** — a guess that verifies is still a guess.
+
+🟢 **Then `--contribute` offers it upstream**, staging that one file and refusing if anything else in your
+working copy has changed. **Everyone who adds an employer saves everyone else finding it.** It is the only
+file here that is the same for everybody.
+
+**And because endpoints die quietly:**
+
+```bash
+python3 tools/registry_check.py
+```
+
+**Every entry, called.** It fails on an endpoint that has gone empty, and **asks you to look** when a known
+requisition has vanished — because it cannot tell a moved endpoint from a filled vacancy and does not
+pretend to.
+
 ### Check the sources actually work — before you invest in any of them
 
 ```bash

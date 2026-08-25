@@ -91,6 +91,40 @@ the rest are still instructions; but the SIGNAL vocabulary and the search window
 behind them. **The distinction this table exists to police is the one to keep applying: a rule is not a
 control.**
 
+### 🟢 What changed on 2026-08-25 while the dev session was working — read before picking anything up
+
+**A registry and its tooling were built alongside your radar work. Five new files, and two of them change
+how `config.json` behaves:**
+
+| File | What it does to you |
+|---|---|
+| **`tools/radar/employers.json`** | **15 employers, ~13,000 roles**, every entry verified by calling it. Not code — a contributor adds an object |
+| **`tools/radar/registry.py`** | 🔴 **`config.json` now supports `"watch": ["Stripe"]`**, expanded into the shapes your adapters already expect. **`load_config()` calls it.** No adapter was changed |
+| **`tools/radar/adapters/custom.py`** | A sixth adapter, for employers running their own API. **Registered in `ADAPTERS`.** Driven by a field map in the registry, not by code per employer |
+| **`tools/registry_check.py`** | Calls every entry. Wired into `/career-lint` |
+| **`tools/add_employer.py`** | Verifies an employer, writes the entry, offers it upstream one file at a time |
+
+🔴 **Three things that will bite if you do not know them:**
+
+1. **`radar.py`'s `load_config()` gained six lines** — it resolves `watch` and prints a report to stderr
+   before the run. **If you are mid-edit in that function, that is the collision.**
+2. **`adapters/__init__.py` gained `custom`** in the import line and in `ADAPTERS`.
+3. 🔴 **Two of your resolver tests were repointed, not deleted.** They encoded Deel as *"the ATS nothing
+   speaks"*, which stopped being true when `custom.py` shipped. **The `NO ADAPTER` branch keeps its
+   coverage via a fictional employer** — do not remove the stand-in thinking it is dead weight.
+
+🟢 **Three findings from building it that generalise to the adapters you own:**
+
+- 🔴 **Oracle fails open, Workday fails closed.** A wrong Oracle `siteNumber` returns **200 and the
+  tenant's whole unfiltered list**; a wrong Workday site 404s with a named error. **That asymmetry decides
+  where probing is honest** — `add_employer.py` probes Workday site names and refuses to probe Oracle.
+- 🔴 **A first-of-many field is not the field.** Deel carries `location_name` (*"Israel"*, the first of
+  thirty) beside `all_locations`. **Mapping the obvious one would have dropped all 66 roles open to
+  Ireland and said nothing.**
+- 🔴 **`registry_check.py` shipped without retries and cried wolf within the hour** — one employer
+  reported `UNREACHABLE!` on a connection reset and answered fine a second later. **Anything that calls a
+  live endpoint needs retries before it is allowed to call something dead.**
+
 ### 3. Then, in this order
 
 🟢 **The first two items on this list were done on 2026-08-25** — the seven-day window is now
@@ -1102,6 +1136,30 @@ and never recorded at all.**
 
 **That is the registry, already built, in the wrong shape.** It is the strongest argument that it should be
 one file.
+
+---
+
+### 🟡 A user guide — not yet, and the trigger is specific
+
+**Status: raised 2026-08-25. Deliberately deferred.**
+
+**The README is over 700 lines and already doing four jobs**: the disclaimer, a page for employers arriving
+from an application, a pitch, and a reference. **A guide is a real need.**
+
+🔴 **But writing one now would be guessing.** Nobody has run this system from a clean clone as a
+first-time user. **Every sentence of a guide written today would be an assumption about where a beginner
+gets stuck**, written by people who cannot get stuck because they built it.
+
+🟢 **The trigger is the cold-start run**, which is the last item in this file. **That run is the guide's
+source material** — the note of *"where I had to help it"* is the table of contents, and the questions the
+agent failed to ask are the sections.
+
+**What a guide should be, when it exists:** the first hour, in order, with the decisions called out —
+**not** a second copy of the reference. If it repeats the README, one of them will drift and a reader will
+believe the wrong one.
+
+**Until then**, keep the README's *Your first hour* section honest, and fix it the moment the cold run
+proves it wrong.
 
 ---
 

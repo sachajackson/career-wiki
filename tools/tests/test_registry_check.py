@@ -86,6 +86,33 @@ class Verdicts(unittest.TestCase):
         self.assertEqual(v, "OK")
 
 
+class TransientFailures(unittest.TestCase):
+    """A connection reset is not a dead endpoint. One real employer reported
+    UNREACHABLE! on a reset and answered fine a second later."""
+
+    def test_it_retries_before_calling_an_endpoint_dead(self):
+        calls = []
+        real = rc.urllib.request.urlopen
+
+        class Fake:
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+            def read(self): return b"[]"
+
+        def flaky(req, timeout=None):
+            calls.append(1)
+            if len(calls) < 3:
+                raise ConnectionResetError(54, "Connection reset by peer")
+            return Fake()
+
+        rc.urllib.request.urlopen = flaky
+        self.addCleanup(lambda: setattr(rc.urllib.request, "urlopen", real))
+        real_sleep, rc.time.sleep = rc.time.sleep, lambda *_: None
+        self.addCleanup(lambda: setattr(rc.time, "sleep", real_sleep))
+        self.assertEqual(rc.call("https://x/"), "[]")
+        self.assertEqual(len(calls), 3)
+
+
 class TheRealRegistry(unittest.TestCase):
     def test_it_parses_and_every_entry_has_what_the_checker_needs(self):
         reg = json.load(open(os.path.join(ROOT, "tools", "radar", "employers.json"), encoding="utf-8"))

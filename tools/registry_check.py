@@ -31,21 +31,36 @@ Decide whether a missing canary means a broken endpoint or a filled vacancy. It
 cannot know, so it reports and leaves the judgement. Guessing would make the
 output confident and sometimes wrong, which is worse than making someone look.
 """
-import argparse, json, os, sys, urllib.request, datetime
+import argparse, json, os, sys, time, urllib.request, datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REGISTRY = os.path.join(HERE, "radar", "employers.json")
 COLLAPSE = 4          # "now < previous/4" is a collapse; anything less is churn
 
 
-def call(url, method="GET", body=None, timeout=30):
-    req = urllib.request.Request(
-        url, method=method,
-        data=json.dumps(body).encode() if body is not None else None,
-        headers={"User-Agent": "Mozilla/5.0", "Content-Type": "application/json",
-                 "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read().decode("utf-8", "replace")
+def call(url, method="GET", body=None, timeout=30, tries=3):
+    """Retries, because a transient reset is not a dead endpoint.
+
+    Found the hard way: seeding fifteen employers, one reported UNREACHABLE! on a
+    connection reset and answered fine three times in a row a second later. A
+    checker that calls a working endpoint dead is the cry-wolf failure this whole
+    file exists to avoid.
+    """
+    last = None
+    for attempt in range(tries):
+        try:
+            req = urllib.request.Request(
+                url, method=method,
+                data=json.dumps(body).encode() if body is not None else None,
+                headers={"User-Agent": "Mozilla/5.0", "Content-Type": "application/json",
+                         "Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.read().decode("utf-8", "replace")
+        except Exception as e:
+            last = e
+            if attempt + 1 < tries:
+                time.sleep(1.5 * (attempt + 1))
+    raise last
 
 
 def fetch(entry, endpoints):
