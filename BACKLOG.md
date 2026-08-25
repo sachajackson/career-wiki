@@ -1459,9 +1459,10 @@ that starts archiving postings should say so out loud rather than leave it impli
 
 ---
 
-### 🟡 The personal-data heuristic fires on this repo's own subject matter
+### ✅ The personal-data heuristic fired on this repo's own subject matter — SCOPED
 
-**Status: hit twice on 2026-08-25. A false positive, correctly investigated, and it will recur.**
+**Status: ✅ fixed 2026-08-25 by scoping the content scan out of the three system directories, with a test
+that fails if that exemption grows. The record of why follows.**
 
 **The pre-commit hook blocked a skill file** on a line of generic advice telling a user **not** to disclose
 what they are currently paid. **No number, no person, no employer** — guidance in a system file.
@@ -1489,10 +1490,18 @@ good check stops being one.**
 |---|---|
 | **Leave it** | One reword every few months. **Cheapest, and it depends on whoever hits it reading the flagged line rather than overriding** |
 | **Require a figure nearby** | Would miss *"mine is well above market"*, which is genuinely personal and carries no number |
-| 🟢 **Skip the content heuristic in the system directories** | `.claude/skills/`, `templates/` and `tools/` are written *about* users, never *by* them. **A user's own material never lands there** — the risk this rule guards is `wiki/` and `sources/`, which are ignored anyway. **This is the same reasoning the hook already applies to itself** |
+| ✅ **Skip the content heuristic in the system directories** | **Chosen.** `.claude/skills/`, `templates/` and `tools/` are written *about* users, never *by* them. **A user's own material never lands there** — the risk this rule guards is `wiki/` and `sources/`, which are still scanned. **The same reasoning the hook already applies to itself, one step wider** |
 
-🔴 **Whatever is chosen, do not widen the exemption by filename.** That was tried once, on
-`config.example.json`, and the file it waved through turned out to contain a real person's home county.
+🔴 **The exemption is now under test.** `test_shipped.py` asserts the skip list is exactly what it should
+be and **fails on any addition**, with the message *"every addition needs a reason written beside it, and a
+filename is not one"*. **It caught one on its first run** — the binary-file skip, which is there because
+grep cannot read a PDF rather than because PDFs are trusted, and now says so.
+
+🟢 **Verified both directions:** the reworded skill line is accepted, and a deliberately personal line
+added to `README.md` is still blocked. **The guard holds everywhere a user actually writes.**
+
+🔴 **Do not widen this by filename.** That was tried once, on `config.example.json`, and the file it waved
+through turned out to contain a real person's home county.
 
 ---
 

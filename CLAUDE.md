@@ -525,6 +525,31 @@ are always fine.
 **Whether it comes from the radar, a link the user sends, or anywhere else: score it and add it to the
 table in the same turn.** Do not describe a role and wait to be asked to assess it.
 
+🔴 **And archive the posting text in the same turn, to `wiki/postings/<Employer>.txt`, with the URL and
+the date at the top.**
+
+**The posting is the source document behind the score, the requirement tally, the angle a CV takes and the
+stories chosen for an interview — and it is the only input in this system guaranteed to be deleted.**
+Usually at the point it becomes most useful: after the employer has finished hiring and is about to
+interview.
+
+🔴 **Measured, not assumed. In one real vault, five of forty-one assessed roles already had unreachable
+postings — including the one a full application pack had been built for (410 Gone) and the one the user had
+been rejected from.** Nothing was left to read for the post-mortem.
+
+🔴 **Archive at assessment, never at pack time.** An application folder only exists for roles that reach a
+pack, and **most assessed roles never do. Those are precisely the ones that disappear without anyone
+noticing.** In that vault, before this rule, **one posting had been saved out of fifteen assessed roles.**
+
+**What losing it costs, in order:** interview preparation, because the stories were chosen against
+requirements nobody can now read; the rejection post-mortem; **re-scoring when the framework changes, since
+a row whose posting has gone quietly becomes unreviewable**; and the requirement tally, which is
+uncheckable once the requirements are unreadable.
+
+🟡 **It is the employer's text.** A private copy kept as the evidence behind a decision is ordinary
+practice. **It stays in `wiki/`, which is gitignored, and `export_review.py` will not carry it** — it is
+not one of the four reviewable kinds.
+
 **An unassessed role is worse than one never found** — it occupies attention, it looks like an option, and
 it decays. Even an obvious rejection gets the four dimensions, the salary if published, and one sentence on
 what decides it, because **the record of what was rejected and why is what stops it being re-surfaced next

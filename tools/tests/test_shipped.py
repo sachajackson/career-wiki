@@ -143,6 +143,46 @@ class DocumentationPointsAtThingsThatExist(unittest.TestCase):
         self.assertEqual(broken, [], f"dead links in shipped documentation: {broken}")
 
 
+class ThePersonalDataHeuristicScopesCorrectly(unittest.TestCase):
+    """The content scan skips the directories written about users rather than by
+    them. That exemption is the kind that quietly grows, and the last time one
+    grew it waved through a file containing a real person's home county."""
+
+    def hook(self):
+        with open(os.path.join(ROOT, "githooks", "pre-commit"), encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_it_still_scans_where_a_user_actually_writes(self):
+        """wiki/ and sources/ are the user's own words. They must never be skipped."""
+        for d in ("wiki/", "sources/", "oversight/"):
+            self.assertNotIn(f"{d}*|", self.hook(), f"{d} must not be exempt from the content scan")
+            self.assertNotIn(f"|{d}*", self.hook(), f"{d} must not be exempt from the content scan")
+
+    def test_the_exemption_is_the_three_system_directories_and_no_more(self):
+        import re
+        m = re.search(r"^\s*([^\n]*?)\)\s*continue ;;\s*$", self.hook(), re.M)
+        exempt = set()
+        for line in self.hook().splitlines():
+            line = line.strip()
+            if line.endswith(") continue ;;") and "*" in line:
+                exempt.update(p.strip() for p in line[:line.index(")")].split("|"))
+        expected = {
+            # Skipped because grep cannot read them, not because they are trusted.
+            # A binary in a user directory is still blocked by the path rules above.
+            "*.png", "*.jpg", "*.pdf", "*.docx", "*.zip",
+            # Skipped because they necessarily contain the patterns they describe.
+            "githooks/*", "CONTRIBUTING.md", "PRIVACY.md",
+            # Skipped because they are written about users, never by them.
+            ".claude/skills/*", "templates/*", "tools/*",
+            # Files that must ship despite matching an ignore rule, named one at a time.
+            "*/config.example.json", "*/employers.example.json", "*/ats_registry.json",
+        }
+        unexpected = exempt - expected
+        self.assertEqual(unexpected, set(),
+                         f"the exemption list has grown: {unexpected}. Every addition needs a reason "
+                         f"written beside it, and a filename is not one")
+
+
 class TheRegistryIsUsable(unittest.TestCase):
     def test_it_parses_and_is_not_empty(self):
         p = os.path.join(ROOT, "tools", "radar", "ats_registry.json")

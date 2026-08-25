@@ -203,6 +203,8 @@ Real defects, found by running it. Two of them silently discarded good roles.
   posting is **at least** that old and may be far older. **A six-week-old senior requisition may already be
   at offer stage** — that is a reason to deprioritise it, and the `+` is the only thing telling you.
 - 🔴 **A shortlist is not an assessment.** Whatever the radar surfaces, **score it in the same turn it is
+
+🔴 **And archive the posting text when you score it**, to `wiki/postings/<Employer>.txt`. **The cached description is already in `raw.json` and that file is regenerated every run** — so a role assessed today and looked at again in six weeks has nothing behind it unless the text was saved at the time.
   found.** An unassessed role occupies attention, looks like an option, and decays. **Even an obvious no
   gets the dimensions and one sentence on what decided it** — the record of what was rejected and why is
   what stops it being re-surfaced next week.

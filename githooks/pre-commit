@@ -68,6 +68,26 @@ for f in $staged; do
     # This file, and the docs describing it, necessarily contain the patterns
     # they look for. Scanning them flags the guard as its own violation.
     githooks/*|CONTRIBUTING.md|PRIVACY.md) continue ;;
+
+    # System directories: written ABOUT users, never BY them.
+    #
+    # This is the same reasoning as the line above, applied one step wider. The
+    # heuristic below matches phrases like "current salary" -- which is exactly
+    # the phrasing guidance about pay disclosure needs, and to a regex, advice
+    # telling somebody NOT to state a figure is indistinguishable from somebody
+    # stating one. It fired twice on 2026-08-25: once on a skill file, then again
+    # on the backlog entry written to describe the first.
+    #
+    # Both were fixed by rewording rather than overriding, which is the right
+    # first response and does not scale: the next person reaches for
+    # --no-verify, and routine overriding is how a good check stops being one.
+    #
+    # THE SCOPE IS DELIBERATE AND NARROW. A user's own material never lands in
+    # these three directories -- it lives in wiki/ and sources/, which this rule
+    # still scans and which .gitignore already blocks. Widening it further, or
+    # to a filename, is what let config.example.json through with a real
+    # person's home county in it. Do not.
+    .claude/skills/*|templates/*|tools/*) continue ;;
   esac
   hits=$(grep -nEi \
     -e '[A-Za-z0-9._%+-]+@(gmail|outlook|hotmail|yahoo|icloud|proton)\.[a-z]+' \

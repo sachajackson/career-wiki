@@ -154,7 +154,11 @@ requisition looks fresh — **and a six-week-old senior role may already be at o
 prioritisation input.
 
 Create a role page in `wiki/roles/`. Capture the **requisition number and posting URL** — both are often
-only on the employer's own site, and the aggregator listing will vanish. **The requisition number is also
+only on the employer's own site, and the aggregator listing will vanish.
+
+🔴 **And save the posting text itself to `wiki/postings/<Employer>.txt`.** The URL is not enough: postings
+are deleted, and **in one real vault five of forty-one had already gone, including the role a pack had been
+built for and the role the user was rejected from.** See [[CLAUDE.md]]. **The requisition number is also
 what makes an output filename unique.**
 
 Then work out what they are actually anxious about. A job description is a wish list; the role exists
