@@ -33,7 +33,7 @@ says it is hiding locations, this fetches the detail and expands them.
 """
 import datetime, html, re, time
 from ._http import get_json, post_json
-from . import _verdicts as V
+from . import _titles, _verdicts as V
 
 NAME = "workday"
 TRUNCATED = False
@@ -50,7 +50,12 @@ DETAIL = "https://{host}/wday/cxs/{tenant}/{site}{path}"
 PUBLIC_TENANT = "https://{host}/{site}{path}"
 PUBLIC_SHARED = "https://{host}/recruiting/{tenant}/{site}{path}"
 
-PAGE = 20              # the API's own per-request ceiling
+PAGE = 20              # the API's own per-request ceiling: 50 and 100 both 400
+# Safety ceiling on the whole-board read, in pages. 300 is 6,000 roles, which is
+# far above any board seen so far -- State Street, the largest, is 1,377. It
+# exists so a pathological board cannot run forever, not as a filter, and
+# TRUNCATED says so when it bites.
+BOARD_PAGES = 300
 HIDDEN = re.compile(r"^\s*(\d+)\s+locations?\b|\band\s+(\d+)\s+more\b", re.I)
 AGO = re.compile(r"posted\s+(\d+)\+?\s+days?\s+ago", re.I)
 # Workday stops counting here. An age of exactly this is a floor whether or not
@@ -98,16 +103,69 @@ def _public(host, tenant, site, path):
     return tmpl.format(host=host, tenant=tenant, site=site, path=path)
 
 
-def _detail(host, tenant, site, path):
-    d = get_json(DETAIL.format(host=host, tenant=tenant, site=site, path=path))
+def _detail(host, tenant, site, path, delay=0.0):
+    d = get_json(DETAIL.format(host=host, tenant=tenant, site=site, path=path), delay=delay)
     return (d or {}).get("jobPostingInfo") or {}
+
+
+def _board(url, pages, delay):
+    """Every posting on one board, once. Returns (rows, truncated).
+
+    🔴 WHY THE WHOLE BOARD, RATHER THAN THE SERVER'S OWN SEARCH
+
+    Workday HAS a real server-side search and this adapter used it for a year.
+    Measured on State Street, 2026-08-25: the board holds **1,377 roles, and
+    `searchText: "Engineering Manager"` returns 611 of them.** 44% of the board
+    for one query, 682 for "Delivery". It is a loose match across several
+    fields, ranked -- not a filter.
+
+    So the old shape asked for 41 queries x 5 pages = 205 requests and saw the
+    first 100 rows of each 611-row ranked set: **about 7% of the board per
+    query, and largely the same highly-ranked rows every time.** That is why a
+    run fetched 781 Workday rows and found 27 new ones.
+
+    The whole board is 69 pages. **Fewer requests than the old shape, and it is
+    complete rather than a ranked slice** -- and because the request body no
+    longer varies by query, the cache in _http serves every query after the
+    first without touching the network.
+
+    🟡 WHAT IS GIVEN UP, STATED PLAINLY. The server matched description text;
+    `_titles.matches` reads titles only, as it does for every other board
+    adapter. A role whose title does not carry the domain word is now dropped
+    where Workday might have surfaced it. **Against that, 93% of the board was
+    previously never fetched at all**, so this is more coverage and a stricter
+    filter, not a trade of like for like.
+    """
+    rows, truncated, total = [], False, None
+    for page in range(pages):
+        # The delay is passed to the transport rather than taken here, so a
+        # page served from the cache costs nothing. Sleeping after a cache hit
+        # is being polite to a server nobody contacted.
+        data, status = post_json(url, {"appliedFacets": {}, "limit": PAGE,
+                                       "offset": page * PAGE, "searchText": ""},
+                                 delay=delay)
+        if data is None:
+            return rows, True, status
+        if total is None:
+            total = data.get("total")
+        got = data.get("jobPostings") or []
+        if not got:
+            break
+        rows.extend(got)
+        if total is not None and len(rows) >= total:
+            break
+    else:
+        truncated = total is None or len(rows) < total
+    if total is not None and len(rows) < total:
+        truncated = True
+    return rows, truncated, None
 
 
 def fetch(cfg, query, days):
     """`days` is ignored -- see HONOURS_DAYS. Workday has no recency filter.
 
-    It does have a real server-side search, so unlike a plain board adapter the
-    query is used rather than thrown away.
+    The board is read once per run and filtered here. See `_board` for why, and
+    for what that costs.
     """
     global TRUNCATED
     TRUNCATED = False
@@ -115,7 +173,11 @@ def fetch(cfg, query, days):
     employers = w.get("employers", [])
     if not employers:
         return []
-    pages = int(w.get("pages", 5))
+    # `pages` used to mean pages PER QUERY. Reusing it for the board read would
+    # turn the common `pages: 5` into "the first 100 roles of the board" -- a
+    # silent 93% loss on State Street, and exactly the kind of quiet regression
+    # a renamed meaning causes. So it is ignored here, and said out loud.
+    pages = int(w.get("board_pages", BOARD_PAGES))
     delay = float(w.get("delay", 0.3))
     out = []
 
@@ -126,85 +188,62 @@ def fetch(cfg, query, days):
                   f"(got {e!r}) -- skipped", flush=True)
             continue
         url = LIST.format(host=host, tenant=tenant, site=site)
-        got, total = 0, None
-
-        for page in range(pages):
-            data, status = post_json(url, {"appliedFacets": {}, "limit": PAGE,
-                                           "offset": page * PAGE, "searchText": query})
-            if data is None:
-                TRUNCATED = True
-                if status == 422:
-                    print(f"  !! workday {tenant}: 422 -- the tenant is probably on a "
-                          f"different wd shard. Try wd3/wd5 in host, not a new request.",
-                          flush=True)
-                elif status:
-                    print(f"  !! workday {tenant}: HTTP {status}", flush=True)
-                break
-
-            if total is None:
-                total = data.get("total")
-            rows = data.get("jobPostings") or []
-            if not rows:
-                break
-
-            for j in rows:
-                path = j.get("externalPath") or ""
-                loc = (j.get("locationsText") or "").strip()
-                posted = j.get("postedOn") or ""
-                date, floor = _date(posted)
-                # bulletFields is where Workday puts the requisition number --
-                # the thing an application folder has to be named for and that
-                # no aggregator carries.
-                req = next((b for b in (j.get("bulletFields") or []) if b), "")
-                body, url = "", _public(host, tenant, site, path)
-
-                # Only pay for the detail call when the listing admits it is
-                # hiding something. Expanding every posting would triple the
-                # request count for a field most of them do not have.
-                if path and HIDDEN.search(loc):
-                    info = _detail(host, tenant, site, path)
-                    extra = [x for x in (info.get("additionalLocations") or []) if x]
-                    primary = info.get("location") or ""
-                    if primary or extra:
-                        loc = "; ".join([p for p in [primary] + extra if p])
-                    body = _strip(info.get("jobDescription"))
-                    req = info.get("jobReqId") or info.get("id") or req
-                    if info.get("startDate"):
-                        date, floor = str(info["startDate"])[:10], False
-                    # The employer's own link, rather than one this reconstructed.
-                    url = info.get("externalUrl") or url
-                    time.sleep(delay)
-
-                out.append({
-                    "id": f"wd-{tenant}-{req or path.rsplit('_', 1)[-1] or len(out)}",
-                    "title": (j.get("title") or "").strip(),
-                    "company": w.get("names", {}).get(tenant, tenant),
-                    "loc": loc or "?",
-                    "date": date,
-                    "url": url,
-                    "body": body,
-                    "pay": "",
-                    "source": NAME,
-                    # Kept so nothing downstream has to trust a derived date, and
-                    # so the requisition survives into the role page.
-                    "requisition": req,
-                    "posted_text": posted,
-                    "date_is_floor": floor,
-                    "_wd": [host, tenant, site, path],
-                })
-                got += 1
-
-            time.sleep(delay)
-            if total is not None and (page + 1) * PAGE >= total:
-                break
-
-        # One place, and not a guess: Workday returns the true total, so a gap
-        # between what was asked for and what exists IS the cap being the
-        # constraint. Whether the loop ended on budget or on an empty page is
-        # not a distinction worth two branches -- it was tried, and the second
-        # branch made a test pass while testing nothing.
-        if total is not None and got < total:
+        board, truncated, status = _board(url, pages, delay)
+        if truncated:
             TRUNCATED = True
+        if status is not None:
+            if status == 422:
+                print(f"  !! workday {tenant}: 422 -- the tenant is probably on a "
+                      f"different wd shard. Try wd3/wd5 in host, not a new request.",
+                      flush=True)
+            else:
+                print(f"  !! workday {tenant}: HTTP {status}", flush=True)
+
+        for j in board:
+            if not _titles.matches(query, j.get("title") or ""):
+                continue
+            path = j.get("externalPath") or ""
+            loc = (j.get("locationsText") or "").strip()
+            posted = j.get("postedOn") or ""
+            date, floor = _date(posted)
+            # bulletFields is where Workday puts the requisition number --
+            # the thing an application folder has to be named for and that
+            # no aggregator carries.
+            req = next((b for b in (j.get("bulletFields") or []) if b), "")
+            body, url_row = "", _public(host, tenant, site, path)
+
+            # Only pay for the detail call when the listing admits it is
+            # hiding something, and only for rows this query actually kept.
+            if path and HIDDEN.search(loc):
+                info = _detail(host, tenant, site, path, delay)
+                extra = [x for x in (info.get("additionalLocations") or []) if x]
+                primary = info.get("location") or ""
+                if primary or extra:
+                    loc = "; ".join([p for p in [primary] + extra if p])
+                body = _strip(info.get("jobDescription"))
+                req = info.get("jobReqId") or info.get("id") or req
+                if info.get("startDate"):
+                    date, floor = str(info["startDate"])[:10], False
+                # The employer's own link, rather than one this reconstructed.
+                url_row = info.get("externalUrl") or url_row
+
+            out.append({
+                "id": f"wd-{tenant}-{req or path.rsplit('_', 1)[-1] or len(out)}",
+                "title": (j.get("title") or "").strip(),
+                "company": w.get("names", {}).get(tenant, tenant),
+                "loc": loc or "?",
+                "date": date,
+                "url": url_row,
+                "body": body,
+                "pay": "",
+                "source": NAME,
+                # Kept so nothing downstream has to trust a derived date, and
+                # so the requisition survives into the role page.
+                "requisition": req,
+                "posted_text": posted,
+                "date_is_floor": floor,
+                "_wd": [host, tenant, site, path],
+            })
 
     return out
 

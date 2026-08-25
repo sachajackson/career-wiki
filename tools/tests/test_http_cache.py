@@ -90,6 +90,27 @@ class TheCache(unittest.TestCase):
         self.assertEqual(a, c)
         self.assertEqual(len(bodies), 2)
 
+    def test_a_cache_hit_costs_no_politeness_delay(self):
+        """🔴 The bug this exists for. The adapter slept after every page,
+        including the pages the cache served -- 69 cached pages at 0.3s is
+        twenty seconds of waiting for a server nobody contacted, once per query,
+        and on a 41-query config that is thirteen minutes of pure sleep."""
+        import time as _t
+        self.http.enable_cache()
+
+        class Resp:
+            @staticmethod
+            def read(): return b'{"ok": 1}'
+
+        self.http.urllib.request.urlopen = lambda req, timeout=None: Resp()
+        first = _t.time()
+        self.http.get_json("http://x/board", delay=0.2)
+        self.assertGreaterEqual(_t.time() - first, 0.2, "a real request skipped its delay")
+        second = _t.time()
+        for _ in range(20):
+            self.http.get_json("http://x/board", delay=0.2)
+        self.assertLess(_t.time() - second, 0.2, "cached responses slept anyway")
+
     def test_enabling_it_clears_what_a_previous_run_held(self):
         """There is deliberately no on-disk cache. A board read yesterday would
         report a filled role as open, which is the failure the tool exists to

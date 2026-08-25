@@ -147,8 +147,16 @@ class TheDocsAreAMapNotAPile(unittest.TestCase):
     described a model that had been replaced. Length is how a document rots:
     nobody re-reads the middle of it."""
 
-    PAGES = ("FOR-RECRUITERS", "CHECKING", "INSTALL", "JOB-SEARCH", "SCORING",
-             "DISCLAIMER", "PRIVACY", "CONTRIBUTING", "BACKLOG", "SCHEMA", "AGENTS")
+    # docs/ holds the guides a person reads. The root keeps only what a
+    # convention or a tool looks for there: README and LICENSE (GitHub),
+    # AGENTS.md and CLAUDE.md (agent entry points), SCHEMA.md as AGENTS' one
+    # companion, CONTRIBUTING.md (GitHub links it from the PR form), PRIVACY.md
+    # because it is the one document a user must not have to hunt for, and
+    # BACKLOG.md because it is a working record rather than documentation.
+    GUIDES = ("docs/FOR-RECRUITERS", "docs/CHECKING", "docs/INSTALL",
+              "docs/JOB-SEARCH", "docs/SCORING", "docs/DISCLAIMER")
+    ROOTED = ("PRIVACY", "CONTRIBUTING", "BACKLOG", "SCHEMA", "AGENTS")
+    PAGES = GUIDES + ROOTED
 
     def readme(self):
         with open(os.path.join(ROOT, "README.md"), encoding="utf-8") as fh:
@@ -161,12 +169,19 @@ class TheDocsAreAMapNotAPile(unittest.TestCase):
         for page in self.PAGES:
             self.assertIn(f"({page}.md)", text, f"{page}.md is orphaned")
 
-    def test_every_page_points_back(self):
-        for page in self.PAGES:
-            if page in ("BACKLOG", "SCHEMA", "AGENTS", "PRIVACY", "CONTRIBUTING"):
-                continue          # these predate the split and stand alone
+    def test_every_guide_points_back(self):
+        for page in self.GUIDES:
             with open(os.path.join(ROOT, f"{page}.md"), encoding="utf-8") as fh:
                 self.assertIn("README.md", fh.read(2000), f"{page}.md has no way back")
+
+    def test_the_root_holds_only_what_something_looks_for_there(self):
+        """Fourteen markdown files at the root is a pile. The ones that stay are
+        the ones a convention or a tool expects at the top level -- move any of
+        them and something silently stops finding it."""
+        import glob
+        at_root = {os.path.basename(p)[:-3] for p in glob.glob(os.path.join(ROOT, "*.md"))}
+        self.assertEqual(at_root, {"README", "CLAUDE"} | set(self.ROOTED),
+                         "a guide belongs in docs/, or the reason it does not belongs in this test")
 
     def test_the_readme_stays_short_enough_to_be_read(self):
         n = len(self.readme().splitlines())

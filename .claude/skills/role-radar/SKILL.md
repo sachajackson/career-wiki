@@ -41,11 +41,19 @@ from two runs of the same config against the same boards.
 🟡 **Still say so before starting it, not after.** Four minutes of near-silence still reads as a hang.
 The run now prints each adapter as it lands, which is the thing to watch.
 
-🔴 **Workday is the long pole and cannot be made faster the same way.** Its search is a POST whose body
-carries the query text, so **every query is a genuinely different request** and nothing can be reused
-across them. The cache only collapses whole-board adapters — Greenhouse, Lever and custom fetch one fixed
-URL and filter in-process, so they now cost one request per board per *run* instead of one per *query*.
-On the measured run: **225 requests made, 386 served from the cache.**
+**All six adapters now read a board once per run.** Greenhouse, Lever and custom always did; **Workday
+joined them on 2026-08-25**, and the measurement is why. On State Street the board holds **1,377 roles and
+`searchText: "Engineering Manager"` returns 611 of them** — 44% of the board, ranked rather than filtered.
+So 41 queries × 5 pages saw the first 100 rows of each ranked set: **about 7% of the board per query, and
+largely the same rows each time.** The whole board is 69 pages — fewer requests, and complete.
+
+🟡 **What that costs, stated plainly.** The server matched description text; the local filter reads titles
+only, as it does for every other board adapter. A role whose title lacks the domain word is now dropped
+where Workday might have surfaced it. **Against that, 93% of the board was previously never fetched at
+all.**
+
+🔴 **Workday is still the slowest adapter**, because its board is the largest and rows with hidden
+locations each need a detail call. It is the one to name if somebody asks why a run is not instant.
 
 🟡 **If it needs to be quicker, `--adapter NAME` is the only remaining lever.** Narrowing `--days` does
 almost nothing, for the reason directly below.

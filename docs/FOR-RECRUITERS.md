@@ -1,6 +1,6 @@
 # You arrived here from a job application
 
-*This page describes the tool. [The README](README.md) is for people who want to use it.*
+*This page describes the tool. [The README](../README.md) is for people who want to use it.*
 
 **Two minutes, then you can stop reading.** Someone linked you here because their application was built
 using this. It is open source and anyone may use it for any purpose, so **this page describes the
@@ -26,18 +26,18 @@ wrong text. Every layer here exists because of that.
 
 | | |
 |---|---|
-| **[`tools/verify.py`](tools/verify.py)** — deterministic | Extracts **every number** from an outgoing CV or letter, traces it back to a sourced page, **checks it is attributed to the right employer**, and fails on anything unsourced. **No model is involved.** The reasoning: a model is probabilistic, so the check on it must not be. It also runs a `--coverage` pass against the job posting itself |
-| **[`tools/cv_lint.py`](tools/cv_lint.py)** — mechanical | Catches the tells: **banned AI vocabulary, participial tails, suspiciously round numbers, repetitive cadence,** non-ASCII punctuation that breaks applicant tracking systems |
-| **[`tools/known.py`](tools/known.py)** — against the agent itself | Answers *"does this knowledge base already know this?"* in **three ways rather than two**: settled, present, established absence, or genuinely nothing. **Searching for evidence and finding none returns the same result whether a thing was never investigated or investigated and ruled out** — and those mean opposite things. It exists because an agent got that wrong three times in one session, and re-asked questions the user had already answered |
-| **[`tools/wikilinks.py`](tools/wikilinks.py)** — structural | Finds links that go nowhere: **split across two lines** by a wrapping convention, **pointing at a missing page**, or **pointing at a heading that has been renamed.** None of the three looks broken while you are reading, and a knowledge base whose failure mode is silence is one you stop being able to trust |
+| **[`tools/verify.py`](../tools/verify.py)** — deterministic | Extracts **every number** from an outgoing CV or letter, traces it back to a sourced page, **checks it is attributed to the right employer**, and fails on anything unsourced. **No model is involved.** The reasoning: a model is probabilistic, so the check on it must not be. It also runs a `--coverage` pass against the job posting itself |
+| **[`tools/cv_lint.py`](../tools/cv_lint.py)** — mechanical | Catches the tells: **banned AI vocabulary, participial tails, suspiciously round numbers, repetitive cadence,** non-ASCII punctuation that breaks applicant tracking systems |
+| **[`tools/known.py`](../tools/known.py)** — against the agent itself | Answers *"does this knowledge base already know this?"* in **three ways rather than two**: settled, present, established absence, or genuinely nothing. **Searching for evidence and finding none returns the same result whether a thing was never investigated or investigated and ruled out** — and those mean opposite things. It exists because an agent got that wrong three times in one session, and re-asked questions the user had already answered |
+| **[`tools/wikilinks.py`](../tools/wikilinks.py)** — structural | Finds links that go nowhere: **split across two lines** by a wrapping convention, **pointing at a missing page**, or **pointing at a heading that has been renamed.** None of the three looks broken while you are reading, and a knowledge base whose failure mode is silence is one you stop being able to trust |
 | **`vault/oversight/`** — independent | The document is reviewed by **a different vendor's model**, in a fresh session, working from a restricted export. **Cross-model review rather than self-review** — and the export is allow-listed, so the reviewer only ever sees what you would see |
 
-🟢 **And the checkers have their own checks.** [`tools/tests/`](tools/tests/) is **several hundred tests,
+🟢 **And the checkers have their own checks.** [`tools/tests/`](../tools/tests/) is **several hundred tests,
 stdlib only, and it runs in seconds** — `python3 tools/tests/run.py`. Several encode bugs that were live in a shipped version:
 the linter reporting *"clean"* on empty input, a crash on bullets with no words, and figures being sourced
 from the very document under review, so a fabrication proved itself.
 
-🔴 **None of it runs on memory.** An [agent hook](.claude/hooks/verify-artefact.sh) fires the verifier
+🔴 **None of it runs on memory.** An [agent hook](../.claude/hooks/verify-artefact.sh) fires the verifier
 **every time a CV or cover letter is written or edited**, and puts the findings straight back into the
 agent's context so they have to be dealt with. **A control that depends on someone remembering to run it
 is not a control.**
@@ -79,15 +79,15 @@ their questions will be about your division rather than your homepage.
 
 ### The rest of it
 
-- **Job search across multiple sources** — [adapters](tools/radar/adapters/) for Workday, Oracle, Greenhouse, Lever, Adzuna
+- **Job search across multiple sources** — [adapters](../tools/radar/adapters/) for Workday, Oracle, Greenhouse, Lever, Adzuna
   and LinkedIn, plus direct Workday and Oracle recruiting endpoints, which return more than the aggregators
   do — the real posting date, the requisition number, and the additional locations a listing hides
 - **The employer's own posting is fetched in preference to any job board's copy**, because aggregators
   truncate — and they truncate the qualifiers, which is the half that decides eligibility
-- **[`BACKLOG.md`](BACKLOG.md)** — the system's own defects, written up honestly: what broke, what it cost,
+- **[`BACKLOG.md`](../BACKLOG.md)** — the system's own defects, written up honestly: what broke, what it cost,
   what would prevent it. **Including the occasions it was wrong about the person using it**
-- 🔴 **Nothing personal is in this repository.** A [`PRIVACY.md`](PRIVACY.md), a
-  [pre-commit hook](githooks/pre-commit) that blocks personal paths and content **even when someone forces
+- 🔴 **Nothing personal is in this repository.** A [`PRIVACY.md`](../PRIVACY.md), a
+  [pre-commit hook](../githooks/pre-commit) that blocks personal paths and content **even when someone forces
   the add**, and an allow-listed oversight export. **The private knowledge base and the public tool are
   separate by construction, not by care**
 
@@ -98,7 +98,7 @@ public and anyone may use it. **If they claim to have written it, they should sa
 can check:**
 
 - **The commit history** shows who wrote what and when, and GitHub marks a forked repository as a fork.
-- 🟢 **[`BACKLOG.md`](BACKLOG.md) is the part that cannot be copied.** Anyone can clone a codebase. **A
+- 🟢 **[`BACKLOG.md`](../BACKLOG.md) is the part that cannot be copied.** Anyone can clone a codebase. **A
   defect log written in first-person operational detail — dated, with what it cost — is a record of
   running the thing rather than possessing it.**
 - 🟢 **Or just ask.** *Why are the scores split into three? What broke, and what changed as a result? Why

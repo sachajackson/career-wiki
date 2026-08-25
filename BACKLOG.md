@@ -190,17 +190,38 @@ into one module would each read the other's answer.
 🔴 **It was also silent for its entire duration**, because nothing printed until every adapter finished.
 **That is worse than the slowness it was fixing.** Progress now prints as each adapter lands.
 
-### 🟡 Still open: Workday cannot benefit from either fix
+### ✅ Workday reads the board once and filters locally — BUILT 2026-08-25
 
-**Its search is a POST whose body carries the query text**, so every query is a genuinely different
-request and nothing is reusable across them. It is now the long pole in any run that watches a Workday
-employer.
+**Probed before deciding, and the numbers made it obvious.** State Street's board holds **1,377 roles**;
+`searchText: "Engineering Manager"` returns **611**, and `"Delivery"` returns **682**. 🔴 **Workday's
+server-side search is not a filter — it is a loose ranked match across several fields.**
 
-**The available options, none obviously worth it yet:** fetch its pages concurrently *within* one query
-(pages are independent, but rate limits are per-tenant and undocumented); or fetch the board once with an
-empty `searchText` and filter in-process like the whole-board adapters — 🔴 **which changes what the
-adapter is claiming.** "The API filtered" and "the adapter filtered" are different claims, and only one
-can be checked against the source.
+So the old shape asked 41 queries × 5 pages and saw the first 100 rows of each 611-row ranked set: **about
+7% of the board per query, largely the same highly-ranked rows every time.** That is why a run fetched 781
+Workday rows and found 27 new ones.
+
+**The whole board is 69 pages: fewer requests than before, and complete.** And because the request body no
+longer varies by query, every query after the first is served from the within-run cache.
+
+🟡 **What is given up.** The server matched description text; `_titles.matches` reads titles only. A role
+whose title lacks the domain word is now dropped where Workday might have surfaced it. **Against that, 93%
+of the board was never fetched at all**, so this is more coverage and a stricter filter, not like for like.
+
+🔴 **The trap that had to be designed around:** `pages` meant *pages per query*. Reusing it for a board
+read would turn the common `pages: 5` into "the first 100 roles of the board" — **a silent 93% loss.** It
+is ignored in board mode; the ceiling is `board_pages`, default 300, with TRUNCATED set when it bites.
+**Also confirmed by probe: `limit` above 20 returns 400**, so paging is the only route.
+
+### ✅ The politeness delay was being paid on requests that never happened — FIXED 2026-08-25
+
+**Found because board mode made a run slower rather than faster, despite making a fraction of the
+requests.** The adapter slept `delay` after every page — including the 69 pages the cache served.
+**Twenty seconds of waiting for a server nobody contacted, per query. On 41 queries, thirteen minutes of
+pure sleep.**
+
+🟢 **The delay now lives in `_http`, and that is not tidying.** It exists to be polite to a server; **a
+cache hit touches no server, so it earns no delay.** Any adapter that sleeps on its own is now the thing
+to look at when a run is slow.
 
 ### 🔴 Two files, one letter apart, opposite privacy rules — know which is which
 

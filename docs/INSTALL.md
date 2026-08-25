@@ -1,4 +1,4 @@
-> **Part of [Career Wiki](README.md).** Getting it running, and the first hour after that.
+> **Part of [Career Wiki](../README.md).** Getting it running, and the first hour after that.
 
 # Installing it
 

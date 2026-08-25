@@ -1,4 +1,4 @@
-> **Part of [Career Wiki](README.md).** What checks the output before it is sent.
+> **Part of [Career Wiki](../README.md).** What checks the output before it is sent.
 
 # Checking the output
 

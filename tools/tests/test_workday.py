@@ -46,14 +46,17 @@ class Recorder:
         self.pages, self.detail, self.status = pages or [], detail or {}, status
         self.posts, self.gets = [], []
 
-    def post_json(self, url, payload, headers=None, timeout=30):
+    def post_json(self, url, payload, headers=None, timeout=30, delay=0.0):
+        # delay is accepted and ignored: it belongs to the transport, which is
+        # exactly what this stands in for. A stub that rejects it would fail
+        # for a reason that has nothing to do with the adapter.
         self.posts.append((url, payload))
         if self.status != 200:
             return None, self.status
         i = payload["offset"] // workday.PAGE
         return (self.pages[i] if i < len(self.pages) else listing([])), 200
 
-    def get_json(self, url, headers=None):
+    def get_json(self, url, headers=None, delay=0.0):
         self.gets.append(url)
         return self.detail
 
@@ -96,10 +99,44 @@ class TheTwoHostingStyles(unittest.TestCase):
         self.assertIn("host, tenant and site", said)
         self.assertEqual(rec.posts, [])
 
-    def test_the_query_is_used_because_workday_really_searches(self):
+    def test_the_query_is_NOT_sent_to_the_server(self):
+        """🔴 Reversed on 2026-08-25, and the measurement is the reason.
+
+        Workday does have a real server-side search and this adapter used it for
+        a year. On State Street the board holds 1,377 roles and
+        `searchText: "Engineering Manager"` returns **611 of them** -- 44% of the
+        board, ranked, not filtered. So 41 queries x 5 pages saw the first 100
+        rows of each ranked set: about 7% of the board per query, largely the
+        same rows every time. The whole board is 69 pages: fewer requests, and
+        complete.
+        """
         rec = Recorder([listing([row()])])
         run(cfg(), rec, query="head of delivery")
-        self.assertEqual(rec.posts[0][1]["searchText"], "head of delivery")
+        self.assertEqual(rec.posts[0][1]["searchText"], "",
+                         "the board is read whole and filtered locally")
+
+    def test_the_board_is_read_once_however_many_queries_run(self):
+        """The request body no longer varies by query, so the cache in _http
+        serves every query after the first without touching the network. That is
+        where the twenty-minute run went."""
+        bodies = set()
+        rec = Recorder([listing([row()]), listing([row()]), listing([row()])])
+        rec.install()
+        for q in ("delivery", "engineering", "programme"):
+            with redirect_stdout(io.StringIO()):
+                workday.fetch(cfg(), q, None)
+        for _, body in rec.posts:
+            bodies.add((body["searchText"], body["offset"]))
+        self.assertEqual({b[0] for b in bodies}, {""})
+
+    def test_a_title_that_does_not_match_the_query_is_dropped_here(self):
+        """The filter moved from the server into the adapter, so it has to
+        actually filter. A board adapter that returns everything turns eleven
+        boards into 756 roles and one worth reading."""
+        rec = Recorder([listing([row(title="Warehouse Operative"),
+                                 row(title="Delivery Manager")])])
+        out, _ = run(cfg(), rec, query="delivery")
+        self.assertEqual([r["title"] for r in out], ["Delivery Manager"])
 
 
 class ThePublicUrl(unittest.TestCase):
@@ -270,12 +307,22 @@ class Pagination(unittest.TestCase):
 
 
 class Robustness(unittest.TestCase):
-    def test_an_unrecognised_shape_yields_a_thin_row_not_a_traceback(self):
-        """A tenant returning something this has not seen must not kill the run."""
-        rec = Recorder([listing([{}])])
+    def test_an_unrecognised_shape_does_not_kill_the_run(self):
+        """A tenant returning something this has not seen must not raise.
+
+        It is dropped rather than kept: with the filter now in the adapter, a
+        posting with no title cannot match any query, and a row with no title is
+        not assessable downstream anyway. The guarantee that matters is that the
+        run survives it.
+        """
+        rec = Recorder([listing([{}, row(title="Delivery Manager")])])
+        out, _ = run(cfg(), rec)
+        self.assertEqual([r["title"] for r in out], ["Delivery Manager"])
+
+    def test_a_thin_row_that_matches_is_still_returned(self):
+        rec = Recorder([listing([{"title": "Delivery Manager"}])])
         out, _ = run(cfg(), rec)
         self.assertEqual(len(out), 1)
-        self.assertEqual(out[0]["title"], "")
         self.assertEqual(out[0]["loc"], "?")
         self.assertEqual(out[0]["source"], "workday")
 

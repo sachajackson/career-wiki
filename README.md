@@ -2,7 +2,7 @@
 
 **An AI-maintained knowledge base for running a job search properly.**
 
-> 👔 **Arrived here from a job application?** → **[Two minutes on what this is](FOR-RECRUITERS.md)**.
+> 👔 **Arrived here from a job application?** → **[Two minutes on what this is](docs/FOR-RECRUITERS.md)**.
 > That page describes the tool, not the applicant.
 
 > 🔴 **Here to *use* it?** Read **[what it does with your data](PRIVACY.md)** before your first session.
@@ -20,18 +20,18 @@ You never write the wiki. You answer questions and make the decisions.
 > **Large language models produce fluent, confident, plausible text, and some of it will be wrong.** That
 > is how the technology works, not a defect awaiting a fix. **If you cannot personally stand over a
 > sentence in an interview, take it out.** The full warning — and what you are accepting by using this —
-> is **[`DISCLAIMER.md`](DISCLAIMER.md)**.
+> is **[`docs/DISCLAIMER.md`](docs/DISCLAIMER.md)**.
 
 ## Where things are
 
 | | |
 |---|---|
-| **[INSTALL.md](INSTALL.md)** | Getting it running, and the first hour after that. **Start here if you are not technical — the desktop app needs no terminal** |
-| **[JOB-SEARCH.md](JOB-SEARCH.md)** | Configuring the search: naming employers rather than endpoints, and checking the sources actually answer |
-| **[CHECKING.md](CHECKING.md)** | **The three layers that check the output**, including how to run oversight through a different vendor's model |
-| **[SCORING.md](SCORING.md)** | How a role gets a number, and why the number is four numbers |
+| **[INSTALL.md](docs/INSTALL.md)** | Getting it running, and the first hour after that. **Start here if you are not technical — the desktop app needs no terminal** |
+| **[JOB-SEARCH.md](docs/JOB-SEARCH.md)** | Configuring the search: naming employers rather than endpoints, and checking the sources actually answer |
+| **[CHECKING.md](docs/CHECKING.md)** | **The three layers that check the output**, including how to run oversight through a different vendor's model |
+| **[SCORING.md](docs/SCORING.md)** | How a role gets a number, and why the number is four numbers |
 | **[PRIVACY.md](PRIVACY.md)** | What is held, where it goes, and what you should decide |
-| **[DISCLAIMER.md](DISCLAIMER.md)** | What it cannot do, and what it will decline to do |
+| **[DISCLAIMER.md](docs/DISCLAIMER.md)** | What it cannot do, and what it will decline to do |
 | **[BACKLOG.md](BACKLOG.md)** | What does not work yet, and what has gone wrong once |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Using it and developing it, in the same clone |
 | **[SCHEMA.md](SCHEMA.md)** · **[AGENTS.md](AGENTS.md)** | The instructions the agent itself reads |
@@ -265,7 +265,7 @@ true.
 
 ## Limits, and what it will decline to do
 
-**[`DISCLAIMER.md`](DISCLAIMER.md) is the full list.** The one that matters most:
+**[`docs/DISCLAIMER.md`](docs/DISCLAIMER.md) is the full list.** The one that matters most:
 
 🔴 **It cannot tell you whether what it wrote is true.** The deterministic layer proves every figure
 traces back to your wiki. **Nothing proves your wiki is right.** Only you can do that.

@@ -793,7 +793,7 @@ These exist because breaking them produces a career document that fails at inter
 7. **Do not let a preference masquerade as a value.** LIFE and SEC measure the user's two stated career
    anchors and nothing else. Everything else — technical exposure, prestige, interest — is a capability or
    risk question and belongs elsewhere. **A LIFE or SEC score whose justification never mentions the anchor
-   it is named after is measuring something else.** See `SCORING.md`.
+   it is named after is measuring something else.** See `docs/SCORING.md`.
 8. **Take the user's own judgement seriously.** If they overrule an assessment, they are usually
    right about their own life. Update the reasoning, do not just record the override.
 

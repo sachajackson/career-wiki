@@ -1,4 +1,4 @@
-> **Part of [Career Wiki](README.md).** What it cannot do, and what it will not do.
+> **Part of [Career Wiki](../README.md).** What it cannot do, and what it will not do.
 
 > # ⚠️ Read this before you use anything here
 >
@@ -74,7 +74,7 @@ that, and no amount of checking below substitutes for reading the document befor
   more. Good roles do land low in it, which is why the shortlist gets read rather than trusted.
 - **It cannot make anything private from the model.** Claude Code runs locally, but it sends the contents
   of the files it reads to Anthropic's API to answer anything. **Local storage is not concealment** — see
-  [`PRIVACY.md`](PRIVACY.md).
+  [`PRIVACY.md`](../PRIVACY.md).
 - **It will not invent anything.** No metric, title or achievement you did not provide. Ask it to
   embellish and it will decline and explain why the claim would not survive a follow-up question.
 - **It is not a lawyer, a doctor or an HR professional.** Redundancy rights, notice periods and
@@ -100,6 +100,6 @@ that, and no amount of checking below substitutes for reading the document befor
 
 ## Known gaps
 
-**[`BACKLOG.md`](BACKLOG.md) records what does not work yet, what has gone wrong once, and what was
+**[`BACKLOG.md`](../BACKLOG.md) records what does not work yet, what has gone wrong once, and what was
 deliberately not done.** Worth reading before you rely on something: the largest gap is that **the system
 stops at the submit button** — interview preparation, offers and negotiation are not covered.

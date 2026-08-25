@@ -15,6 +15,13 @@ lifetime of the process and no longer. There is no on-disk cache and there
 should not be: a stale board read from yesterday would report a filled role as
 open, which is the one failure this whole tool exists to avoid.
 
+🔴 THE POLITENESS DELAY LIVES HERE, NOT IN THE ADAPTERS, and that is not tidying.
+An adapter that sleeps after every page sleeps after the pages the cache served
+too -- 69 cached pages at 0.3s is twenty seconds of waiting for a server nobody
+contacted, once per query, and on a 41-query config that is thirteen minutes of
+pure sleep. The delay exists to be polite to a server. A cache hit touches no
+server, so it earns no delay.
+
 🔴 FAILURES ARE NEVER CACHED. A transient timeout cached for the rest of the run
 turns one flaky request into a whole board reported as empty -- a silent zero,
 which is worse than being slow.
@@ -85,11 +92,11 @@ def get(url, headers=None, tries=3, timeout=30):
                 return None          # not cached: see the module docstring
             time.sleep(2 * (i + 1))
 
-def get_json(url, headers=None):
-    return fetch_json(url, headers)[0]
+def get_json(url, headers=None, delay=0.0):
+    return fetch_json(url, headers, delay=delay)[0]
 
 
-def fetch_json(url, headers=None, timeout=30):
+def fetch_json(url, headers=None, timeout=30, delay=0.0):
     """GET JSON and report the status alongside it. Returns (data, status).
 
     get_json collapses every failure to None, which is fine when all you can do
@@ -118,9 +125,11 @@ def fetch_json(url, headers=None, timeout=30):
     except ValueError:
         return None, 200
     _store(key, out)
+    if delay:
+        time.sleep(delay)     # only ever after a real request. See the docstring
     return out
 
-def post_json(url, payload, headers=None, timeout=30):
+def post_json(url, payload, headers=None, timeout=30, delay=0.0):
     """POST JSON, get JSON back. Returns (data, status).
 
     Unlike get_json this reports the HTTP status, because for at least one API
@@ -152,4 +161,6 @@ def post_json(url, payload, headers=None, timeout=30):
     except ValueError:
         return None, 200
     _store(key, out)
+    if delay:
+        time.sleep(delay)     # only ever after a real request. See the docstring
     return out

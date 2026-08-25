@@ -1,4 +1,4 @@
-> **Part of [Career Wiki](README.md).** How a role gets a number, and why the number is four numbers.
+> **Part of [Career Wiki](../README.md).** How a role gets a number, and why the number is four numbers.
 
 # The scoring framework
 
