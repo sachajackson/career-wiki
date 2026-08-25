@@ -94,6 +94,16 @@ def check_wiki():
     pages = [f for f in os.listdir(d) if f.endswith(".md")] if os.path.isdir(d) else []
     if not pages:
         return OPTIONAL, "no wiki yet. Run /career-init — that is the next step, not a fault"
+    # 🔴 A migrated vault arrives with pages and neither of these, because the
+    # sorter files what it is given and a drop of somebody's pages does not
+    # include them. Every operation in SCHEMA.md ends "update index.md, append
+    # to log.md", so a wiki without them fails quietly: the agent writes an
+    # entry to a file nobody made, or does not write one at all.
+    missing = [f for f in ("index.md", "log.md") if f not in pages]
+    if missing:
+        return WARN, (f"{len(pages)} page(s), but no {' or '.join(missing)}. "
+                      f"Copy templates/{missing[0]} into vault/wiki/ — every operation "
+                      f"ends by writing to these, so without them the record is not kept")
     return OK, f"{len(pages)} page(s). Run template_drift.py after any tool update"
 
 

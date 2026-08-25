@@ -49,6 +49,23 @@ them to the user.** A file quietly removed from a drop zone looks exactly like a
 | **DROP — regenerable state** | Confirm, then delete. `seen.json` and a description cache are the heaviest thing in a vault and worth nothing on the far side. **A fresh `seen.json` means the first radar run reports everything as new** — warn them, or it looks broken |
 | 🔴 **UNKNOWN** | **Ask. Do not guess.** Markdown with no frontmatter is genuinely ambiguous: a note from another tool, a pasted job ad and a page of their history are indistinguishable, and they belong in three different folders |
 
+## 2a. Give them a log and an index if they did not bring one
+
+🔴 **A migrated vault usually arrives with neither.** The sorter files what it is handed, and somebody
+dropping their pages in does not think to include the catalogue or the chronological record — or, quite
+reasonably, **decides to start the log afresh** and leaves the old one behind.
+
+**Copy `templates/log.md` and `templates/index.md` into `vault/wiki/` when they are missing**, then build
+the index from what actually landed rather than from what the old index said.
+
+**Every operation in `SCHEMA.md` ends "update `index.md`, append to `log.md`."** Without them the failure
+is silent: the record simply is not kept, and nobody notices for weeks. `doctor.py` warns about this now.
+
+🟢 **If they left the log behind deliberately, check what was only ever in it before agreeing.** Usually
+nothing — dated decisions belong on the page they are about, corrections belong in `vault/AGENTS.md`, and
+application outcomes belong on the role page. **If any of those live only in the log, lift them out
+first.**
+
 ## 3. Reconcile the frontmatter — the silent one
 
 **Their vault predates this schema, so its types will not match.** In the first real migration **every

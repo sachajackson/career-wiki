@@ -217,3 +217,50 @@ class ItStaysOffline(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AMigratedWikiWithoutItsRecord(unittest.TestCase):
+    """A migrated vault arrives with pages and no log and no index.
+
+    The sorter files what it is handed, and somebody dropping their pages in
+    does not include the catalogue -- or decides to start the log afresh and
+    leaves the old one behind. Every operation in SCHEMA.md ends "update
+    index.md, append to log.md", so without them the failure is silent: the
+    record is simply not kept, and nobody notices for weeks.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        doctor.paths.use(os.path.join(self.tmp, "vault"))
+        os.makedirs(doctor.paths.WIKI)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def page(self, name):
+        with open(os.path.join(doctor.paths.WIKI, name), "w") as fh:
+            fh.write("---\ntype: topic\n---\n")
+
+    def test_pages_but_no_record_is_a_warning(self):
+        self.page("CV.md")
+        status, msg = doctor.check_wiki()
+        self.assertEqual(status, doctor.WARN)
+        self.assertIn("index.md", msg)
+        self.assertIn("log.md", msg)
+
+    def test_it_names_only_what_is_actually_missing(self):
+        self.page("CV.md"); self.page("log.md")
+        status, msg = doctor.check_wiki()
+        self.assertEqual(status, doctor.WARN)
+        self.assertIn("index.md", msg)
+        self.assertNotIn("or log.md", msg)
+
+    def test_an_empty_wiki_is_still_just_not_set_up_yet(self):
+        """Before /career-init there is nothing to warn about, and warning then
+        would train somebody to ignore the warning that matters."""
+        self.assertEqual(doctor.check_wiki()[0], doctor.OPTIONAL)
+
+    def test_a_complete_wiki_is_ok(self):
+        for f in ("CV.md", "index.md", "log.md"):
+            self.page(f)
+        self.assertEqual(doctor.check_wiki()[0], doctor.OK)
