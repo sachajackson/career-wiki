@@ -27,6 +27,7 @@ python3 tools/radar/radar.py --all-open
 |---|---|
 | `--days N` | Posting window. **7 is the right default for a routine run** — one day returns a handful, mostly noise. **Applies only to searched sources; watched boards ignore it** |
 | 🔴 `--all-open` | **No recency filter: everything still open.** Overrides `--days`. See below — it is not a bigger `--days` |
+| `--help` | **Works before anything is configured.** Lists every flag and every adapter name |
 | `--adapter NAME` | Restrict to one source. Default: whatever `vault/settings/search.json` enables |
 | `--reset` | Forget what has been seen and rebuild |
 | `--retier` | Re-tier the cached corpus without re-fetching. **Use when tuning** (`--score-only` still works) |

@@ -15,10 +15,11 @@ of 21 -- impossible, since that scale stops at 15. A warning was added to the
 output and the confusion recurred anyway, which is why the column is now a word:
 HIGH cannot be mistaken for a score out of 15 even by accident.
 """
-import contextlib, importlib.util, io, json, os, re, sys, tempfile, unittest
+import contextlib, importlib.util, io, json, os, re, subprocess, sys, tempfile, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RADAR_DIR = os.path.join(ROOT, "tools", "radar")
+RADAR = os.path.join(RADAR_DIR, "radar.py")
 
 sys.path.insert(0, RADAR_DIR)
 spec = importlib.util.spec_from_file_location("radar", os.path.join(RADAR_DIR, "radar.py"))
@@ -603,3 +604,42 @@ class TheSignal(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FlagsAreCheckedNotSniffed(unittest.TestCase):
+    """`"--adapter" in sys.argv` had three failure modes and every one was
+    silent: an unknown flag ignored, an unknown adapter name yielding an empty
+    fetch -- the "silent zero" the skill warns about, reachable by one typo --
+    and a missing --days value crashing on an IndexError."""
+
+    def test_help_works_before_the_config_exists(self):
+        """The first thing anybody types. A tool that will not describe itself
+        until it is configured is one nobody gets as far as configuring."""
+        r = subprocess.run([sys.executable, RADAR, "--help"], capture_output=True, text=True,
+                           env=dict(os.environ, CAREER_VAULT="/nonexistent-vault"))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("--adapter", r.stdout)
+
+    def test_an_unknown_adapter_is_refused_by_name(self):
+        r = subprocess.run([sys.executable, RADAR, "--adapter", "greanhouse"],
+                           capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("invalid choice", r.stderr)
+
+    def test_an_unknown_flag_is_refused(self):
+        r = subprocess.run([sys.executable, RADAR, "--adaptor", "greenhouse"],
+                           capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+
+    def test_days_needs_a_number(self):
+        r = subprocess.run([sys.executable, RADAR, "--days", "soon"],
+                           capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+
+    def test_the_old_flag_name_still_works(self):
+        self.assertTrue(radar.parse(["--retier"]).score_only)
+        self.assertTrue(radar.parse(["--score-only"]).score_only)
+
+    def test_all_open_beats_days(self):
+        a = radar.parse(["--days", "3", "--all-open"])
+        self.assertTrue(a.all_open)

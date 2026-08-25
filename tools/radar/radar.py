@@ -20,7 +20,7 @@ ladder: 100 results from one week, or 100 results across three months. Both are
 needed -- frequent windowed runs for freshness, a periodic unfiltered sweep for
 the standing backlog of still-open roles. Dedup handles the overlap.
 """
-import json, os, re, sys, time, datetime
+import argparse, json, os, re, sys, time, datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -244,16 +244,46 @@ def assess_location(cfg, loc, title):
     return False, False
 
 
-def main():
-    argv = sys.argv
-    # --all-open means "no recency filter at all". It beats --days if both are
-    # given, because it is the more explicit of the two.
-    all_open = "--all-open" in argv
-    days = None if all_open else (
-        int(argv[argv.index("--days") + 1]) if "--days" in argv else 7)
-    only = argv[argv.index("--adapter") + 1] if "--adapter" in argv else None
-    reset = "--reset" in argv
-    retier = "--retier" in argv or "--score-only" in argv   # old name still works
+def parse(argv=None):
+    """Flags, checked rather than sniffed.
+
+    🔴 This was `"--adapter" in sys.argv` and friends, which has three failure
+    modes and every one of them is silent:
+
+      --adaptor greenhouse   an unknown flag is ignored, so the run does
+                             something other than what was asked, and says
+                             nothing about it
+      --adapter greanhouse   an unknown adapter name yields an empty fetch --
+                             which is EXACTLY the "silent zero" the role-radar
+                             skill warns about, reachable by one typo
+      --days                 a missing or non-numeric value crashes on an
+                             IndexError instead of saying what was wrong
+
+    `--help` also has to work before the config exists. It is the first thing
+    anybody types, and a tool that will not describe itself until it is
+    configured is a tool nobody gets as far as configuring.
+    """
+    ap = argparse.ArgumentParser(
+        prog="radar.py", description="Find roles, score them, and report only what is new.")
+    ap.add_argument("--days", type=int, default=7, metavar="N",
+                    help="posting window in days (default: 7)")
+    ap.add_argument("--all-open", action="store_true",
+                    help="no recency filter at all. Beats --days, being the more explicit of the two")
+    ap.add_argument("--adapter", choices=sorted(ADAPTERS), metavar="NAME",
+                    help=f"restrict to one source: {', '.join(sorted(ADAPTERS))}")
+    ap.add_argument("--reset", action="store_true", help="forget everything seen before")
+    ap.add_argument("--score-only", "--retier", dest="score_only", action="store_true",
+                    help="re-score the cached corpus without re-fetching")
+    return ap.parse_args(argv)
+
+
+def main(argv=None):
+    args = parse(argv)
+    all_open = args.all_open
+    days = None if all_open else args.days
+    only = args.adapter
+    reset = args.reset
+    retier = args.score_only
 
     cfg = load_config()
     # The watch list is folded into the adapter configs before anything runs, so
