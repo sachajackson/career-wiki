@@ -441,8 +441,6 @@ A pass they believe they have is more dangerous than no pass at all, because the
 **That nothing is provably wrong.** Not that the document is good, not that it is honest about things the
 wiki never recorded, and not that it should be sent. **Never report a clean verify as approval.**
 
-## Sensitive data
-
 ## Sensitive data — what to record and what to refuse
 
 **Full reasoning and the user-facing version are in `PRIVACY.md`. These are the operative rules.**
@@ -595,8 +593,6 @@ git history that cannot be edited.
 
 **Especially record anything that went wrong despite an instruction telling you not to.** An instruction
 that has already failed once needs a structural fix, not a stronger instruction.
-
-## Maintenance discipline
 
 ## Maintenance discipline — how information is captured and kept true
 

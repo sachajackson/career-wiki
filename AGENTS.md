@@ -5,8 +5,24 @@ convention stewarded by the Agentic AI Foundation, so that this system works in 
 you already use rather than only in one. `CLAUDE.md` is a one-line pointer at this file; other tools'
 conventions should be the same.
 
-**The schema, the operations and the rules live in [`SCHEMA.md`](SCHEMA.md).** Read it before writing
-anything into the vault.
+**Three files, and the split is the point:**
+
+| | | Replaced by an update? |
+|---|---|---|
+| **This file** | The boundary and where things go | Yes |
+| **[`SCHEMA.md`](SCHEMA.md)** | The schema, the operations, the rules that hold for everybody. **Read it before writing anything into the vault** | Yes |
+| 🔴 **`vault/AGENTS.md`** | **The user's own standing instructions.** Read it at the start of every session and follow it. **If it is missing, create it from [`templates/vault-AGENTS.md`](templates/vault-AGENTS.md)** — it is untracked, because it is the one file in the vault the user writes and `git add -A` would publish it | **Never** |
+
+**`vault/AGENTS.md` is the one file in this repository that belongs to the user**, and it exists because
+the two kinds of instruction were mixed for months. A rule like *"never call me a leader"* and a rule
+like *"frontmatter goes at the top of the page"* look identical on the page and behave nothing alike: one
+is personal and permanent, the other is system detail that changes when the tools change. Mixed together,
+an update either destroys the first or refuses to touch the second.
+
+🔴 **When the user corrects you, write it into `vault/AGENTS.md` with the date and the reason** — not
+into your reply, and not into `SCHEMA.md`. A correction you do not record is one you will need again next
+week. Where the two disagree, `vault/AGENTS.md` wins on style, tone and emphasis; `SCHEMA.md` wins on
+structure; and the rules under *Rules that are not negotiable* are overridable by neither.
 
 ## The boundary, in one paragraph
 

@@ -25,7 +25,18 @@ It should tell them something about their own document they did not know.
 
 ## 2. Scaffold
 
-Copy `templates/` into `wiki/`, filling in what the sources support. Create `index.md`, `log.md`,
+**Place `templates/vault-AGENTS.md` at `vault/AGENTS.md` first, unedited.** It is the user's standing
+instructions to you — tone, lines they will not cross, corrections you must not repeat — and it is the
+one file in the vault an update never touches.
+
+🔴 **Do not try to fill it in from the sources.** Every section is deliberately empty: its content comes
+from corrections the user makes over months, and a plausible guess written in on day one reads like a
+rule they set and will be followed as one. Say the file exists and what it is for. That is all.
+
+**From then on, when the user corrects you, write the rule into `vault/AGENTS.md` with the date and the
+reason** — in their words, not a paraphrase.
+
+Then copy the rest of `templates/` into `vault/wiki/`, filling in what the sources support. Create `index.md`, `log.md`,
 `Career.md`, `Operating Model.md`, `CV.md`, `Standing Answers.md` and a `roles/` folder. OKF frontmatter on everything, per
 `SCHEMA.md`.
 
@@ -103,6 +114,8 @@ Append to `log.md`. Then tell them:
 - **The three most interesting things you learned** that were not in their CV
 - What is still unknown, as a backlog on `Operating Model.md`
 - That `/interview` is the thing to run next, and why
+- 🔴 **That `vault/AGENTS.md` exists and is theirs.** Give one concrete example of what belongs in it —
+  *"if you tell me not to describe you as a leader, that is where it goes and it survives every update"*
 
 **Do not offer to write a CV yet.** There is not enough in the wiki, and a CV written from a
 single interview round is a formatted version of the document they already had.

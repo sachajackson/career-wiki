@@ -33,6 +33,7 @@ entirely — outside the repo, in a synced folder, wherever.
 | **`secrets/`** | An `.env`, and nothing else | 🔴 **Never.** Not in a zip, not in a backup you share, not in a message |
 | `state/` | `seen.json`, `raw.json`, `shortlist.md` | 🔴 **No. Regenerable — delete it any time and nothing is lost** |
 | **`migration/`** | A drop zone. See below | — |
+| **`AGENTS.md`** | 🔴 **Your standing instructions to the agent** — tone, lines you will not cross, corrections it must not repeat. Created by `/career-init` | **Yes.** This one above all |
 
 ## `migration/` — where to put things when you do not know where they go
 

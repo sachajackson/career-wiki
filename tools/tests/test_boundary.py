@@ -39,7 +39,8 @@ class NothingOfTheUsersIsTracked(unittest.TestCase):
         reading the docs first. Their READMEs are the system's words about the
         folder; everything else under vault/ is the user's."""
         leaked = sorted(p for p in tracked()
-                        if p.startswith("vault/") and not p.endswith("/README.md"))
+                        if p.startswith("vault/")
+                        and not p.endswith("/README.md"))
         self.assertEqual(leaked, [], f"the vault is the user's and must never ship: {leaked}")
 
     def test_the_folders_a_user_puts_things_into_ship(self):
@@ -50,6 +51,19 @@ class NothingOfTheUsersIsTracked(unittest.TestCase):
         for folder in ("sources", "migration", "settings", "secrets"):
             self.assertIn(f"vault/{folder}/README.md", tracked(),
                           f"vault/{folder}/ must ship, or nobody knows it exists")
+
+    def test_the_users_own_instruction_file_is_a_template_not_a_tracked_file(self):
+        """It is the one file in vault/ the USER writes, which makes tracking it
+        the exact mistake the boundary exists to prevent: `git add -A` would
+        publish their standing instructions. It ships in templates/ and
+        career-init places a copy."""
+        self.assertIn("templates/vault-AGENTS.md", tracked())
+        self.assertNotIn("vault/AGENTS.md", tracked(),
+                         "a file the user writes must never be tracked")
+        for f in ("AGENTS.md", os.path.join(".claude", "skills", "career-init", "SKILL.md")):
+            with open(os.path.join(ROOT, f), encoding="utf-8") as fh:
+                self.assertIn("vault/AGENTS.md", fh.read(),
+                              f"{f} must say where the user's instructions live")
 
     def test_the_shipped_readmes_carry_no_personal_data(self):
         """They sit inside the user's folder, so they are the one place where a
