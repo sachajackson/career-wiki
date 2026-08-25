@@ -19,9 +19,18 @@ the same class of error the None handling exists to prevent, reintroduced by the
 shorter spelling. 0 is a window, or a user error; it is not a request for
 everything, and answering a question nobody asked is the failure mode here.
 
+AN EARLY STOP DOES NOT MEAN THE SAME THING IN EVERY ADAPTER. For most, stopping
+before the end means the source had more to give -- truncation. For one that
+sorts newest-first and holds an exact posting date, stopping at the window edge
+means the opposite: everything in the window was seen. Set TRUNCATED from WHY
+the loop ended, never from whether it ended early.
+
 THE `HONOURS_DAYS` CONTRACT. True if the adapter applies `days` at all. Adapters
 that read a whole employer board return everything currently open regardless, so
-they set it False, and the runner then refuses to head the shortlist with a
+they set it False. An adapter with no window parameter may still set it True if
+it filters exactly itself -- but say so in the module, because "the API filters"
+and "the adapter filters" are different claims and only one can be checked
+against the source. Adapters and the runner then refuses to head the shortlist with a
 window those rows do not obey. An adapter that does not declare it is treated as
 NOT honouring the window: over-warning costs a line of output, under-warning
 tells the reader a six-month-old posting is a week old.
@@ -37,12 +46,13 @@ per query, so a run reporting a round number is usually reporting the cap.
 Adding an adapter: write the module, expose fetch(), set TRUNCATED, add it to
 ADAPTERS below.
 """
-from . import adzuna, greenhouse, lever, linkedin, workday
+from . import adzuna, greenhouse, lever, linkedin, oracle, workday
 
 ADAPTERS = {
     "adzuna": adzuna,
     "greenhouse": greenhouse,
     "lever": lever,
     "linkedin": linkedin,
+    "oracle": oracle,
     "workday": workday,
 }

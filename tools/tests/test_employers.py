@@ -45,14 +45,17 @@ class Routing(unittest.TestCase):
         cfg = {"queries": ["delivery"]}
         emp = {"watch": [
             {"employer": "A", "workday": {"host": "h", "tenant": "t", "site": "s"}},
+            {"employer": "B2", "oracle": {"host": "h2", "site": "s2"}},
             {"employer": "B", "greenhouse": "btoken"},
             {"employer": "C", "lever": "cslug"},
             {"employer": "D", "query": "\"D\" delivery"}]}
         routed, unrouted = EMP.route(emp, cfg)
-        self.assertEqual(routed, ["A", "B", "C", "D"])
+        self.assertEqual(routed, ["A", "B2", "B", "C", "D"])
         self.assertEqual(unrouted, [])
         self.assertEqual(cfg["workday"]["employers"], [{"host": "h", "tenant": "t", "site": "s"}])
         self.assertEqual(cfg["workday"]["names"], {"t": "A"})
+        self.assertEqual(cfg["oracle"]["employers"], [{"host": "h2", "site": "s2"}])
+        self.assertEqual(cfg["oracle"]["names"], {"s2": "B2"})
         self.assertEqual(cfg["greenhouse"]["boards"], ["btoken"])
         self.assertEqual(cfg["lever"]["companies"], ["cslug"])
         self.assertIn('"D" delivery', cfg["queries"])
@@ -62,6 +65,13 @@ class Routing(unittest.TestCase):
         cfg = {}
         routed, unrouted = EMP.route({"watch": [{"employer": "A", "why": "..."}]}, cfg)
         self.assertEqual((routed, unrouted), ([], ["A"]))
+
+    def test_a_partial_oracle_entry_is_not_a_route(self):
+        """host and site or nothing. One of two reaches nobody."""
+        cfg = {}
+        _, unrouted = EMP.route(
+            {"watch": [{"employer": "A", "oracle": {"host": "h"}}]}, cfg)
+        self.assertEqual(unrouted, ["A"])
 
     def test_a_partial_workday_entry_is_not_a_route(self):
         """host, tenant and site or nothing -- two of three fetches nothing."""

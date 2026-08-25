@@ -80,7 +80,7 @@ their questions will be about your division rather than your homepage.
 
 ### The rest of it
 
-- **Job search across multiple sources** — [adapters](tools/radar/adapters/) for Workday, Greenhouse, Lever, Adzuna
+- **Job search across multiple sources** — [adapters](tools/radar/adapters/) for Workday, Oracle, Greenhouse, Lever, Adzuna
   and LinkedIn, plus direct Workday and Oracle recruiting endpoints, which return more than the aggregators
   do — the real posting date, the requisition number, and the additional locations a listing hides
 - **The employer's own posting is fetched in preference to any job board's copy**, because aggregators
@@ -749,6 +749,7 @@ fill in what you have. `config.json` is ignored by git, so your settings stay on
 | **adzuna** | A free API key from [developer.adzuna.com](https://developer.adzuna.com/) | Documented and supported. 🔴 **Check your country is covered before relying on it** — GB, US, NL, DE and others work; **Ireland is not covered and returns 404** |
 | **greenhouse** | Employer board names | Public data, no key. Best for watching specific target employers |
 | **lever** | Employer handles | Public data, no key. Same idea |
+| **oracle** | Host and site, both read off the employer's careers URL | Public data, no key. The other large enterprise ATS. **Gives an exact posting date**, the requisition number, and a description in the listing itself. Verified against three live employers |
 | **workday** | Host, tenant and site, read off the employer's careers URL | Public data, no key. **A large share of big employers run Workday**, including where the careers site looks bespoke. Returns the requisition number and the real posting date, and expands roles advertised in one city that are open in several. Verified against two live employers, one of each hosting style |
 | **linkedin** | Nothing | **Off by default.** Uses an undocumented endpoint, is against LinkedIn's terms of service, and will break without warning. Enable knowingly or not at all |
 
@@ -783,6 +784,10 @@ one out from another.** There are two hosting styles — `<tenant>.wd1.myworkday
 `wd1.myworkdaysite.com` — and all three values are visible in the employer's own careers URL. If a
 configured employer returns a `422`, that means the tenant sits on a different shard: try `wd3` or `wd5`
 in the host rather than changing anything else. The adapter says so when it happens.
+
+**Oracle Cloud Recruiting needs two values, not three**, and both sit in the careers URL:
+`https://<host>/hcmUI/CandidateExperience/en/sites/<site>/jobs`. Take them verbatim — some tenants carry a
+region in the host and some do not, so there is no pattern to derive it from.
 
 🟢 **And if an employer's careers site clearly is not Workday, check anyway.** Big employers often put a
 different front end over a Workday back end, and the *Apply* links give it away — search the page source

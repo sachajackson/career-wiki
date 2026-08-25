@@ -58,6 +58,21 @@
     "delay": 0.3
   },
 
+  "oracle": {
+    "_comment": [
+      "Employers on Oracle Cloud Recruiting. No key needed, and unlike Workday it needs",
+      "only TWO values — both are in the careers URL, which looks like:",
+      "  https://<host>/hcmUI/CandidateExperience/en/sites/<site>/jobs",
+      "Take host and site verbatim. Do not derive the host: tenants appear both with a",
+      "region (<pod>.fa.us2.oraclecloud.com) and without (<pod>.fa.oraclecloud.com).",
+      "'names' is optional and only prettifies the site slug in the shortlist."
+    ],
+    "employers": [],
+    "names": {},
+    "pages": 5,
+    "delay": 0.3
+  },
+
   "linkedin": {
     "_comment": "OFF by default. Undocumented endpoint, against LinkedIn's terms of service. Read adapters/linkedin.py and decide for yourself.",
     "enabled": false,

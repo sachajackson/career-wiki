@@ -89,6 +89,11 @@ def route(emp, cfg):
             cfg.setdefault("workday", {}).setdefault("employers", []).append(dict(wd))
             cfg["workday"].setdefault("names", {})[wd["tenant"]] = name
             hit = True
+        orc = e.get("oracle")
+        if orc and orc.get("host") and orc.get("site"):
+            cfg.setdefault("oracle", {}).setdefault("employers", []).append(dict(orc))
+            cfg["oracle"].setdefault("names", {})[orc["site"]] = name
+            hit = True
         if e.get("greenhouse"):
             cfg.setdefault("greenhouse", {}).setdefault("boards", []).append(e["greenhouse"])
             hit = True

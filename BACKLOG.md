@@ -96,8 +96,8 @@ for the reasoning. **What follows is what is next.**
 |---|---|
 | 🔴 **Ask the user for their actual lists** | ✅ The mechanism is built and empty. **`employers.json` is the user's to write and nobody has been asked** — which employers they want watched, which they will not work for, and on what basis |
 | **A `sources check` command** | Probe every configured adapter for the user's country and report what actually works, before they invest in any of it. **The Workday run proved the value cheaply** — two employers, four minutes, two defects |
-| **The Oracle Cloud CX adapter** | The remaining large ATS written up in the aggregator entry. Same argument as Workday, one endpoint, `GET` rather than `POST` |
-| **Everything after the submit button** | The system stops at submission and the process does not |
+| **Everything after the submit button** | The system stops at submission and the process does not. **Interview prep is the largest piece and the wiki already holds what it needs** |
+| 🟡 **The salary bonus in the radar tally** | Logged as a defect below. The `+3` measures which adapter found a role rather than the role |
 
 🟢 **Leave the rest until the cold run says which of them matter.**
 
@@ -254,7 +254,7 @@ so invisibly, because the truncated text is perfectly coherent.
 2. **Prefer the ATS JSON endpoint over the rendered page.** Every major ATS exposes one and the JSON
    carries fields the page does not — real posting date, requisition number, secondary locations, study
    level, requisition type:
-   - **Oracle Cloud CX**: `GET /hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails?expand=all&finder=ById;Id="<jobId>",siteNumber="CX_1"` — the `jobId` is in the careers URL. Quotes around the values are required; without them it 400s.
+   - **Oracle Cloud CX**: ✅ **built 2026-08-25 as [`adapters/oracle.py`](tools/radar/adapters/oracle.py)**, verified against three live tenants. Detail: `GET .../recruitingCEJobRequisitionDetails?expand=all&finder=ById;Id="<jobId>",siteNumber="<site>"`. Search: `GET .../recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder=findReqs;siteNumber=<site>,limit=25,offset=N,sortBy=POSTING_DATES_DESC,keyword="..."`. 🟡 **The "quotes are required or it 400s" note was not reproducible** — unquoted worked on every tenant tried, so it is either version-specific or was only ever true of a non-numeric id. Quoting is kept because it costs nothing, but **an instruction nobody can reproduce stops being followed**, so the claim is softened rather than repeated.
    - **Workday CXS**: `POST /wday/cxs/<tenant>/<site>/jobs`
    - **Greenhouse**: `/v1/boards/<token>/jobs?content=true`
    - **Lever**: `/v0/postings/<company>?mode=json`
@@ -855,6 +855,36 @@ depth-and-rigour machinery and drops the breadth machinery.**
 
 **So the build is: a fixed question set, executed with Layer 3 depth, red-teamed, and confidence-marked.**
 Roughly a page of skill instructions rather than a research methodology.
+
+### ✅ Oracle Cloud Recruiting adapter — BUILT
+
+**Status: ✅ 2026-08-25, 20 tests, verified against three live tenants** — a numbered site, a named site,
+and a host with no region in it.
+
+🟢 **Two values, not three, and both are in the careers URL:**
+`https://<host>/hcmUI/CandidateExperience/en/sites/<site>/jobs`. **The site segment works directly as the
+API's `siteNumber`** — confirmed on all three. The host is taken verbatim and not derived, because tenants
+appear both with a region (`<pod>.fa.us2.oraclecloud.com`) and without (`<pod>.fa.oraclecloud.com`).
+
+🟢 **It is the richest source in the repo.** An **exact ISO posting date** rather than Workday's
+*"30+ days ago"*, the requisition number as the employer prints it, secondary locations, and a short
+description **in the listing itself** — so a failed description fetch degrades to something real instead
+of to nothing, which everywhere else makes a good role signal low for a reason unrelated to the role.
+
+🔴 **It forced a correction to the `TRUNCATED` contract that applies to the whole package.** This adapter
+has no window parameter but does have exact dates and a newest-first sort, so it filters exactly, in the
+adapter, and **stops paging at the first row outside the window.** In every other adapter stopping early
+means the source had more to give. **Here it means the opposite — everything in the window was seen** —
+and reporting truncation would send the reader hunting for roles that do not exist.
+
+🟢 **The rule now in `adapters/__init__.py`: set `TRUNCATED` from *why* the loop ended, never from
+*whether* it ended early.** And an adapter may set `HONOURS_DAYS` true while filtering client-side, **as
+long as the module says which** — *"the API filters"* and *"the adapter filters"* are different claims and
+only one of them can be checked against the source.
+
+🟡 **Not tiered on the short description, deliberately.** It would save a request per role and
+systematically under-score this source against ones that give full text — **the same defect as a scoring
+term only some inputs can earn**, which is already logged below about the salary bonus.
 
 ### ✅ Employer preference and exclusion lists — BUILT
 

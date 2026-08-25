@@ -152,6 +152,9 @@ Real defects, found by running it. Two of them silently discarded good roles.
   employer's own posting date, and the extra locations behind a listing that says *"4 Locations"* — which
   matters because the location filter runs *before* any description is read, so a role open in the user's
   city but advertised elsewhere would otherwise be dropped unseen.
+- 🟢 **Miss an employer that runs Oracle Cloud Recruiting.** The other large enterprise ATS, and the
+  richest source here: **an exact posting date**, the requisition number, secondary locations and a
+  description in the listing. Two values, both in the careers URL.
 - 🟡 **Read a date ending in `+` as a floor, not a date.** Workday will only say *"30+ days ago"*, so the
   posting is **at least** that old and may be far older. **A six-week-old senior requisition may already be
   at offer stage** — that is a reason to deprioritise it, and the `+` is the only thing telling you.
