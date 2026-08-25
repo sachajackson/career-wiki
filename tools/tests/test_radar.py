@@ -394,6 +394,47 @@ class BoardTitleFilter(unittest.TestCase):
         self.assertTrue(_titles.matches("delivery manager", "Service Delivery Manager"))
         self.assertFalse(_titles.matches("delivery manager", "Account Manager"))
 
+    def test_a_short_query_word_does_not_match_inside_a_longer_one(self):
+        """THE FALSE-POSITIVE CASE, and the one that mattered most.
+
+        The match was `w in title`, a raw substring test. "ai" is two letters
+        and it lives inside retail, training, maintenance, campaign, email,
+        domain, chair and air. With fifteen AI-flavoured queries on a real
+        watchlist, every AI query kept every Retail Operations Manager on
+        every board."""
+        for junk in ("Retail Operations Manager", "Maintenance Technician",
+                     "Training Coordinator", "Campaign Manager",
+                     "Email Marketing Specialist", "Domain Administrator",
+                     "Chair of the Board", "Air Traffic Analyst"):
+            self.assertFalse(_titles.matches("head of ai", junk), junk)
+
+    def test_it_still_matches_the_word_it_is_actually_looking_for(self):
+        """The fix must not buy precision by breaking recall."""
+        for real in ("Head of AI", "Director, AI Platform Engineering",
+                     "Senior Team Lead, AI Engineering", "Applied AI Product Manager",
+                     "AI/ML Programme Lead"):
+            self.assertTrue(_titles.matches("head of ai", real), real)
+
+    def test_technical_digital_and_data_are_not_distinctive(self):
+        """Measured against a real board: 74 of 138 rows survived the filter and
+        seventeen were Account Executives. "Cloud Account Executive - Digital"
+        was kept by "digital transformation"; "Technical Support Engineer" by
+        three separate queries. These words are everywhere in sales and support
+        titles, so they discriminate nothing."""
+        self.assertFalse(_titles.matches("digital transformation",
+                                         "Cloud Account Executive - Digital, Northern Europe"))
+        self.assertFalse(_titles.matches("technical program manager",
+                                         "Technical Support Engineer - German or French"))
+        self.assertFalse(_titles.matches("data and ai", "Account Executive, SMB Data Cloud"))
+
+    def test_those_queries_still_find_what_they_are_for(self):
+        self.assertTrue(_titles.matches("digital transformation",
+                                        "Head of Digital Transformation"))
+        self.assertTrue(_titles.matches("technical program manager",
+                                        "Lead Technical Program Manager"))
+        self.assertTrue(_titles.matches("data and ai",
+                                        "Associate Director, Data & AI Internal Product Team"))
+
     def test_an_all_generic_query_falls_back_to_requiring_every_word(self):
         """Nothing distinctive to ask for, so ask for all of it. "senior
         manager" deserves strict -- loose, it would return the whole board."""
