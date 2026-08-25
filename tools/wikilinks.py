@@ -49,7 +49,13 @@ def split_target(inner):
     table needs, which is why a naive split on | gets this wrong."""
     target = re.split(r"\\?\|", inner, maxsplit=1)[0]
     page, _, anchor = target.partition("#")
-    return page.strip().rstrip("\\"), anchor.strip().rstrip("\\")
+    page = page.strip().rstrip("\\")
+    # Obsidian resolves [[CLAUDE.md]] and [[CLAUDE]] to the same page. Not
+    # stripping the extension reported five links to a file sitting in the
+    # vault root as pointing at nothing.
+    if page.lower().endswith(".md"):
+        page = page[:-3]
+    return page, anchor.strip().rstrip("\\")
 
 
 # Not pages. migration/ is a drop zone whose contents are by definition not
@@ -122,11 +128,24 @@ def check(root):
     return findings
 
 
+def writable(root, path):
+    """🔴 `sources/` is the user's, and the schema's one absolute rule about it
+    is that it is never edited. A --fix that silently rewrites a CV export
+    breaks the guarantee the folder exists to give -- and the rewrite is
+    invisible, because a joined wikilink looks like an improvement.
+
+    Their own files are still READ, so a link pointing at one still resolves.
+    Reading and writing are not the same permission.
+    """
+    rel = os.path.relpath(path, root).replace("\\", "/").split("/")
+    return rel[0] != "sources"
+
+
 def fix_wrapped(root):
     """Join links split across lines, where the joined target resolves."""
     _, _, exists = scan(root)
     repaired = 0
-    for path in md_files(root):
+    for path in [p for p in md_files(root) if writable(root, p)]:
         with open(path, encoding="utf-8") as fh:
             text = original = fh.read()
         this = os.path.splitext(os.path.basename(path))[0]

@@ -162,3 +162,36 @@ class ExitStatus(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class SourcesAreNeverWritten(unittest.TestCase):
+    """The schema's one absolute rule about sources/ is that it is not edited.
+    A --fix that rewrites a CV export breaks it invisibly: a joined wikilink
+    looks like an improvement."""
+
+    def test_fix_reads_sources_but_does_not_write_them(self):
+        import shutil, tempfile
+        tmp = tempfile.mkdtemp()
+        try:
+            wrapped = "see [[Some\nPage]] here\n"
+            for folder in ("wiki", "sources"):
+                os.makedirs(os.path.join(tmp, folder))
+                with open(os.path.join(tmp, folder, "note.md"), "w") as fh:
+                    fh.write(wrapped)
+            with open(os.path.join(tmp, "wiki", "Some Page.md"), "w") as fh:
+                fh.write("# Some Page\n")
+            wikilinks.fix_wrapped(tmp)
+            with open(os.path.join(tmp, "sources", "note.md")) as fh:
+                self.assertEqual(fh.read(), wrapped, "sources/ was rewritten")
+            with open(os.path.join(tmp, "wiki", "note.md")) as fh:
+                self.assertIn("[[Some Page]]", fh.read())
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
+class AMarkdownExtensionStillResolves(unittest.TestCase):
+    def test_the_extension_is_optional_as_in_obsidian(self):
+        self.assertEqual(wikilinks.split_target("CLAUDE.md"), ("CLAUDE", ""))
+        self.assertEqual(wikilinks.split_target("Weight Log.md#Table"), ("Weight Log", "Table"))
+        # A page whose name genuinely ends in something else is untouched.
+        self.assertEqual(wikilinks.split_target("Sacha Jackson.pdf"), ("Sacha Jackson.pdf", ""))
