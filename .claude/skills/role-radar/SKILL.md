@@ -41,7 +41,15 @@ Google role could ever have tiered without it.**
 
 ### How long it takes, measured
 
-**About six minutes**, and it now returns five times as many roles as it did before. Three runs of the
+🔴 **About thirty minutes for a full `--all-open` sweep, measured 2026-08-26** — not the six minutes
+recorded below, which was a smaller search. **Say thirty before starting one.**
+
+The six-minute figure was 41 queries and three watched employers. It is now **47 queries and
+eleven watched employers**: Workday alone covers four boards totalling 5,276 open roles, Oracle returns
+7,315, and Google adds a detail fetch per matching role. **The measured run was 924s of fetching plus
+description reading — 6,486 roles, 1,580 requests, 15,044 served from the within-run cache.**
+
+The older measurements below are kept because the *shape* of the trade still holds. Three runs of the
 same config — 41 queries, three watched employers — on 2026-08-25:
 
 | | Wall | Roles reaching the filter | Requests |
