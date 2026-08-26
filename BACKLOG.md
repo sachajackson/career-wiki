@@ -586,7 +586,7 @@ commit from the branch, not from the server.** For anything genuinely sensitive 
 
 ## 🟡 Gaps — things the system does not do yet
 
-### 🔴 test_boundary.py checks the FORM of the boundary, not the SUBSTANCE
+### ✅ test_boundary.py checked the FORM of the boundary, not the SUBSTANCE — TWO CHECKS ADDED
 
 **Three violations found on 2026-08-26, none of which the boundary test could see.** All three had the
 same shape: **content specific to one user, living in files the repo ships to everyone.**
@@ -607,6 +607,31 @@ under `vault/` is tracked. **It says nothing about user-specific *content* in `t
 `.claude/`** — and that is the direction the leaks actually went. **The same distinction let an editor's
 workspace file name vault paths from the repository root** (see the `.obsidian/` entry): the guard covers
 the form of the boundary and not its substance.
+
+## ✅ What shipped, 2026-08-26
+
+**Two of the three. Both were dry-run against the repo before being written**, and both were then
+verified by putting the real leaks back and watching them fail.
+
+| Check | Catches |
+|---|---|
+| 🟢 **No template carries a real organisation** | A capitalised multi-word phrase in a non-comment JSON value. `State Street` fires; `Acme Corp` does not |
+| 🟢 **No tool ships a weighted preference table** | A module-level list of three or more `(string, number)` pairs — the exact shape the tiering vocabulary had |
+
+🔴 **The false-positive case fired on the first draft, which is why it is a test of its own.** The
+proper-noun rule flagged **`Acme Corp`, `Employer One`, `Employer Two`, `Employer Three`** — the repo's
+own deliberately fictional stand-ins. **A rule that punishes a well-written template is worse than no
+rule**, so the check now allows the established fiction and a second test pins that: the fictional names
+must pass *and* the real ones must fail. **Both halves, or the allowlist silently swallows everything.**
+
+🔴 **Locale enforcement — the third — is NOT done, and is not attempted.** A spelling list and a
+vocabulary list are structurally identical; the only signal is *enforcement without configuration*, and
+nothing found so far distinguishes that from a legitimate constant. **Two solid checks beat three where
+one cries wolf.** It stays below as an open item.
+
+**The original entry follows.**
+
+---
 
 **What a check could look for, in rough order of confidence:**
 

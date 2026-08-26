@@ -14,7 +14,7 @@ each was found only because somebody noticed a clone was broken.
 These tests assert the property rather than the list. A list has to be
 maintained by hand and had already failed twice; a boundary does not.
 """
-import os, re, subprocess, unittest
+import ast, glob, json, os, re, subprocess, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TOOLS = os.path.join(ROOT, "tools")
@@ -154,6 +154,105 @@ class NothingOfTheUsersIsTracked(unittest.TestCase):
             self.assertIn("vault/wiki/README.md", blocked,
                           "only the five shipped READMEs are the system's")
             self.assertNotIn("vault/sources/README.md", blocked)
+
+
+class NoUsersPreferencesShipInTheSystem(unittest.TestCase):
+    """🔴 The boundary test checked the FORM of the boundary, not the SUBSTANCE.
+
+    Three leaks on 2026-08-26, none of which any check could see, all the same
+    shape: content specific to ONE user, in files the repo ships to everyone.
+
+      tools/radar/radar.py   one person's entire tiering vocabulary -- weights
+                             for the phrases that suited them, heavy negatives
+                             for an industry that kept mismatching their words,
+                             a penalty for a commute they would not accept
+      tools/cv_lint.py       one market's spelling, enforced with a non-zero
+                             exit and no flag to turn it off
+      templates/...json      two REAL employers in a file whose own README says
+                             to replace every placeholder
+
+    The existing tests assert no FILE under vault/ is tracked. They say nothing
+    about user-specific CONTENT in tools/ or templates/, and that is the
+    direction all three went.
+
+    🔴 SCOPE IS THE WHOLE DESIGN. These rules apply ONLY to files whose purpose
+    is to be generic -- templates and shipped defaults. They must never touch
+    tools/radar/ats_registry.json, which is MADE of real employer names and is
+    the one file strangers are invited to contribute to; nor docs/, which names
+    real markets and regulators deliberately, to teach; nor the tests, which
+    need the forbidden strings in order to search for them. A check that fires
+    on the best content in the repo is one somebody switches off.
+    """
+
+    # The repo's established stand-ins. A template must use a <placeholder> or
+    # one of these -- not somebody's real answer.
+    FICTIONAL = re.compile(r"^(acme|beta|widget|example|foo|bar|employer (one|two|three)|"
+                           r"first bank|second bank|halfling|statesman|obscure)\b", re.I)
+    # A capitalised multi-word phrase: how a real organisation is written.
+    PROPER_NOUN = re.compile(r"^[A-Z][a-z]+(?:\s+(?:[A-Z][a-z]+|&|and|of|the))+")
+
+    def _strings(self, obj, path=""):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if str(k).startswith("_"):      # _comment / _README are prose
+                    continue
+                yield from self._strings(v, f"{path}.{k}")
+        elif isinstance(obj, list):
+            for i, v in enumerate(obj):
+                yield from self._strings(v, f"{path}[{i}]")
+        elif isinstance(obj, str):
+            yield path, obj
+
+    def test_no_template_carries_a_real_organisation(self):
+        """A template that quietly holds real answers teaches the reader that
+        some of it is already right."""
+        bad = []
+        for f in glob.glob(os.path.join(ROOT, "templates", "**", "*.json"), recursive=True):
+            with open(f, encoding="utf-8") as fh:
+                doc = json.load(fh)
+            for path, s in self._strings(doc):
+                if s.startswith("<") or self.FICTIONAL.match(s):
+                    continue
+                if self.PROPER_NOUN.match(s):
+                    bad.append(f"{os.path.relpath(f, ROOT)}{path} = {s!r}")
+        self.assertEqual(bad, [], "a real organisation is named in a template: " + str(bad))
+
+    def test_the_repos_own_fiction_still_passes(self):
+        """🔴 THE FALSE-POSITIVE CASE, and it fired on the first draft.
+        'Acme Corp' and 'Employer One' are deliberately fictional examples and
+        must not be flagged -- otherwise the rule punishes good templates."""
+        for ok in ("Acme Corp", "Employer One", "Beta Corp", "Widget Industries",
+                   "First Bank", "Halfling Ltd"):
+            self.assertTrue(self.FICTIONAL.match(ok) or not self.PROPER_NOUN.match(ok), ok)
+        for real in ("State Street", "Grant Thornton Ireland", "Bank of Ireland"):
+            self.assertTrue(self.PROPER_NOUN.match(real) and not self.FICTIONAL.match(real), real)
+
+    def test_no_tool_ships_a_weighted_preference_table(self):
+        """A literal list of (pattern, weight) pairs is a taste, not a mechanism.
+
+        That shape IS the thing that leaked: a scoring vocabulary reads as code
+        and is really a statement about one person's career. Tests are exempt --
+        they must build such tables to check the loader."""
+        bad = []
+        for f in glob.glob(os.path.join(ROOT, "tools", "**", "*.py"), recursive=True):
+            if os.sep + "tests" + os.sep in f:
+                continue
+            try:
+                tree = ast.parse(open(f, encoding="utf-8").read())
+            except SyntaxError:
+                continue
+            for node in tree.body:
+                if not isinstance(node, ast.Assign) or not isinstance(node.value, (ast.List, ast.Tuple)):
+                    continue
+                pairs = [e for e in node.value.elts
+                         if isinstance(e, (ast.Tuple, ast.List)) and len(e.elts) == 2
+                         and isinstance(e.elts[0], ast.Constant) and isinstance(e.elts[0].value, str)
+                         and isinstance(e.elts[1], ast.Constant)
+                         and isinstance(e.elts[1].value, (int, float))]
+                if len(pairs) >= 3:
+                    name = node.targets[0].id if isinstance(node.targets[0], ast.Name) else "?"
+                    bad.append(f"{os.path.relpath(f, ROOT)}:{node.lineno} {name}")
+        self.assertEqual(bad, [], "a weighted preference table ships in tools/: " + str(bad))
 
 
 class NoToolNamesAFileThatMoved(unittest.TestCase):
