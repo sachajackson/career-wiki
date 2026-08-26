@@ -11,7 +11,7 @@ decide whether the CV works. Run the audit prompt as well, in a fresh session.
 
 Exit status is 1 if anything was flagged, so this can gate a build.
 """
-import re, sys, unicodedata
+import json, os, re, sys, unicodedata
 from collections import Counter
 
 BAD_CHARS = {
@@ -38,8 +38,37 @@ HEDGES = ["helped to", "worked on", "was involved in", "contributed to", "respon
 TAILS = [", resulting in", ", driving", ", enabling", ", leading to", ", allowing",
          ", ensuring", ", providing", ", creating"]
 
-US_SPELLING = [r"\b\w+ize\b", r"\b\w+ization\b", r"\bcolor\b", r"\bcenter\b",
-               r"\banalyze\b", r"\bfavorite\b", r"\bbehavior\b", r"\borganization\b"]
+# SPELLING IS A LOCALE, AND A LOCALE IS THE USER'S, NOT THIS REPO'S.
+#
+# This list used to run unconditionally, so a US candidate writing a correct US
+# resume got a finding for every "optimize" and "center" in it, and a non-zero
+# exit that could gate their build. There was no flag and no note -- just one
+# market's conventions enforced as if they were rules.
+#
+# Read from vault/settings/profile.json now. ABSENT MEANS OFF: enforcing a
+# spelling nobody declared is how the original bug worked.
+SPELLINGS = {
+    "ie-uk": [r"\b\w+ize\b", r"\b\w+ization\b", r"\bcolor\b", r"\bcenter\b",
+              r"\banalyze\b", r"\bfavorite\b", r"\bbehavior\b", r"\borganization\b"],
+    "us":    [r"\b\w+ise\b", r"\b\w+isation\b", r"\bcolour\b", r"\bcentre\b",
+              r"\banalyse\b", r"\bfavourite\b", r"\bbehaviour\b", r"\borganisation\b"],
+    "off":   [],
+}
+
+
+def spelling_rules(profile_path=None):
+    """(patterns, locale_name). Absent or unknown locale -> nothing enforced."""
+    try:
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+        import paths
+        with open(profile_path or paths.PROFILE, encoding="utf-8") as fh:
+            want = (json.load(fh).get("spelling") or "off").lower()
+    except Exception:
+        return [], None
+    return SPELLINGS.get(want, []), (want if want in SPELLINGS else None)
+
+
+US_SPELLING, SPELLING_LOCALE = spelling_rules()
 
 # Third-person SINGULAR only, and the omission is the whole design.
 #
@@ -116,8 +145,8 @@ def main():
     # 5. US spelling
     for rx in US_SPELLING:
         for m in re.finditer(rx, low):
-            if m.group(0) not in ("size", "prize", "seize"):
-                findings.append(f"US spelling: {m.group(0)!r}")
+            if m.group(0) not in ("size", "prize", "seize", "wise", "rise", "advise"):
+                findings.append(f"spelling ({SPELLING_LOCALE}): {m.group(0)!r}")
 
     # 6. third person -- the register leak
     for n, line in enumerate(lines, 1):

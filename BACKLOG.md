@@ -586,6 +586,51 @@ commit from the branch, not from the server.** For anything genuinely sensitive 
 
 ## 🟡 Gaps — things the system does not do yet
 
+### 🔴 test_boundary.py checks the FORM of the boundary, not the SUBSTANCE
+
+**Three violations found on 2026-08-26, none of which the boundary test could see.** All three had the
+same shape: **content specific to one user, living in files the repo ships to everyone.**
+
+| Found | What was shipped to every clone |
+|---|---|
+| 🔴 `tools/radar/radar.py` | One person's whole tiering vocabulary — a weight for the phrase that pre-answered their objection, a heavy negative for an industry that kept mismatching their words, a penalty for a commute they would not accept, and a list of trades to exclude by title |
+| 🔴 `tools/cv_lint.py` | **One market's spelling, enforced with a non-zero exit and no flag.** A candidate in another market got a finding for every correctly-spelled word |
+| 🟡 `templates/settings/search.example.json` | Two **real employers** in the `watch` list of a template that says *"REPLACE EVERY PLACEHOLDER"* |
+
+🟢 **All three are fixed.** The vocabulary is `vault/settings/signal.json`, the spelling is
+`vault/settings/profile.json`, and the template carries placeholders. **In each case the default when
+the file is absent is to do NOTHING** — no tiering, no spelling enforcement — because falling back to
+somebody's values is how each bug worked in the first place.
+
+🔴 **The gap is that nothing would have caught any of them.** `test_boundary.py` asserts that no *file*
+under `vault/` is tracked. **It says nothing about user-specific *content* in `tools/`, `templates/` or
+`.claude/`** — and that is the direction the leaks actually went. **The same distinction let an editor's
+workspace file name vault paths from the repository root** (see the `.obsidian/` entry): the guard covers
+the form of the boundary and not its substance.
+
+**What a check could look for, in rough order of confidence:**
+
+1. 🟢 **Real employer names in `templates/`.** A template is placeholders by definition; a capitalised
+   multi-word proper noun outside a `_comment` is nearly always somebody's real answer. **Cheapest and
+   most reliable.**
+2. 🟡 **Weighted keyword tables or preference lists in `tools/`.** Structurally recognisable — a literal
+   list of regex-and-number pairs is almost always a taste, not a mechanism.
+3. 🔴 **Locale assumptions.** The hardest, because a spelling list looks exactly like a vocabulary list.
+   **The signal is enforcement without configuration**: a check with no way to turn it off, in a repo
+   used across markets.
+
+🔴 **The false-positive case, and it is severe here.** `ats_registry.json` is *made of* real employer
+names and is explicitly the one file a stranger may contribute to. `docs/` names real markets and
+regulators deliberately, to teach. **A check that flags those fires on the repo's best content and gets
+switched off in a week.** Any rule must be scoped to files whose *purpose* is to be generic — templates
+and defaults — and never to registries, documentation or tests.
+
+🟡 **Worth noting what was NOT a violation, because the distinction is the useful part.**
+`build-application/WRITING.md` is a declared Ireland/UK profile with a *Localising this* section naming
+the three parts that change elsewhere. **A documented default is not a hidden assumption.** The problem
+was never that the repo had a default — it is that the code enforced one silently.
+
+
 ### ✅ The signal tier measured the advert, not the job — TIER DEMOTED TO A HINT, 2026-08-26
 
 **Measured 2026-08-26 against a real run of 5,255 roles and 17 hand-scored assessments.** The keyword tally

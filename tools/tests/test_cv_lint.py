@@ -4,10 +4,14 @@ Three of these encode bugs that were live in the shipped version:
 empty input reported "clean", bullets with no words crashed, and one word
 could produce two identical findings.
 """
-import subprocess, sys, os, unittest
+import importlib.util, json, re, shutil, subprocess, sys, os, tempfile, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LINT = os.path.join(ROOT, "tools", "cv_lint.py")
+
+_spec = importlib.util.spec_from_file_location("cv_lint", LINT)
+cv_lint = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(cv_lint)
 
 
 def run(text):
@@ -92,17 +96,51 @@ class Numbers(unittest.TestCase):
 
 
 class Spelling(unittest.TestCase):
-    def test_us_spelling_flagged(self):
-        self.assertIn("US spelling", run("Optimize the pipeline.\n")[1])
+    """🔴 Spelling is a LOCALE, and a locale belongs to the user.
 
-    def test_short_ize_words_are_not_false_positives(self):
-        out = run("The size of the prize.\n")[1]
-        self.assertNotIn("US spelling", out)
+    These patterns ran unconditionally until 2026-08-26, so a US candidate
+    writing a correct US resume got a finding for every "optimize" and "center"
+    and a non-zero exit, with no flag to turn it off."""
 
-    def test_one_word_produces_one_finding(self):
-        """Two patterns matched 'organization' and both reported it."""
-        out = run("The organization grew.\n")[1]
-        self.assertEqual(out.count("US spelling"), 1, out)
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.p = os.path.join(self.tmp, "profile.json")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def rules(self, cfg):
+        if cfg is not None:
+            with open(self.p, "w") as fh:
+                json.dump(cfg, fh)
+        return cv_lint.spelling_rules(self.p)
+
+    def test_no_profile_enforces_nothing(self):
+        """🔴 THE ONE THAT MATTERS. Absent means off, never means one market."""
+        pats, locale = cv_lint.spelling_rules(os.path.join(self.tmp, "absent.json"))
+        self.assertEqual(pats, [])
+        self.assertIsNone(locale)
+
+    def test_an_unknown_locale_enforces_nothing(self):
+        pats, locale = self.rules({"spelling": "klingon"})
+        self.assertEqual(pats, [])
+        self.assertIsNone(locale)
+
+    def test_the_two_locales_are_mirror_images(self):
+        """A US resume must not be corrected toward British spelling, and the
+        reverse. Each locale flags the OTHER one's forms."""
+        ie, _ = self.rules({"spelling": "ie-uk"})
+        us, _ = self.rules({"spelling": "us"})
+        self.assertTrue(any(re.search(r, "we optimize the center") for r in ie))
+        self.assertFalse(any(re.search(r, "we optimise the centre") for r in ie))
+        self.assertTrue(any(re.search(r, "we optimise the centre") for r in us))
+        self.assertFalse(any(re.search(r, "we optimize the center") for r in us))
+
+    def test_short_words_are_not_false_positives(self):
+        """🔴 'size', 'wise' and 'rise' end in -ise and are not British spelling."""
+        us, _ = self.rules({"spelling": "us"})
+        out = run("The size of the prize. Rise and advise wisely.\n")[1]
+        self.assertNotIn("spelling", out)
 
 
 class Cadence(unittest.TestCase):

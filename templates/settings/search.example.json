@@ -5,35 +5,47 @@
     "the location filter matches nothing and the radar returns nothing.",
     "Nothing in this file should describe a real person until you fill it in yourself."
   ],
-
   "queries": [
     "<a job title you would take>",
     "<another job title you would take>",
     "<a third — 10 to 40 queries is a sensible range>"
   ],
-
   "location": {
     "_comment": [
       "Plain substrings, matched case-insensitively against the posting's location.",
       "'ok' alone wins nothing; 'bad' and 'edge' both exclude. Add 'remote' to ok if",
       "you want remote roles — but note that most boards scope remote to one country."
     ],
-    "ok":   ["<your city>", "<your region>", "<your country>", "remote"],
-    "bad":  ["<somewhere you will not commute to>"],
-    "edge": ["<somewhere you would consider only for the right role>"]
+    "ok": [
+      "<your city>",
+      "<your region>",
+      "<your country>",
+      "remote"
+    ],
+    "bad": [
+      "<somewhere you will not commute to>"
+    ],
+    "edge": [
+      "<somewhere you would consider only for the right role>"
+    ]
   },
-
   "adzuna": {
     "_comment": "Free key from https://developer.adzuna.com/ . country is an ISO-2 code. Coverage varies by country — check yours is supported before relying on it.",
-    "app_id": "", "app_key": "",
-    "country": "<iso-2, e.g. gb>", "where": "<your city>", "distance": 40, "pages": 2
+    "app_id": "",
+    "app_key": "",
+    "country": "<iso-2, e.g. gb>",
+    "where": "<your city>",
+    "distance": 40,
+    "pages": 2
   },
-
   "_watch_comment": [
     "Name employers here and the endpoint is looked up in ats_registry.json -- no need to know whether",
     "they use Greenhouse, Workday or Oracle. Anything that cannot be resolved is reported at the",
     "start of every run rather than quietly skipped. Run `python3 tools/radar/registry.py NAME` to",
-    "test a name, and `python3 tools/registry_check.py` to confirm the endpoints still answer."
+    "test a name, and `python3 tools/registry_check.py` to confirm the endpoints still answer.",
+    "🔴 This shipped naming two REAL employers until 2026-08-26 -- taken from one user's own",
+    "watch list. A template that says REPLACE EVERY PLACEHOLDER and then quietly carries",
+    "somebody's actual answers teaches the reader that some of it is already right."
   ],
   "_postings_comment": [
     "Where to archive the description of every shortlisted role. Default: ../../wiki/postings.",
@@ -42,9 +54,10 @@
     "an archived posting records what was actually read at the time."
   ],
   "postings_dir": null,
-
-  "watch": ["State Street", "Grant Thornton Ireland"],
-
+  "watch": [
+    "<an employer you want watched by name>",
+    "<another>"
+  ],
   "greenhouse": {
     "_comment": "Board tokens of employers you want watched directly. Find one in their careers URL: boards.greenhouse.io/<token>",
     "boards": []
@@ -53,7 +66,6 @@
     "_comment": "Company slugs, from jobs.lever.co/<slug>",
     "companies": []
   },
-
   "workday": {
     "_comment": [
       "Employers whose careers site runs on Workday — a large share of big ones do,",
@@ -73,7 +85,6 @@
     "pages": 5,
     "delay": 0.3
   },
-
   "oracle": {
     "_comment": [
       "Employers on Oracle Cloud Recruiting. No key needed, and unlike Workday it needs",
@@ -88,10 +99,11 @@
     "pages": 5,
     "delay": 0.3
   },
-
   "linkedin": {
     "_comment": "OFF by default. Undocumented endpoint, against LinkedIn's terms of service. Read adapters/linkedin.py and decide for yourself.",
     "enabled": false,
-    "location": "<your country>", "pages": 4, "delay": 0.8
+    "location": "<your country>",
+    "pages": 4,
+    "delay": 0.8
   }
 }
