@@ -20,7 +20,7 @@ ladder: 100 results from one week, or 100 results across three months. Both are
 needed -- frequent windowed runs for freshness, a periodic unfiltered sweep for
 the standing backlog of still-open roles. Dedup handles the overlap.
 """
-import argparse, json, os, re, sys, time, datetime
+import argparse, datetime, json, os, re, sys, time
 import concurrent.futures as cf
 import threading
 
@@ -427,6 +427,60 @@ def fetch_all(cfg, names, queries, days, dead, capped, report=None):
     return {(n, q): out[(n, q)] for n in names for q in queries if (n, q) in out}
 
 
+SWEEP_MARKER = "last-all-open.json"
+SWEEP_STALE_DAYS = 7
+
+
+def _sweep_path(state_dir=None):
+    # state_dir is a PARAMETER, not a monkeypatched global. The first version of
+    # this patched paths.STATE in setUp, another test relocated paths mid-run,
+    # and the restore wrote a marker into the real vault -- which then silenced
+    # the very warning these tests exist to prove. A test that writes to the
+    # user's vault is a boundary violation as well as a flaky test.
+    return os.path.join(state_dir or paths.STATE, SWEEP_MARKER)
+
+
+def sweep_age_days(today=None, state_dir=None):
+    """Days since the last --all-open sweep, or None if there has never been one.
+
+    `today` is injectable because Date.now()-style calls make a test unrunnable.
+    """
+    try:
+        with open(_sweep_path(state_dir), encoding="utf-8") as fh:
+            last = json.load(fh)["last_all_open"]
+    except (OSError, ValueError, KeyError):
+        return None
+    today = today or datetime.date.today()
+    return (today - datetime.date.fromisoformat(last)).days
+
+
+def record_sweep(today=None, state_dir=None):
+    paths.ensure(state_dir or paths.STATE)
+    with open(_sweep_path(state_dir), "w", encoding="utf-8") as fh:
+        json.dump({"last_all_open": (today or datetime.date.today()).isoformat()}, fh)
+
+
+def sweep_warning(age):
+    """The line to print, or None. A windowed run cannot see an older posting.
+
+    WHY THIS IS A CHECK AND NOT A LINE IN THE SKILL. The skill already says to
+    run both, in a section headed "Run both, and know which one you ran", and
+    says a year went by with only the windowed run before anybody noticed. It
+    was then missed again on the first real use of this tool: four runs, all
+    windowed, and two roles the user had actually APPLIED FOR were invisible
+    because they were posted more than a week before the run.
+
+    An instruction that has now failed twice is not an instruction problem.
+    """
+    if age is None:
+        return ("  !! NO --all-open SWEEP HAS EVER RUN. A windowed run cannot see a role posted\n"
+                "     before the window, however open it still is. Run:  radar.py --all-open")
+    if age > SWEEP_STALE_DAYS:
+        return (f"  !! LAST --all-open SWEEP WAS {age} DAYS AGO. Everything posted before this run's\n"
+                f"     window has been invisible since. Run:  radar.py --all-open")
+    return None
+
+
 def main(argv=None):
     args = parse(argv)
     all_open = args.all_open
@@ -434,6 +488,13 @@ def main(argv=None):
     only = args.adapter
     reset = args.reset
     retier = args.score_only
+
+    if all_open:
+        record_sweep()
+    else:
+        warn = sweep_warning(sweep_age_days())
+        if warn:
+            print(warn, file=sys.stderr)
 
     cfg = load_config()
     HTTP.enable_cache()   # a board does not change during a run. See adapters/_http.py

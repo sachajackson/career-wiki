@@ -15,7 +15,7 @@ of 21 -- impossible, since that scale stops at 15. A warning was added to the
 output and the confusion recurred anyway, which is why the column is now a word:
 HIGH cannot be mistaken for a score out of 15 even by accident.
 """
-import contextlib, importlib.util, io, json, os, re, subprocess, sys, tempfile, unittest
+import contextlib, datetime, importlib.util, io, json, os, re, shutil, subprocess, sys, tempfile, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RADAR_DIR = os.path.join(ROOT, "tools", "radar")
@@ -410,6 +410,51 @@ class RemoteIsCountryScoped(unittest.TestCase):
                  "location": {"ok": ["<home>", "remote"]}}) as r:
             self.assertIn("Remote (scope TBC)", r.out)
             self.assertNotIn("Remote - <home> (scope TBC)", r.out)
+
+
+class TheAllOpenSweepIsNotForgotten(unittest.TestCase):
+    """🔴 An instruction that has failed twice becomes a check.
+
+    The skill has a section headed "Run both, and know which one you ran". It
+    was missed anyway on the first real use: four runs, every one windowed, and
+    two roles the user had ALREADY APPLIED FOR were invisible because they were
+    posted more than a week before the run."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_never_swept_says_so_loudly(self):
+        self.assertIsNone(radar.sweep_age_days(state_dir=self.tmp))
+        self.assertIn("NO --all-open SWEEP HAS EVER RUN", radar.sweep_warning(None))
+
+    def test_a_stale_sweep_warns_with_its_age(self):
+        w = radar.sweep_warning(30)
+        self.assertIn("30 DAYS AGO", w)
+        self.assertIn("--all-open", w)
+
+    def test_a_recent_sweep_is_silent(self):
+        """🔴 THE FALSE-POSITIVE CASE. A warning on every run is a warning
+        nobody reads, and this one prints above the results where it is most
+        tempting to start ignoring."""
+        for age in (0, 1, 6, 7):
+            self.assertIsNone(radar.sweep_warning(age), f"warned at {age} days")
+
+    def test_recording_a_sweep_clears_the_warning(self):
+        today = datetime.date(2026, 8, 26)
+        radar.record_sweep(today, state_dir=self.tmp)
+        self.assertEqual(radar.sweep_age_days(today, state_dir=self.tmp), 0)
+        self.assertEqual(radar.sweep_age_days(datetime.date(2026, 9, 30), state_dir=self.tmp), 35)
+        self.assertIsNone(radar.sweep_warning(radar.sweep_age_days(today, state_dir=self.tmp)))
+
+    def test_a_corrupt_marker_warns_rather_than_crashing(self):
+        """state/ is regenerable and hand-deletable. A broken marker must fail
+        toward the warning, never toward silence."""
+        with open(os.path.join(self.tmp, radar.SWEEP_MARKER), "w") as fh:
+            fh.write("not json")
+        self.assertIsNone(radar.sweep_age_days(state_dir=self.tmp))
 
 
 class Dedup(unittest.TestCase):
