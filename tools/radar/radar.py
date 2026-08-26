@@ -187,6 +187,47 @@ REMOTE = re.compile(r"\b(fully\s+|100%\s+|partially\s+)?remote(ly)?\b", re.I)
 EDGES = r"^[\s\-–—,:;()/|]+|[\s\-–—,:;()/|]+$"
 
 
+def _norm(s):
+    return re.sub(r"\W+", "", (s or "").lower())
+
+
+def _loc_tokens(loc):
+    return {w for w in re.split(r"\W+", (loc or "").lower()) if w}
+
+
+def same_role(a, b):
+    """Are these two rows the same posting reaching us from two places?
+
+    Title and employer must match. The location decides the rest, and HOW it
+    decides is the whole design.
+
+    The old key was normalised_title[:40] plus the RAW first twelve characters
+    of the location, with the employer left out entirely. One city arrives
+    written three ways -- "Lyon, Rhône, France", "Lyon  France",
+    "France - Lyon" -- so identical titles produced three different keys and
+    one role appeared three times.
+
+    🔴 Token INTERSECTION is the obvious repair and it is wrong. Every location
+    in a country carries the country's name, so "Lyon, France" and "Nice,
+    France" intersect on "france" and one real role silently disappears --
+    the worst failure this tool has, because nothing reports it.
+
+    So: SUBSET. One location's tokens must contain the other's. That folds
+    "San Francisco" into "San Francisco, CA" and the three Lyon spellings
+    into one, while leaving Lyon and Nice as the two different roles they
+    are. An empty location is unknown rather than different, and does not
+    split a role that is otherwise identical.
+    """
+    if _norm(a.get("title")) != _norm(b.get("title")):
+        return False
+    if _norm(a.get("company")) != _norm(b.get("company")):
+        return False
+    la, lb = _loc_tokens(a.get("loc")), _loc_tokens(b.get("loc"))
+    if not la or not lb:
+        return True
+    return la <= lb or lb <= la
+
+
 def parse_location(loc):
     """Split a location string into (is_remote, scope). The scope is the point.
 
@@ -403,11 +444,10 @@ def main(argv=None):
             got = 0
             for q in cfg.get("queries", []):
                 for r in results.get((name, q), []):
-                    key = re.sub(r"\W+", "", r["title"].lower())[:40] + "|" + r["loc"].lower()[:12]
                     if r["id"] in found or r["id"] in seen or any(
-                            f["_k"] == key for f in found.values()):
+                            same_role(r, f) for f in found.values()):
                         dupes += 1; continue
-                    r["_k"], r["q"] = key, q
+                    r["q"] = q
                     found[r["id"]] = r
                     got += 1
             print(f"  {name:12} +{got}", file=sys.stderr)
@@ -593,7 +633,8 @@ def main(argv=None):
 
     if not retier:
         for c in found.values():
-            c.pop("_k", None)
+            # `_k` used to be popped here. There is no longer a cached key to
+            # strip: same_role() compares the rows themselves.
             # requisition and posted are here so a REPOST can be spotted next run:
             # the same requisition number reappearing under a new id with a newer
             # date. Records written before this shipped have neither, and the

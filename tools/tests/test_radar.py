@@ -412,6 +412,70 @@ class RemoteIsCountryScoped(unittest.TestCase):
             self.assertNotIn("Remote - <home> (scope TBC)", r.out)
 
 
+class Dedup(unittest.TestCase):
+    """One role reaching the runner from two sources must collapse to one row.
+
+    The key was normalised_title[:40] + the RAW first twelve characters of the
+    location, and the company was not in it at all. Three sources write one
+    city three ways -- "Lyon, Rhône, France", "Lyon  France",
+    "France - Lyon" -- so the titles normalised identically and those twelve
+    characters were the whole difference. Eighteen duplicate pairs in a
+    187-row shortlist."""
+
+    def r(self, title, company, loc):
+        return {"title": title, "company": company, "loc": loc}
+
+    def test_one_city_written_three_ways_is_one_role(self):
+        a = self.r("Director, Services Operations AI Governance", "Citi",
+                   "Lyon, Rhône, France")
+        b = self.r("Director, Services Operations AI Governance", "Citi", "Lyon  France")
+        c = self.r("Director, Services Operations AI Governance", "Citi", "France - Lyon")
+        self.assertTrue(radar.same_role(a, b))
+        self.assertTrue(radar.same_role(b, c))
+        self.assertTrue(radar.same_role(a, c))
+
+    def test_the_company_case_no_longer_matters(self):
+        """A board adapter labels rows with its own token."""
+        a = self.r("Senior Sales Operations Analyst", "MongoDB", "Lyon, France")
+        b = self.r("Senior Sales Operations Analyst", "mongodb", "Lyon, France")
+        self.assertTrue(radar.same_role(a, b))
+
+    def test_two_cities_in_one_country_are_two_roles(self):
+        """🔴 THE FALSE-POSITIVE CASE, and the one that decided the design.
+
+        Plain token overlap looks right and is wrong: every location in one
+        country shares the country name, so "Lyon, France" and "Nice,
+        France" intersect on 'france' and one real role vanishes. A
+        disappearing role is the worst failure this tool has, because nothing
+        reports it. Subset, not intersection."""
+        a = self.r("Delivery Manager", "Acme", "Lyon, France")
+        b = self.r("Delivery Manager", "Acme", "Nice, France")
+        self.assertFalse(radar.same_role(a, b))
+        c = self.r("Delivery Manager", "Acme", "Lyon, Rhône, France")
+        d = self.r("Delivery Manager", "Acme", "Nice, Alpes-Maritimes, France")
+        self.assertFalse(radar.same_role(c, d))
+
+    def test_the_same_title_at_two_employers_is_two_roles(self):
+        a = self.r("Engineering Manager", "Acme", "Lyon, France")
+        b = self.r("Engineering Manager", "Beta Corp", "Lyon, France")
+        self.assertFalse(radar.same_role(a, b))
+
+    def test_a_narrower_location_folds_into_a_wider_one(self):
+        a = self.r("Engineering Manager", "Acme", "San Francisco, CA")
+        b = self.r("Engineering Manager", "Acme", "San Francisco")
+        self.assertTrue(radar.same_role(a, b))
+
+    def test_an_unknown_location_does_not_split_a_role(self):
+        a = self.r("Engineering Manager", "Acme", "")
+        b = self.r("Engineering Manager", "Acme", "Lyon, France")
+        self.assertTrue(radar.same_role(a, b))
+
+    def test_different_titles_never_merge(self):
+        a = self.r("Engineering Manager", "Acme", "Lyon, France")
+        b = self.r("Delivery Manager", "Acme", "Lyon, France")
+        self.assertFalse(radar.same_role(a, b))
+
+
 class BoardTitleFilter(unittest.TestCase):
     """A board returns everything an employer has open, so it needs its own
     relevance filter. This one matched the FIRST word of the query.
