@@ -83,11 +83,13 @@ HONOURS_DAYS, expose probe(), add it to ADAPTERS below.
 from ._verdicts import (OK, EMPTY, NOT_CONFIGURED, NO_COVERAGE,      # noqa: F401
                         BAD_CREDENTIALS, BLOCKED, FAILED, SEVERITY)
 
-from . import adzuna, custom, greenhouse, lever, linkedin, oracle, workday  # noqa: E402
+from . import (adzuna, custom, google, greenhouse, lever, linkedin,  # noqa: E402
+               oracle, workday)
 
 ADAPTERS = {
     "adzuna": adzuna,
     "custom": custom,
+    "google": google,
     "greenhouse": greenhouse,
     "lever": lever,
     "linkedin": linkedin,

@@ -160,7 +160,7 @@ class TheRealRegistry(unittest.TestCase):
         reg = json.load(open(os.path.join(ROOT, "tools", "radar", "ats_registry.json"), encoding="utf-8"))
         for e in reg["employers"]:
             self.assertTrue(e.get("careers_url", "").startswith("http"), e["employer"])
-            self.assertIn(e["ats"], ("workday", "oracle", "greenhouse", "lever", "custom"), e["employer"])
+            self.assertIn(e["ats"], ("workday", "oracle", "greenhouse", "lever", "custom", "google"), e["employer"])
             self.assertIsInstance(e.get("verified_returned"), int, e["employer"])
             if e["ats"] == "oracle":
                 self.assertTrue(e.get("canary"), f"{e['employer']}: oracle fails open, so it needs a canary")

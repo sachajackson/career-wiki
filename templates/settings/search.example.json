@@ -105,5 +105,26 @@
     "location": "<your country>",
     "pages": 4,
     "delay": 0.8
+  },
+  "google": {
+    "_comment": [
+      "Google runs its own careers site: no third-party ATS, and no JSON API (the old",
+      "careers.google.com/api/v3 endpoint answers 404). The results page is SERVER-RENDERED,",
+      "so the adapter reads the HTML directly. Leave 'locations' empty to disable this source.",
+      "",
+      "'locations' are Google's own location strings, exactly as they appear in the ?location=",
+      "parameter of the careers URL. Their site writes 'Dublin Ireland', not 'Dublin, Ireland' --",
+      "open the careers page, filter to your city, and copy the value out of the address bar.",
+      "",
+      "🔴 GOOGLE PUBLISHES NO POSTING DATE anywhere on a job card. Worse than Workday's",
+      "'30+ days', which at least gives you a floor. Rows carry an empty date and may be any",
+      "age, so never report a Google role as new.",
+      "",
+      "pages is a budget of 20 roles each. The adapter stops early on a short page or a repeat,",
+      "so a generous number costs nothing when the board is smaller than the budget."
+    ],
+    "locations": [],
+    "pages": 8,
+    "delay": 0.5
   }
 }

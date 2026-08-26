@@ -165,6 +165,13 @@ def verify(ats, params, canary=None):
         raw = get(params["list"])
         d = json.loads(raw)
         return (len(d) if isinstance(d, list) else len(d.get("jobs", d.get("results", [])))), raw
+    if ats == "google":
+        # The only HTML source here. Counting parsed cards rather than bytes or
+        # a status code is deliberate: both of those stay healthy through the
+        # failure worth catching, which is Google re-rendering the page.
+        raw = get("https://www.google.com/about/careers/applications/jobs/results/"
+                  f"?location={params['location'].replace(' ', '%20')}&page=1")
+        return len(re.findall(r'aria-label="Learn more about ', raw)), raw
     raise ValueError(f"no verification rule for {ats!r}")
 
 

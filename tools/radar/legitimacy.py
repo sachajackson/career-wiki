@@ -43,7 +43,10 @@ LONG_OPEN_DAYS = 90
 
 # Sources that ARE the employer's own system. A date from one of these is the
 # employer's own; a date from anything else is that site's idea of the date.
-EMPLOYER_OWN = {"workday", "oracle", "greenhouse", "lever", "custom"}
+# 🟡 google is here for correctness rather than effect: it IS the employer's
+# own site, but it publishes no date at all, so there is never a date to
+# attribute. The ageing checks simply do not fire on a Google row.
+EMPLOYER_OWN = {"workday", "oracle", "greenhouse", "lever", "custom", "google"}
 # Of those, the ones that issue a requisition number on every posting, so a
 # posting without one is odd rather than merely unrecorded.
 ISSUES_REQUISITION = {"workday", "oracle"}

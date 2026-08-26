@@ -135,6 +135,18 @@
       "verified_returned": 210
     },
     {
+      "employer": "Google",
+      "ats": "google",
+      "params": {
+        "location": "Dublin Ireland"
+      },
+      "careers_url": "https://www.google.com/about/careers/applications/jobs/results/",
+      "publishes_salary": false,
+      "last_verified": "2026-08-26",
+      "verified_returned": 20,
+      "note": "Runs its own server-rendered careers site; no third-party ATS and no JSON API (the old careers.google.com/api/v3 endpoint answers 404). Publishes NO posting date, so rows carry an empty date and can be any age. verified_returned counts JOB CARDS PARSED ON PAGE 1 (20 = a full page), not the site's advertised total -- 112 was recorded first and read as a collapse to 21, because the checker and the entry were measuring different things. Counting parsed cards is deliberate: it falls to 0 if Google re-renders the page, which a byte count or a status code would not."
+    },
+    {
       "employer": "Grant Thornton Ireland",
       "ats": "oracle",
       "params": {

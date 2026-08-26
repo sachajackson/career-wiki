@@ -31,7 +31,7 @@ Decide whether a missing canary means a broken endpoint or a filled vacancy. It
 cannot know, so it reports and leaves the judgement. Guessing would make the
 output confident and sometimes wrong, which is worse than making someone look.
 """
-import argparse, json, os, sys, time, urllib.request, datetime
+import argparse, json, os, re, sys, time, urllib.request, datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REGISTRY = os.path.join(HERE, "radar", "ats_registry.json")
@@ -93,6 +93,15 @@ def fetch(entry, endpoints):
         raw = call(p["list"])
         d = json.loads(raw)
         return (len(d) if isinstance(d, list) else len(d.get("jobs", d.get("results", [])))), raw
+    if ats == "google":
+        # 🔴 The only HTML source in the registry, so the count comes from
+        # counting parsed cards rather than reading a field. That is the point:
+        # a byte count or a status code would stay healthy through exactly the
+        # failure this is watching for -- Google re-rendering its careers site,
+        # leaving a page that answers 200 with a megabyte of HTML and no jobs.
+        raw = call("https://www.google.com/about/careers/applications/jobs/results/"
+                   f"?location={p['location'].replace(' ', '%20')}&page=1")
+        return len(re.findall(r'aria-label="Learn more about ', raw)), raw
     raise ValueError(f"no rule for ats {ats!r}")
 
 

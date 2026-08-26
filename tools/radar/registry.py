@@ -38,6 +38,9 @@ SHAPES = {
     "oracle":     ("oracle", "employers", ("host", "site")),
     "greenhouse": ("greenhouse", "boards", ("token",)),
     "lever":      ("lever", "companies", ("handle",)),
+    # Google takes a location string rather than an employer identifier: the
+    # adapter already knows whose site it is, and what varies is WHERE.
+    "google":     ("google", "locations", ("location",)),
     # custom carries the whole params object rather than named fields: a bespoke
     # API needs its list URL and its field map, and which fields those are is
     # exactly what varies between employers.
