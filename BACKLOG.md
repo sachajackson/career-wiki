@@ -1289,36 +1289,58 @@ unknown keys would break it.
 
 ---
 
-### 🔴 There is no way for a user to take an update — and every day makes it worse
+### 🟡 Taking an update: the code half works. The vault half is the gap
 
-**Status: designed 2026-08-25, not built. Architectural, and the one that compounds.**
+**Status: re-measured 2026-08-26, and the original entry was wrong.** It was written on 2026-08-25 and
+claimed there was *no way* to take an update, resting on two premises that have both since evaporated:
+`sync-to-vault.sh` **no longer exists**, and the user's queries and geography are no longer in a tracked
+`config.json` — they are `vault/settings/search.json`, which is gitignored like everything else under
+`vault/`. **The ambiguous column that was "the whole problem" has mostly collapsed.**
 
-**A user clones this, fills `wiki/` and `sources/` with a year of their working life, and then cannot take
-an improvement.** `sync-to-vault.sh` moves things the other way. **The honest current answer to *"how do I
-get the new verifier?"* is *"hand-merge it, good luck."***
+🔴 **So it was tested rather than argued about.** Clone the repo, rewind eight commits to simulate an old
+install, populate a vault, `git pull`:
 
-🔴 **That is fine at fifteen users and fatal at fifty**, and it gets worse every time this repo improves —
-which is daily.
+| | |
+|---|---|
+| Old install | 507 checks pass |
+| `git status` before pulling | **empty — the vault is invisible to git, as designed** |
+| `git pull` | exit 0 |
+| The vault afterwards | **untouched** |
+| After the update | 536 checks pass |
 
-**The shape of the problem is a boundary nobody has drawn:**
+**`git pull` is the update mechanism, and it works.** That half of the entry is closed.
 
-| Clearly the system's | Clearly the user's | 🔴 **Genuinely ambiguous** |
-|---|---|---|
-| `tools/`, `.claude/skills/`, `githooks/` | `wiki/`, `sources/`, `oversight/<employer>/` | **`config.json`** — the user's queries and geography, in a file whose *schema* is the system's |
-| `templates/` | `vault/settings/employers.json` | **`SCHEMA.md`** — the schema, which the user is invited to co-evolve |
-| `ats_registry.json` | | **`.claude/skills/`** if a user has tuned one |
+### What the test actually found instead
 
-**The ambiguous column is the whole problem.** A naive `git pull` clobbers a tuned skill; a naive "never
-touch user files" means the schema can never be improved.
+🔴 **The gap is not the code. It is that an update can require a vault file it cannot deliver.**
 
-🟢 **`career-ops` is solving this publicly right now** — *"[Umbrella] User/System boundary: make
+The tiering vocabulary moved into `vault/settings/signal.json` on 2026-08-26. A user who pulls that change
+gets the new radar and **not the file it reads**. The radar still runs, still fetches, still writes a
+shortlist — HIGH and MED are simply always empty and every role lands in the catch-all section. **That
+reads as a quiet week, not as a broken install**, which is the worst failure this system can have.
+
+🟢 **Two pieces of that are now covered**, both by executable checks rather than by a note:
+
+- **`doctor.py` reports a missing or unedited `signal.json`** — and is scoped to installs that actually
+  have a `search.json`, because it cried wolf on one that did not.
+- **`tools/template_drift.py`** already does the equivalent for `wiki/` pages.
+
+### 🔴 What is still open
+
+- **Nothing generalises the settings case.** `doctor.py` knows about `signal.json` by name because
+  somebody wrote that check by hand. **The next required settings file will ship with the same silence**,
+  and the next person to notice will be a user with an empty shortlist. A drift check comparing
+  `vault/settings/` against `templates/settings/*.example.json` is the shape — new keys, new files,
+  removed keys — and it should say what to do, not just what differs.
+- **A tuned `.claude/skills/` or `SCHEMA.md` is still clobbered by a pull**, silently. This is the one
+  genuinely ambiguous case left, and it is much smaller than the original entry implied.
+- 🔴 **The rule from everywhere else on this page still applies: an update that silently drops a user's
+  change is the same class of failure as an ignore rule that silently drops a file.** It must fail loudly
+  and name what it could not merge.
+
+🟢 **`career-ops` is solving the same problem publicly** — *"[Umbrella] User/System boundary: make
 personalization legible and update-safe"* is their second-most-reacted issue, and their `update-system.mjs`
-already has a **"SAFETY VIOLATION on pre-existing dirty user file"** guard. **Watch how they land it before
-building ours.** This is the one place where being second is an advantage.
-
-🔴 **Whatever is built, the rule from everywhere else in this file applies: an update that silently drops a
-user's change is the same class of failure as an ignore rule that silently drops a file.** It must fail
-loudly and name what it could not merge.
+has a **"SAFETY VIOLATION on pre-existing dirty user file"** guard. Worth watching for the skills case.
 
 ---
 
