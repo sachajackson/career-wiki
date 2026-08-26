@@ -61,7 +61,14 @@ def split_target(inner):
 # Not pages. migration/ is a drop zone whose contents are by definition not
 # filed yet, and reporting a half-sorted pile as broken links buries the real
 # findings. state/ is regenerable and secrets/ holds no markdown at all.
-NOT_PAGES = ("migration", "state", "secrets")
+# temp/ joined this list on 2026-08-26, the day it shipped. It is the user's
+# scratch folder -- a place to hand over a file that is context, not a record --
+# so its contents are drafts, pastes and things on their way somewhere else.
+# Linting them produced two permanent warnings about links in somebody's working
+# notes, and a linter that always reports noise is one people stop reading. That
+# is this repository's own stated failure mode, so it is fixed rather than
+# tolerated.
+NOT_PAGES = ("migration", "state", "secrets", "temp")
 
 
 def md_files(root):

@@ -44,9 +44,23 @@ and the `... Standards` suffix is what keeps the two apart. Say which is which w
 | **Target roles** | `vault/roles/` and the scoring table | The vocabulary a recruiter would actually search on |
 | 🔴 **Regulatory exposure** | **Derive from industry + country** | Ireland's Central Bank fitness-and-probity regime makes CV accuracy a regulatory matter for pre-approved controlled functions; the UK's SM&CR is the analogue. **Where it applies it is a hard constraint in the CV page, not a footnote** |
 
-🔴 **If the vault does not say what industry or level they are at, ask. Do not infer it from one employer
-name.** A wrong country or level produces four pages of confidently wrong advice, and those pages then
-get used to build documents.
+🔴 **If the vault does not say what industry or level they are at, ask. Do not infer it from the employer
+list.** A wrong country or level produces four pages of confidently wrong advice, and those pages then get
+used to build documents.
+
+🔴 **This went wrong on the very first run, and the failure is subtle enough to repeat.** An employer
+history of three financial-services firms was read as *industry: financial services*. The user's actual
+profession was **technology leadership**, and the sector was context. **An employer list says which sector
+paid the salary. It does not say what the person does** — and the resulting page was built around a
+financial regulator's regime the user is unlikely ever to be subject to.
+
+🔴 **Inferring from three employers feels safer than inferring from one and is exactly as wrong.** The
+question to ask is not *"which industry?"* but **"is that sector your profession, or where your profession
+happened to be practised?"**
+
+🔴 **And weight by applicability before evidence quality.** The regulatory material was the best-sourced
+on the page — regulators publish, vendors do not — which made it *look* like the most important thing.
+**Best-evidenced is not most relevant.** Let evidence quality decide confidence, never emphasis.
 
 🔴 **Ask as numbered plain text in the message body, never as a picker** — see `vault/AGENTS.md`. A
 question the user cannot see is a question that gets answered by assumption.
