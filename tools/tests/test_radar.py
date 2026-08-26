@@ -412,6 +412,85 @@ class RemoteIsCountryScoped(unittest.TestCase):
             self.assertNotIn("Remote - <home> (scope TBC)", r.out)
 
 
+class NothingThatPassesTheFiltersIsHidden(unittest.TestCase):
+    """🔴 The tally was a GATE and it should only ever have been a hint.
+
+    Measured on one real run: 1,931 roles passed location and the avoid list,
+    then fell below the tally threshold and were never shown. Three of the four
+    roles the user had ALREADY APPLIED FOR were in that pile, scoring 6, 8 and
+    10 on a scale where 18 means "read this first"."""
+
+    def rows(self, n):
+        return [{"id": f"i{i}", "title": t, "company": co, "loc": "<city>",
+                 "url": f"http://e.g/{i}", "date": "2026-08-01", "source": "fake",
+                 "body": body}
+                for i, (co, t, body) in enumerate(n)]
+
+    def test_a_low_scoring_role_is_listed_rather_than_dropped(self):
+        rows = self.rows([("Acme", "Head of Delivery", "nothing matching any query at all")])
+        with Run([], {"fake": FakeAdapter(rows)},
+                 config={"queries": ["delivery"], "location": {"ok": ["<city>"]}}) as r:
+            self.assertIn("Everything else that passed the filters", r.out)
+            self.assertIn("Head of Delivery", r.out)
+
+    def test_the_header_counts_everything_that_survived(self):
+        rows = self.rows([("Acme", "Head of Delivery", "x"), ("Beta", "Delivery Lead", "y")])
+        with Run([], {"fake": FakeAdapter(rows)},
+                 config={"queries": ["delivery"], "location": {"ok": ["<city>"]}}) as r:
+            self.assertIn("2 passed the filters", r.out)
+            self.assertIn("below the tally threshold", r.out)
+
+    def test_the_section_says_it_is_not_a_ranking(self):
+        """🔴 Sorting by tally is what made a keyword count look like a ranking.
+        The section must say so, or the next reader infers one anyway."""
+        rows = self.rows([("Acme", "Head of Delivery", "x")])
+        with Run([], {"fake": FakeAdapter(rows)},
+                 config={"queries": ["delivery"], "location": {"ok": ["<city>"]}}) as r:
+            self.assertIn("Sorted by employer", r.out)
+            self.assertRegex(r.out, r"no ranking|not a lower tier|Not a lower tier")
+
+    def test_it_is_sorted_by_employer_not_by_tally(self):
+        rows = self.rows([("Zeta", "Delivery Lead", "delivery " * 30),
+                          ("Alpha", "Head of Delivery", "x")])
+        with Run([], {"fake": FakeAdapter(rows)},
+                 config={"queries": ["delivery"], "location": {"ok": ["<city>"]}}) as r:
+            tail = r.out.split("Everything else that passed the filters")[-1]
+            if "Alpha" in tail and "Zeta" in tail:
+                self.assertLess(tail.index("Alpha"), tail.index("Zeta"),
+                                "the section is not in employer order")
+
+
+class RetierDoesNotLieAboutTheWindow(unittest.TestCase):
+    """🔴 docs/LESSONS.md: "a header that describes a run must be true of every
+    row under it." --retier took the window from the command line rather than
+    from the corpus, so re-scoring an --all-open corpus produced a file headed
+    "7-day window" over rows that could be months old."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_an_all_open_corpus_remembers_it_has_no_window(self):
+        radar.record_window(None, state_dir=self.tmp)
+        self.assertIsNone(radar.recorded_window(state_dir=self.tmp))
+
+    def test_a_windowed_corpus_remembers_its_window(self):
+        radar.record_window(7, state_dir=self.tmp)
+        self.assertEqual(radar.recorded_window(state_dir=self.tmp), 7)
+
+    def test_an_unrecorded_corpus_is_false_not_none(self):
+        """🔴 None is a REAL stored value meaning --all-open. Conflating the two
+        would make an old corpus silently claim to be an unfiltered sweep."""
+        self.assertIs(radar.recorded_window(state_dir=self.tmp), False)
+
+    def test_a_corrupt_marker_falls_back_rather_than_crashing(self):
+        with open(os.path.join(self.tmp, radar.WINDOW_MARKER), "w") as fh:
+            fh.write("{}")
+        self.assertIs(radar.recorded_window(state_dir=self.tmp), False)
+
+
 class TheAllOpenSweepIsNotForgotten(unittest.TestCase):
     """🔴 An instruction that has failed twice becomes a check.
 

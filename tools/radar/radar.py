@@ -427,7 +427,34 @@ def fetch_all(cfg, names, queries, days, dead, capped, report=None):
     return {(n, q): out[(n, q)] for n in names for q in queries if (n, q) in out}
 
 
+WINDOW_MARKER = "corpus-window.json"
 SWEEP_MARKER = "last-all-open.json"
+
+
+def record_window(days, state_dir=None):
+    """Remember what window the CACHED CORPUS was fetched with.
+
+    --retier re-scores raw.json without re-fetching, and it took `days` from the
+    command line -- so re-tiering an --all-open corpus produced a file headed
+    "7-day window" over rows that could be months old. docs/LESSONS.md already
+    carries the rule this broke: a header that describes a run must be true of
+    every row under it.
+    """
+    paths.ensure(state_dir or paths.STATE)
+    with open(os.path.join(state_dir or paths.STATE, WINDOW_MARKER), "w", encoding="utf-8") as fh:
+        json.dump({"days": days}, fh)
+
+
+def recorded_window(state_dir=None):
+    """The window the corpus was fetched with, or False if unrecorded.
+
+    False rather than None: None is a legitimate stored value meaning --all-open.
+    """
+    try:
+        with open(os.path.join(state_dir or paths.STATE, WINDOW_MARKER), encoding="utf-8") as fh:
+            return json.load(fh)["days"]
+    except (OSError, ValueError, KeyError):
+        return False
 SWEEP_STALE_DAYS = 7
 
 
@@ -489,6 +516,13 @@ def main(argv=None):
     reset = args.reset
     retier = args.score_only
 
+    if retier:
+        # The corpus was fetched by an earlier run; its window is that run's, not
+        # this command's. Unrecorded (an old corpus) leaves `days` alone and the
+        # header says what it always said.
+        remembered = recorded_window()
+        if remembered is not False:
+            days = remembered
     if all_open:
         record_sweep()
     else:
@@ -596,6 +630,8 @@ def main(argv=None):
 
     paths.ensure(paths.STATE)
     json.dump(found, open(RAW, "w"), indent=1)
+    if not retier:
+        record_window(days)
     keep.sort(key=lambda x: (-x["tally"], x["date"]))
     high = [c for c in keep if c["signal"] == "HIGH"]
     med  = [c for c in keep if c["signal"] == "MED"]
@@ -624,7 +660,9 @@ def main(argv=None):
         f.write(f"{len(found)} fetched, {dupes} duplicates suppressed. "
                 f"Dropped {dropped['loc']} on location, {dropped['title']} on title"
                 + (f", {dropped['avoid']} on the avoid list" if dropped["avoid"] else "")
-                + f". **HIGH {len(high)}, MED {len(med)}.**\n\n")
+                + f". **{len(keep)} passed the filters: HIGH {len(high)}, MED {len(med)}, "
+                f"{len(keep) - len(high) - len(med)} below the tally threshold and listed in "
+                f"full below.**\n\n")
         if routed or unrouted:
             f.write(f"> Watching {len(routed)} employer(s) directly"
                     + (f". 🔴 **{len(unrouted)} on the watch list have no route and were NOT "
@@ -710,6 +748,36 @@ def main(argv=None):
             notes = sorted({c["_note"] for c in rows if c.get("_note")})
             for n in notes:
                 f.write(f"\n† {n}\n")
+            f.write("\n")
+
+        # EVERYTHING ELSE. Not a courtesy -- the tier was hiding real roles.
+        #
+        # Measured on one run: 1,931 roles passed location and the avoid list and
+        # were then dropped below the tally threshold and never shown. Among them
+        # were THREE of the four roles this user had already applied for, scoring
+        # 6, 8 and 10 on a scale where 18 means "read this first". The tally
+        # measures the advert: one contract advertised by three agencies scored
+        # 14, 14 and 9, and the third was invisible.
+        #
+        # Sorted by EMPLOYER, never by tally. Sorting by tally is what made a
+        # keyword count look like a ranking, and reading in that order is reading
+        # in copywriting order.
+        rest = [c for c in keep if c["signal"] == "LOW"]
+        if rest:
+            f.write(f"## Everything else that passed the filters ({len(rest)})\n\n")
+            f.write("> 🔴 **Not a lower tier of quality. A lower tally.** These cleared every "
+                    "filter above, then scored below the keyword threshold — which measures "
+                    "how closely the advert's wording matches the queries, not whether the job "
+                    "suits. **Roles this user actually applied for have scored 6, 8 and 10 "
+                    "here.**\n>\n"
+                    "> **Sorted by employer, deliberately.** There is no ranking in this "
+                    "section and none should be inferred. **Skim the titles.**\n\n")
+            f.write("| Company | Title | Location | Posted | Link |\n|---|---|---|---|---|\n")
+            for c in sorted(rest, key=lambda x: (x["company"].lower(), x["title"].lower())):
+                posted = c["date"] + ("+" if c.get("date_is_floor") else "")
+                where = c["loc"][:22] + (" (scope TBC)" if c.get("loc_tbc") else "")
+                f.write(f"| {c['company'][:26]} | {c['title'][:64]} | {where} | "
+                        f"{posted} | [link]({c['url']}) |\n")
             f.write("\n")
 
     # Before seen.json is updated and raw.json is overwritten on the next run.
