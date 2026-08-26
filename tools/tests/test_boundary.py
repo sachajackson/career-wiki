@@ -14,7 +14,7 @@ each was found only because somebody noticed a clone was broken.
 These tests assert the property rather than the list. A list has to be
 maintained by hand and had already failed twice; a boundary does not.
 """
-import ast, glob, json, os, re, subprocess, unittest
+import ast, glob, json, os, re, subprocess, sys, tempfile, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TOOLS = os.path.join(ROOT, "tools")
@@ -393,6 +393,44 @@ class TheFourKinds(unittest.TestCase):
             self.assertTrue(self.paths.ENV.startswith("/tmp/somewhere-else"))
         finally:
             self.paths.use(original)
+
+
+class TheSuiteDoesNotReadTheUsersVault(unittest.TestCase):
+    """🔴 A test that reads the user's configuration is not testing the code.
+
+    THE INCIDENT. On 2026-08-26 the tiering vocabulary moved out of radar.py and
+    into vault/settings/signal.json, which was right -- it was one user's
+    preferences sitting in shared code. But radar's POS/NEG/HIGH_AT/MED_AT then
+    loaded AT IMPORT from whatever vault happened to be present, and the suite
+    imports radar. On the author's machine signal.json exists, so 530 checks
+    passed and the change looked finished.
+
+    On a fresh clone, five failed. Nothing could ever score HIGH, because the
+    vocabulary was empty. The suite had been measuring the author's vault.
+
+    Found by simulating an update rather than arguing about one: clone, rewind,
+    populate a vault, git pull, run the tests. This check is that simulation,
+    kept, so the next thing to load user config at import fails here instead of
+    on somebody else's first day.
+    """
+
+    GUARD = "CAREER_TESTS_WITHOUT_A_VAULT"
+
+    def test_every_check_passes_against_an_empty_vault(self):
+        if os.environ.get(self.GUARD):
+            self.skipTest("this is the child run; it must not spawn another")
+        here = os.path.dirname(os.path.abspath(__file__))
+        with tempfile.TemporaryDirectory() as empty:
+            env = dict(os.environ, CAREER_VAULT=empty, **{self.GUARD: "1"})
+            r = subprocess.run([sys.executable, os.path.join(here, "run.py")],
+                               capture_output=True, text=True, env=env)
+        self.assertEqual(
+            r.returncode, 0,
+            "The suite passes here and fails on a vault that is not this one, so "
+            "something under test is reading the user's own settings at import.\n"
+            "A default of 'empty' is what makes this silent: nothing errors, the "
+            "vocabulary is simply blank and every role tiers LOW.\n\n"
+            + (r.stdout or "")[-3000:])
 
 
 if __name__ == "__main__":

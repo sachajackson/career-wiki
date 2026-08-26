@@ -264,3 +264,61 @@ class AMigratedWikiWithoutItsRecord(unittest.TestCase):
         for f in ("CV.md", "index.md", "log.md"):
             self.page(f)
         self.assertEqual(doctor.check_wiki()[0], doctor.OK)
+
+
+class TheSignalCheck(unittest.TestCase):
+    """🔴 The update gap, made checkable.
+
+    The tiering vocabulary moved into the vault on 2026-08-26. An update can
+    ship a system that needs a new vault file; it cannot put that file in
+    somebody's vault. Without signal.json the radar still runs, still fetches,
+    still writes a shortlist -- HIGH and MED are just always empty. Every role
+    falls into the catch-all section, which reads as a quiet week rather than a
+    broken install, and doctor reported the whole setup as fine.
+    """
+
+    GOOD = {"thresholds": {"high": 18, "med": 10},
+            "positive": [{"match": "delivery", "weight": 6}],
+            "negative": []}
+
+    def test_nothing_is_wrong_when_nothing_searches_yet(self):
+        """🔴 The cry-wolf case, and it fired for real. An install with no
+        search.json has nothing to tier, so a missing vocabulary is not a fault
+        there -- it is a step not yet reached."""
+        with Home() as h:
+            verdict, _ = doctor.check_signal()
+            self.assertEqual(verdict, doctor.OPTIONAL)
+
+    def test_a_missing_signal_file_is_reported(self):
+        with Home() as h:
+            h.write("vault/settings/search.json", {"queries": ["delivery"]})
+            verdict, detail = doctor.check_signal()
+            self.assertEqual(verdict, doctor.PLACEHOLDER)
+            self.assertIn("quiet week", detail)
+
+    def test_an_untouched_example_is_caught_too(self):
+        """The placeholder case, which is the one that does not announce itself."""
+        with Home() as h:
+            h.write("vault/settings/search.json", {"queries": ["delivery"]})
+            h.write("vault/settings/signal.json",
+                    {"thresholds": {"high": 18, "med": 10},
+                     "positive": [{"match": "<a technology central to your work>", "weight": 6}]})
+            verdict, _ = doctor.check_signal()
+            self.assertEqual(verdict, doctor.PLACEHOLDER)
+
+    def test_a_real_signal_file_passes(self):
+        """🔴 The false-positive case. A check that cries wolf gets switched off,
+        so the working configuration is tested before the broken ones ship."""
+        with Home() as h:
+            h.write("vault/settings/search.json", {"queries": ["delivery"]})
+            h.write("vault/settings/signal.json", self.GOOD)
+            verdict, detail = doctor.check_signal()
+            self.assertEqual(verdict, doctor.OK)
+            self.assertIn("1 positive pattern", detail)
+
+    def test_broken_json_says_so_rather_than_crashing(self):
+        with Home() as h:
+            h.write("vault/settings/search.json", {"queries": ["delivery"]})
+            h.write("vault/settings/signal.json", "{not json")
+            verdict, _ = doctor.check_signal()
+            self.assertEqual(verdict, doctor.PLACEHOLDER)

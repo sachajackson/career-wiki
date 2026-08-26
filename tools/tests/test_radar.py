@@ -57,16 +57,61 @@ def posting(**kw):
     return r
 
 
+# 🔴 THE SUITE MUST NOT READ THE USER'S VAULT.
+#
+# When the tiering vocabulary moved to vault/settings/signal.json on 2026-08-26,
+# radar's POS/NEG/HIGH_AT/MED_AT became module constants loaded AT IMPORT from
+# whatever vault happened to be present. On the author's machine that file exists
+# and the suite passed. On a fresh clone -- or any vault without it -- five tests
+# failed, because nothing could ever score HIGH.
+#
+# Found by simulating exactly that: clone, rewind, populate a vault, git pull.
+# A test that reads the user's configuration is not testing the code.
+TEST_SIGNAL = {
+    # Tuned to the fixtures below, and the fixtures are the specification:
+    # a bare "Head of Delivery" must NOT tier (that is the pay-promotion test),
+    # a role with governance/AI vocabulary must reach HIGH, and a people-and-
+    # portfolio role must land in MED and stay there.
+    "thresholds": {"high": 20, "med": 12},
+    "positive": [
+        {"match": "generative ai", "weight": 6}, {"match": "agentic", "weight": 6},
+        {"match": "llm", "weight": 6}, {"match": "ai governance", "weight": 6},
+        {"match": "guardrail", "weight": 6}, {"match": "legacy modernisation", "weight": 6},
+        {"match": "sdlc", "weight": 4}, {"match": "release management", "weight": 4},
+        {"match": "portfolio", "weight": 2}, {"match": "roadmap", "weight": 2},
+        {"match": "stakeholder", "weight": 2}, {"match": "mentor", "weight": 2},
+        {"match": "adoption", "weight": 2}, {"match": "upskill", "weight": 2},
+        {"match": "regulated", "weight": 2},
+    ],
+    "negative": [{"match": "warehouse", "weight": -6}, {"match": "forklift", "weight": -6}],
+    "exclude_titles": {"words": ["mechanical", "nurse"]},
+    "individual_contributor_titles": {
+        "seniority": ["senior", "staff", "principal", "lead", "junior", "graduate"],
+        "domains": ["software", "data", "cloud", "platform"],
+        "nouns": ["developer", "engineer", "scientist", "analyst", "architect", "intern"]},
+}
+
+# Installed at IMPORT, not per-Run, because several tests read radar.HIGH_AT and
+# call radar.tally_of() directly. Those are the ones that failed on a clone.
+(radar.POS, radar.NEG, radar.NEVER, radar.IC_TITLE,
+ radar.HIGH_AT, radar.MED_AT) = radar.build_signal(TEST_SIGNAL)
+
+
 class Run:
     """Run radar.main() against a temp dir with a stubbed adapter."""
 
-    def __init__(self, argv, adapters, config=None, employers=None):
+    def __init__(self, argv, adapters, config=None, employers=None, signal=None):
         self.argv, self.adapters, self.employers = argv, adapters, employers or {}
         self.config = config or {"queries": ["delivery"], "location": {}}
+        self.signal = TEST_SIGNAL if signal is None else signal
 
     def __enter__(self):
         self.dir = tempfile.mkdtemp()
-        self._saved = {k: getattr(radar, k) for k in ("CONFIG", "RAW", "SEEN", "OUT", "ADAPTERS")}
+        self._saved = {k: getattr(radar, k) for k in
+                       ("CONFIG", "RAW", "SEEN", "OUT", "ADAPTERS",
+                        "POS", "NEG", "NEVER", "IC_TITLE", "HIGH_AT", "MED_AT")}
+        (radar.POS, radar.NEG, radar.NEVER, radar.IC_TITLE,
+         radar.HIGH_AT, radar.MED_AT) = radar.build_signal(self.signal)
         self._argv = sys.argv
         radar.CONFIG = os.path.join(self.dir, "config.json")
         radar.RAW = os.path.join(self.dir, "raw.json")

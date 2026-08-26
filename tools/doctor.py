@@ -139,6 +139,44 @@ def check_radar_config():
                 + ". Run sources_check.py to see whether they answer")
 
 
+def check_signal():
+    """🔴 A vault without this file gets a completely clean bill of health while
+    the radar tiers every role LOW.
+
+    The tiering vocabulary moved into the vault on 2026-08-26, correctly -- it
+    was one user's preferences sitting in shared code. But an update that adds a
+    required vault file cannot add it to a vault, and nothing here noticed the
+    absence. The radar still runs, still fetches, still writes a shortlist; HIGH
+    and MED are simply always empty and every role lands in the catch-all
+    section. That reads as a thin week, not as a broken install.
+    """
+    # 🔴 Scoped to a configured radar, and that scoping is the check working.
+    # The first version fired on an install with no search.json at all -- nothing
+    # searches there, so nothing needs a vocabulary, and calling that "needs
+    # attention" is how a check earns its way into being ignored.
+    if not os.path.exists(paths.SEARCH):
+        return OPTIONAL, ("no vocabulary, and nothing searches yet either. It matters once "
+                          "settings/search.json exists")
+    if not os.path.exists(paths.SIGNAL):
+        return PLACEHOLDER, ("settings/signal.json is missing, so nothing can ever signal "
+                             "HIGH or MED — the radar still runs and every role lands in "
+                             "the catch-all section, which looks like a quiet week. Copy "
+                             "templates/settings/signal.example.json and edit it")
+    try:
+        with open(paths.SIGNAL, encoding="utf-8") as fh:
+            cfg = json.load(fh)
+    except ValueError as e:
+        return PLACEHOLDER, f"settings/signal.json is not valid JSON: {e}"
+    pos = [w for w in cfg.get("positive", []) if not str(w.get("match", "")).startswith("<")]
+    if not pos:
+        return PLACEHOLDER, ("settings/signal.json has no positive patterns filled in. Copied "
+                             "from the example and never edited looks exactly like configured")
+    hi = cfg.get("thresholds", {}).get("high")
+    return OK, (f"{len(pos)} positive pattern(s)"
+                + (f", HIGH at {hi}" if hi is not None else "")
+                + ". Tuning it changes what reaches you — nothing else does")
+
+
 def check_employers():
     p = paths.EMPLOYERS
     if not os.path.exists(p):
@@ -194,6 +232,7 @@ CHECKS = [
     ("your CV", check_sources),
     ("your wiki", check_wiki),
     ("job search", check_radar_config),
+    ("signal", check_signal),
     ("watch/avoid", check_employers),
     ("oversight", check_oversight),
 ]
