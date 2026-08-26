@@ -559,6 +559,26 @@ def sweep_warning(age):
     return None
 
 
+def cell(value):
+    """Make a value safe to put in a markdown table cell.
+
+    🔴 A `|` in a job title breaks the row it sits in, and job titles carry them
+    constantly -- "Engineering Manager | Build & Lead a New Team", "Barden | B
+    Corp". Markdown reads the pipe as a column break, so the row renders with
+    every value shifted one cell left and the link in the wrong column.
+
+    Found while counting how many roles were left to score: 43 rows of one
+    sweep carried a pipe, and every one of them rendered with its columns
+    shifted -- the link landing in the Posted column. The row still looks like a
+    row, which is why it survived. The same failure had just been found by hand
+    in the scoring table, which is the argument for fixing it in the writer
+    rather than in the file.
+
+    Newlines do the same thing more violently, turning one row into two.
+    """
+    return str(value).replace("|", "\\|").replace("\r", " ").replace("\n", " ")
+
+
 def main(argv=None):
     args = parse(argv)
     all_open = args.all_open
@@ -791,11 +811,11 @@ def main(argv=None):
                 # A dagger means this employer has been assessed and turned
                 # down before -- a note, never a filter, because a role declined
                 # on a commute or a start date can legitimately come back.
-                who = c["company"][:28] + (" †" if c.get("_note") else "")
+                who = cell(c["company"])[:28] + (" †" if c.get("_note") else "")
                 # "Remote" with no country after it is unknown, not global.
-                where = c["loc"][:22] + (" (scope TBC)" if c.get("loc_tbc") else "")
+                where = cell(c["loc"])[:22] + (" (scope TBC)" if c.get("loc_tbc") else "")
                 f.write(f"| {c['signal']} | {posted} | {who} | "
-                        f"{c['title'][:62]} | {where} | {c['pay']} | [link]({c['url']}) |\n")
+                        f"{cell(c['title'])[:62]} | {where} | {cell(c['pay'])} | [link]({c['url']}) |\n")
             notes = sorted({c["_note"] for c in rows if c.get("_note")})
             for n in notes:
                 f.write(f"\n† {n}\n")
@@ -826,8 +846,8 @@ def main(argv=None):
             f.write("| Company | Title | Location | Posted | Link |\n|---|---|---|---|---|\n")
             for c in sorted(rest, key=lambda x: (x["company"].lower(), x["title"].lower())):
                 posted = c["date"] + ("+" if c.get("date_is_floor") else "")
-                where = c["loc"][:22] + (" (scope TBC)" if c.get("loc_tbc") else "")
-                f.write(f"| {c['company'][:26]} | {c['title'][:64]} | {where} | "
+                where = cell(c["loc"])[:22] + (" (scope TBC)" if c.get("loc_tbc") else "")
+                f.write(f"| {cell(c['company'])[:26]} | {cell(c['title'])[:64]} | {where} | "
                         f"{posted} | [link]({c['url']}) |\n")
             f.write("\n")
 

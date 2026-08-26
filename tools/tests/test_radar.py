@@ -139,6 +139,55 @@ class Run:
         shutil.rmtree(self.dir, ignore_errors=True)
 
 
+class TheTableSurvivesItsOwnContent(unittest.TestCase):
+    """🔴 A pipe in a job title silently breaks the row it is in.
+
+    Found 2026-08-26 while counting how many roles were left to score. 43 rows
+    of one sweep carried a `|` in the title or the company:
+
+        | Barden | B Corp | Privacy & AI Counsel | ...
+        | Archer Recruitment | Engineering Manager - .NET / C# | Build & Lead...
+
+    Markdown reads that pipe as a column break, so the row renders with its
+    columns shifted: the title lands under Company and the link ends up in the
+    wrong cell entirely. 🔴 The row still looks like a row, which is why it
+    lasted -- the same failure had just been found by hand in the scoring table.
+
+    Recruiters and job boards put pipes in titles routinely. This is not an
+    exotic input.
+    """
+
+    def test_a_pipe_in_a_title_does_not_add_a_column(self):
+        rows = [posting(title="Engineering Manager | Build & Lead a New Team",
+                        company="Barden | B Corp", loc="Dublin | Hybrid",
+                        body="delivery portfolio roadmap stakeholder mentor adoption upskill")]
+        with Run([], {"fake": FakeAdapter(rows)}) as r:
+            for line in r.out.splitlines():
+                if line.startswith("| ") and "---" not in line and "SIGNAL" not in line \
+                        and not line.startswith("| Company"):
+                    cells = re.split(r"(?<!\\)\|", line)
+                    self.assertIn(len(cells) - 2, (5, 7),
+                                  f"a pipe in the content added a column: {line!r}")
+
+    def test_the_title_is_still_readable_after_escaping(self):
+        """Escaping must not eat the text -- the point is to keep it."""
+        rows = [posting(title="Engineering Manager | Build a Team",
+                        body="delivery portfolio roadmap stakeholder mentor adoption upskill")]
+        with Run([], {"fake": FakeAdapter(rows)}) as r:
+            self.assertIn("Engineering Manager", r.out)
+            self.assertIn("Build a Team", r.out)
+
+    def test_a_newline_in_a_field_cannot_split_a_row(self):
+        """The other way one row becomes two."""
+        rows = [posting(company="Acme\nCorp", title="Head of Delivery",
+                        body="delivery portfolio roadmap stakeholder mentor adoption upskill")]
+        with Run([], {"fake": FakeAdapter(rows)}) as r:
+            body = r.out.split("## HIGH signal")[1]
+            for line in body.splitlines():
+                self.assertFalse(line.strip() and not line.startswith(("|", "#", ">", "-")),
+                                 f"a newline split a row: {line!r}")
+
+
 # --------------------------------------------------------------------------
 # The window
 # --------------------------------------------------------------------------
