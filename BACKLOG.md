@@ -1327,11 +1327,12 @@ reads as a quiet week, not as a broken install**, which is the worst failure thi
 
 ### 🔴 What is still open
 
-- **Nothing generalises the settings case.** `doctor.py` knows about `signal.json` by name because
-  somebody wrote that check by hand. **The next required settings file will ship with the same silence**,
-  and the next person to notice will be a user with an empty shortlist. A drift check comparing
-  `vault/settings/` against `templates/settings/*.example.json` is the shape — new keys, new files,
-  removed keys — and it should say what to do, not just what differs.
+- 🟢 **The settings case is now generalised — `tools/settings_drift.py`, built 2026-08-26.** Verified on a
+  real pulled clone ten commits behind: it named the missing `linkedin` block and both missing location
+  lists, and exited 1. It found a genuine gap on its first run, too — `profile.json` shipped with no
+  example, so nobody cloning could discover the setting existed. **`doctor.py` and `settings_drift.py`
+  split the job**: drift says *your file is missing a key the system reads*, doctor says *this specific
+  absence will silently do nothing to you*.
 - **A tuned `.claude/skills/` or `SCHEMA.md` is still clobbered by a pull**, silently. This is the one
   genuinely ambiguous case left, and it is much smaller than the original entry implied.
 - 🔴 **The rule from everywhere else on this page still applies: an update that silently drops a user's
