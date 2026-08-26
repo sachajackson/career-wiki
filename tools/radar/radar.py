@@ -76,6 +76,35 @@ OUT    = paths.SHORTLIST
 
 MONEY = re.compile(r"(€|£|\$)\s?\d[\d,.]*\s?k?|\b\d{2,3}\s?k\b", re.I)
 
+# 🔴 A DAY RATE MUST KEEP ITS UNIT, or it reads as its own opposite.
+#
+# Sacha asked on 2026-08-26 to be shown high-FIT contract roles even at SEC 1 or
+# 2, because the rate can make the trade worth it. That makes the rate the
+# deciding number -- and MONEY alone could not see one. It turns
+# "€400-650/day" into "€400", which against a €130k floor reads as catastrophic
+# when it is in fact around €150k gross before the pension, leave and continuity
+# gap.
+#
+# The range and the unit are both captured, so the Pay column can never render a
+# rate as a salary. Ordered before MONEY at the call site: the more specific
+# pattern must win.
+RATE = re.compile(
+    r"(?:(?:€|£|\$)\s?\d[\d,.]*(?:\s?[-–—]\s?(?:€|£|\$)?\s?\d[\d,.]*)?"
+    r"|\b\d{3,4}(?:\s?[-–—]\s?\d{3,4})?)"
+    r"\s*(?:/\s*day|per\s+day|p\s*/\s*d|a\s+day|daily)",
+    re.I)
+
+
+def pay_in(text):
+    """A day rate if there is one, else a salary, else "".
+
+    A rate is checked first because a salary pattern matches the leading number
+    of a rate and would silently strip the unit.
+    """
+    text = text or ""
+    m = RATE.search(text) or MONEY.search(text)
+    return m.group(0).strip() if m else ""
+
 _NOTHING = re.compile(r"(?!x)x")          # matches nothing, ever
 
 
@@ -684,8 +713,10 @@ def main(argv=None):
         c["_note"] = EMP.declined_note(c, emp) if emp else None
         c["tally"] = tally_of(c["title"] + " " + c.get("body", ""))
         if not c.get("pay"):
-            m = MONEY.search(c["title"])
-            c["pay"] = m.group(0) if m else ""
+            # Title first, then the body. A rate is named in the advert far more
+            # often than in the title, and a contract without its rate cannot be
+            # assessed at all -- which is the whole of the decision on one.
+            c["pay"] = pay_in(c["title"]) or pay_in(c.get("body", ""))
         # A visible salary used to add 3 to the tally. It does not any more --
         # see signal(). The Pay column already tells a reader everything the
         # bonus was trying to say, and tells them the figure rather than three

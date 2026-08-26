@@ -139,6 +139,59 @@ class Run:
         shutil.rmtree(self.dir, ignore_errors=True)
 
 
+class TheDayRate(unittest.TestCase):
+    """🔴 A day rate read as a salary is a role thrown away.
+
+    Sacha asked on 2026-08-26 to be shown high-FIT contract roles even at SEC 1
+    or 2, because the rate can make the trade worth it. That makes the RATE the
+    deciding number -- and the pay regex could not see one.
+
+    `(€|£|$)\s?\d[\d,.]*\s?k?` searching the title alone turns
+    "€400-650/day" into "€400". Against a €130k floor that reads as
+    catastrophic, when it is in fact roughly €150k gross before the pension,
+    leave and continuity gap. The one number that decides a contract was being
+    rendered as its own opposite.
+    """
+
+    def test_a_day_rate_keeps_its_unit(self):
+        for text, want in (
+            ("AI Delivery Lead - Finance €400-650/day", "€400-650/day"),
+            ("Delivery Lead (€550 per day)", "€550 per day"),
+            ("Contract PM £700/day", "£700/day"),
+            ("Programme Manager - 650 p/d", "650 p/d"),
+        ):
+            self.assertEqual(radar.pay_in(text), want, text)
+
+    def test_an_annual_salary_is_not_labelled_a_rate(self):
+        """🔴 The false-positive case, tested before the feature ships.
+
+        Mislabelling €149k as a day rate would be the same error in the other
+        direction, and there are far more salaries than rates in the corpus.
+        """
+        for text in ("Head of AI - 120k", "TPM €149,800 - €224,800", "Director $180k"):
+            got = radar.pay_in(text)
+            self.assertTrue(got, text)
+            self.assertNotIn("day", got.lower())
+            self.assertNotIn("p/d", got.lower())
+
+    def test_the_body_is_searched_when_the_title_says_nothing(self):
+        """Rates live in the advert far more often than in the title, and a
+        contract without its rate is not assessable at all."""
+        rows = [posting(title="AI Delivery Lead", pay="",
+                        body="12 month contract, €400-650/day depending on experience. "
+                             "delivery portfolio roadmap stakeholder mentor adoption upskill")]
+        with Run([], {"fake": FakeAdapter(rows)}) as r:
+            self.assertIn("€400-650/day", r.out)
+
+    def test_a_rate_in_the_body_never_overrides_one_the_source_gave(self):
+        rows = [posting(title="AI Delivery Lead", pay="€700/day",
+                        body="was previously €300/day. delivery portfolio roadmap stakeholder "
+                             "mentor adoption upskill")]
+        with Run([], {"fake": FakeAdapter(rows)}) as r:
+            self.assertIn("€700/day", r.out)
+            self.assertNotIn("€300/day", r.out)
+
+
 class TheTableSurvivesItsOwnContent(unittest.TestCase):
     """🔴 A pipe in a job title silently breaks the row it is in.
 
