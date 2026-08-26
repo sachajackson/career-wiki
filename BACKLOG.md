@@ -586,6 +586,87 @@ commit from the branch, not from the server.** For anything genuinely sensitive 
 
 ## 🟡 Gaps — things the system does not do yet
 
+### ✅ The signal tier measured the advert, not the job — TIER DEMOTED TO A HINT, 2026-08-26
+
+**Measured 2026-08-26 against a real run of 5,255 roles and 17 hand-scored assessments.** The keyword tally
+renders as `HIGH` / `MED` / `LOW`, and **the tier carries no information about role quality.**
+
+🔴 **The proof is a single contract advertised by three agencies on the same day:**
+
+```
+Berkley Group   tally 14  MED   -> surfaced
+Stelfox         tally 14  MED   -> surfaced
+IT Search       tally  9  LOW   -> never shown
+```
+
+**Same job. One write-up fell below the threshold entirely.** The same thing happens without agencies: one
+employer's *Senior Engineering Manager, Developer Productivity* scores **20 (HIGH)** in its US listing and
+**17 (MED)** in its Canadian one. **A tally over the advert text is a measure of the copywriting.**
+
+🔴 **And the tier does not predict the framework score.** Across 17 roles assessed by hand against the
+framework:
+
+| Tally | Tier | FIT |
+|---|---|---|
+| 21 | HIGH | **12** |
+| 21 | HIGH | **10** |
+| 19 | HIGH | 14 |
+| **15** *(nearest the HIGH cut)* | MED | **12** |
+| **15** *(nearest the HIGH cut)* | MED | **10** |
+| 13 | MED | 🟢 **15** — the best role assessed |
+| 13 | MED | 🟢 **14** |
+| 13 | MED | **6** |
+
+**Tally 13 spans FIT 6 to 15.** 🔴 **The two roles nearest the HIGH threshold scored 12 and 10, below two
+roles further from it.** *"Nearly HIGH"* is not a useful filter, and reading in tier order is reading in
+copywriting order.
+
+🟢 **This is not a defect in the tally.** A keyword count does what a keyword count does, and the skill
+already says `SIGNAL` is not a score and to always read MED. **What is missing is the consequence of that
+being true:** if the tier is uninformative, the system should stop using it as the gate on what a person
+ever sees.
+
+## ✅ What shipped, 2026-08-26
+
+**Option 3 below, and it was the right one.** Everything that clears the real filters — location, title
+shape, the avoid list — is now **listed in full** under *"Everything else that passed the filters"*,
+**sorted by employer rather than by tally.** The tiers remain as a reading hint above it.
+
+**On the first run after the change: 1,691 roles became visible that had been dropped.**
+
+🟡 **Options 1 and 2 are now unnecessary rather than rejected.** *"Never drop a watched employer"* and
+*"surface on a strong title match"* were both ways of rescuing individual roles from a gate. **With no
+gate there is nothing to rescue from.**
+
+🔴 **The floor stayed, and that was the point of the false-positive note below.** Roles still have to
+clear location, title shape and the avoid list — 4,204 were dropped on location alone in that run. **What
+changed is that the keyword count no longer decides what a person is allowed to see.**
+
+**The original entry follows.**
+
+---
+
+**Three options, and they are not equivalent:**
+
+1. 🟢 **Never drop a role from a WATCHED employer, whatever the tally.** A watched employer is an explicit
+   statement of interest; **letting a keyword count veto it is the tail wagging the dog.** Cheapest change,
+   and the one with the clearest rationale.
+2. 🟡 **Surface LOW roles whose TITLE matches a query strongly**, even when the body scores low. The IT
+   Search listing was terse, not irrelevant.
+3. 🔴 **Report the tier but sort by something else** — employer, then title. **Sorting by tier actively
+   misleads**, because it presents copywriting density as a ranking.
+
+🔴 **The false-positive case to think about first:** the threshold exists because **1,347 roles passed the
+location filter and the avoid list in one run.** Removing it entirely returns a pile nobody reads, which is
+worse than a biased order. **Any fix has to keep a cut somewhere** — the argument above is only that the cut
+should not fall on a watched employer, and that the surviving order should not pretend to be a ranking.
+
+🟡 **Checked, so nobody re-checks it:** of those 1,347 dropped, 312 had a senior-sounding title, and the top
+of that pile by tally was *.NET Technical Lead*, *Principal Software Engineer*, *Technical Team Lead*.
+**Nothing strong was hiding below the line in that run** — the threshold is doing useful work. **The problem
+is the tier order presented above it, not the existence of a floor.**
+
+
 ### 🟡 Oracle identifies an employer by `site` alone, and the default site value is not unique
 
 **Found 2026-08-25 while making the radar label rows with employer names instead of ATS slugs.** The
