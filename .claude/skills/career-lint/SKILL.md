@@ -151,10 +151,24 @@ be there under `SCHEMA.md`:
 Report these before anything else, with the exact file and line, and offer to fix each one. **Do not
 "tidy" them silently** — the user needs to know what was recorded and where it went.
 
-**6. Orphans and gaps.** Pages nothing links to. Concepts mentioned repeatedly with no page. Open
+**6. 🔴 Findings that recur but were never promoted.** `vault/wiki/Search Findings.md` holds what the search
+has *established*, as opposed to what happened on a date. **It is only useful if it is kept current**, and
+nothing forces that.
+
+**Two failure modes, and the second is the quiet one:**
+
+- **A pattern hit a third role and the page still says two.** Check the counts against the role pages —
+  each finding names the roles it rests on, so the stated number and the number of links must agree.
+- 🔴 **A new pattern appeared across several roles and was never written down at all.** This is the one
+  that needs a human read: three role pages failing for the same unstated reason look like three separate
+  disappointments until somebody notices.
+
+🟡 **A count of one is not a finding.** Two is a coincidence; three is worth promoting.
+
+**7. Orphans and gaps.** Pages nothing links to. Concepts mentioned repeatedly with no page. Open
 questions that have been open a long time — some are answerable in one message.
 
-**7. The scoring table.** Roles with no posting URL. Statuses that have not been updated. Scores whose
+**8. The scoring table.** Roles with no posting URL. Statuses that have not been updated. Scores whose
 justification no longer matches the reasoning on the role page.
 
 ## How to report it
