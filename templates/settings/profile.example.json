@@ -1,0 +1,23 @@
+{
+  "_README": [
+    "Things about you that tools need and that change rarely.",
+    "Copy to vault/settings/profile.json and edit. The whole file is optional.",
+    "",
+    "This example exists because tools/settings_drift.py found it missing on the day it was",
+    "written: vault/settings/profile.json was created 2026-08-26 and no example shipped beside",
+    "it, so nobody cloning this repo could discover the file existed at all. A setting nobody",
+    "can find is a setting nobody sets.",
+    "",
+    "'spelling' drives tools/cv_lint.py, and ABSENT MEANS OFF -- deliberately. The rules moved",
+    "out of the shipped code because the linter was enforcing Ireland/UK conventions on",
+    "everybody: a US candidate writing a correct US CV got a finding for every 'optimize' and",
+    "'center', a non-zero exit, and no flag to turn it off. Enforcing a spelling nobody declared",
+    "was the original bug, so the default had to be silence rather than a guess.",
+    "",
+    "Values: 'ie-uk' | 'us' | 'off'. Anything else is treated as 'off'.",
+    "",
+    "🔴 Delete the line below rather than leaving it as it stands. The angle brackets are not a",
+    "value: they match no locale, so the linter falls back to 'off' and quietly checks nothing."
+  ],
+  "spelling": "<ie-uk | us | off>"
+}

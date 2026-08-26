@@ -52,6 +52,28 @@ holds a real person's history is a judgement — where it goes, what carries ove
 belongs under it. **You own these pages; do the merge, and say what you added.** 🟡 And a clean run means
 the *structure* matches, **not** that a section's contents are current.
 
+🔴 **`template_drift.py` covers the pages. `settings_drift.py` covers the settings, and it is the same
+failure in the half nobody checked:**
+
+```
+python3 tools/settings_drift.py
+```
+
+**An update can ship a system that needs a vault file, and it cannot put that file in a vault.** When the
+radar's tiering vocabulary moved into `vault/settings/signal.json`, anybody who pulled got the new radar
+and **not the file it reads**. Nothing errored — the radar still ran, still fetched, still wrote a
+shortlist, and HIGH and MED were simply always empty. 🔴 **A broken install that reads as a quiet week is
+the worst failure this system can have.**
+
+| Finding | What it means |
+|---|---|
+| 🔴 `!!` **a key the system reads and the file has not got** | **The update not taken.** Copy the key from `templates/settings/` and fill in *their* value — never the example's, which is a placeholder and matches nothing. **This is the only finding that fails the run** |
+| `??` **nothing reads this any more** | A renamed setting left behind, still looking configured and doing nothing — **or their own key.** Judgement, so it is reported and does not fail |
+| **a settings file the vault has no copy of** | 🟡 **Not a fault.** Most settings are optional, and telling somebody who never wanted oversight that they are out of date every week is how a check gets muted |
+
+🟢 **It compares keys and never values**, so it cannot leak a query or an employer into a report. **A key
+present but still holding `<your city>` is `doctor.py`'s finding, not this one.**
+
 **And monthly, or before relying on a quiet radar run:**
 
 ```

@@ -352,7 +352,7 @@ class NothingOfTheUsersLivesOutsideIt(unittest.TestCase):
         'I am looking in the wrong place'."""
         for name in ("radar/radar.py", "radar/employers.py", "radar/sources_check.py",
                      "doctor.py", "export_review.py", "verify.py", "known.py",
-                     "wikilinks.py", "template_drift.py"):
+                     "wikilinks.py", "template_drift.py", "settings_drift.py"):
             with open(os.path.join(TOOLS, name), encoding="utf-8") as fh:
                 self.assertIn("import paths", fh.read(), f"{name} should resolve paths centrally")
 

@@ -104,7 +104,8 @@ def check_wiki():
         return WARN, (f"{len(pages)} page(s), but no {' or '.join(missing)}. "
                       f"Copy templates/{missing[0]} into vault/wiki/ — every operation "
                       f"ends by writing to these, so without them the record is not kept")
-    return OK, f"{len(pages)} page(s). Run template_drift.py after any tool update"
+    return OK, (f"{len(pages)} page(s). After any tool update run template_drift.py for "
+                f"these and settings_drift.py for vault/settings/")
 
 
 def _config(path, name, what):

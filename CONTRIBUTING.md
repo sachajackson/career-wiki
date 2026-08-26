@@ -199,5 +199,18 @@ Your wiki was built from the templates **once** and nothing revisits it. When a 
 a new table the agent is told to keep, a row it is told to score — **your pages do not get it**, and the
 agent ends up looking for something that is not there. This says what is missing.
 
+```bash
+python3 tools/settings_drift.py
+```
+
+**The same failure, in the half nobody was checking.** An update can ship a system that needs a settings
+file, and it cannot put that file in your vault. When the radar's tiering vocabulary moved into
+`vault/settings/signal.json`, anyone who pulled got the new radar and **not the file it reads** — and
+nothing errored. The radar still ran, still fetched, still wrote a shortlist, and HIGH and MED were simply
+always empty. **A broken install that reads as a quiet week is the worst failure this system can have.**
+
+It compares **keys, never values**, so it cannot leak a query or an employer into its output. A key that is
+present but still says `<your city>` is `doctor.py`'s finding, not this one.
+
 **It never edits your pages.** Putting a new section into a page that already holds your history is a
 judgement, and that is the agent's job rather than a script's.
