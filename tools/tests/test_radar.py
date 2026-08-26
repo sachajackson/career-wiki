@@ -174,6 +174,37 @@ class TheDayRate(unittest.TestCase):
             self.assertNotIn("day", got.lower())
             self.assertNotIn("p/d", got.lower())
 
+    def test_a_lunch_allowance_is_not_a_day_rate(self):
+        """🔴 THE CRY-WOLF CASE, and it fired on the first real run.
+
+        Searching the body for a rate found this, in a Sprout Social advert for a
+        Senior Applied AI/ML Scientist:
+
+            "Dublin Office Perks: A €18 daily lunch stipend (via Deliveroo)"
+
+        and rendered the role's Pay as "€18 daily". Benefits sections are full of
+        per-day numbers -- lunch, travel, internet -- and every one of them sits
+        beside the word "daily" or "per day".
+
+        Two guards, because either alone leaks: a magnitude floor, since no
+        director-level contract in this market pays under €150 a day, and an
+        allowance-word veto for the ones that clear it.
+        """
+        for text in ("A €18 daily lunch stipend (via Deliveroo)",
+                     "€25 per day meal allowance",
+                     "a €200 per day travel expenses cap",
+                     "€12 a day for lunch"):
+            self.assertEqual(radar.pay_in(text), "", text)
+
+    def test_a_real_rate_still_survives_both_guards(self):
+        """The other half of the same test: guards that block the real thing are
+        worse than no guards, because a contract without its rate is unscoreable."""
+        for text, want in (("€400-650/day", "€400-650/day"),
+                           ("£700/day", "£700/day"),
+                           ("650 p/d", "650 p/d"),
+                           ("€550 per day", "€550 per day")):
+            self.assertEqual(radar.pay_in(text), want, text)
+
     def test_the_body_is_searched_when_the_title_says_nothing(self):
         """Rates live in the advert far more often than in the title, and a
         contract without its rate is not assessable at all."""
@@ -182,6 +213,25 @@ class TheDayRate(unittest.TestCase):
                              "delivery portfolio roadmap stakeholder mentor adoption upskill")]
         with Run([], {"fake": FakeAdapter(rows)}) as r:
             self.assertIn("€400-650/day", r.out)
+
+    def test_company_money_in_the_body_is_never_read_as_pay(self):
+        """🔴 The second thing shipping the body search broke.
+
+        Adverts are full of money that is not the salary. Real matches from one
+        run: "$1.1 trillion in assets under management" became a pay of "$1.1",
+        and "grown products from $0 to $200M in revenue" became "$0".
+
+        So the body is searched for a RATE only. A salary still comes from the
+        title, where a number next to a job title is the job's number. There is
+        no equivalent guarantee anywhere in the body prose.
+        """
+        rows = [posting(title="Head of Delivery", pay="",
+                        body="Our $1.1 trillion in assets under management. We grew from $0 to "
+                             "$200M in revenue. delivery portfolio roadmap stakeholder mentor "
+                             "adoption upskill")]
+        with Run([], {"fake": FakeAdapter(rows)}) as r:
+            self.assertNotIn("$1.1", r.out)
+            self.assertNotIn("| $0 |", r.out)
 
     def test_a_rate_in_the_body_never_overrides_one_the_source_gave(self):
         rows = [posting(title="AI Delivery Lead", pay="€700/day",

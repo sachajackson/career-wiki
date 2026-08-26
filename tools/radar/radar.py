@@ -95,15 +95,66 @@ RATE = re.compile(
     re.I)
 
 
+# 🔴 Two guards, and BOTH are needed. Found by shipping without them.
+#
+# The first real run rendered a Sprout Social AI/ML Scientist role's pay as
+# "€18 daily", from: "Dublin Office Perks: A €18 daily lunch stipend (via
+# Deliveroo)". Benefits sections are full of per-day numbers -- lunch, travel,
+# internet -- and every one of them sits beside "daily" or "per day".
+#
+# MIN_RATE: no director-level contract in this market pays under €150 a day, so
+# a smaller number beside "per day" is something else. Cheap and decisive.
+# ALLOWANCE: catches the ones that clear the floor. A "€200 per day travel
+# expenses cap" is a real number about a real day and is not what anyone is paid.
+MIN_RATE = 150
+ALLOWANCE = re.compile(r"\b(lunch|meal|food|travel|expense|stipend|allowance|per\s?diem|"
+                       r"mileage|subsistence|internet)\b", re.I)
+
+
+def _is_real_rate(match, text):
+    first = re.search(r"\d[\d,.]*", match.group(0))
+    if not first:
+        return False
+    try:
+        if float(first.group(0).replace(",", "").rstrip(".")) < MIN_RATE:
+            return False
+    except ValueError:
+        return False
+    # Look both ways: "lunch stipend" follows the number, "travel expenses cap"
+    # can precede it.
+    lo, hi = max(0, match.start() - 40), min(len(text), match.end() + 40)
+    return not ALLOWANCE.search(text[lo:hi])
+
+
+def rate_in(text):
+    """A day rate, or "". Safe to run over body prose because a rate carries its
+    own unit; a bare number does not."""
+    text = text or ""
+    for m in RATE.finditer(text):
+        if _is_real_rate(m, text):
+            return m.group(0).strip()
+    return ""
+
+
 def pay_in(text):
-    """A day rate if there is one, else a salary, else "".
+    """A day rate if there is a real one, else a salary, else "".
 
     A rate is checked first because a salary pattern matches the leading number
     of a rate and would silently strip the unit.
     """
     text = text or ""
-    m = RATE.search(text) or MONEY.search(text)
-    return m.group(0).strip() if m else ""
+    rate = rate_in(text)
+    if rate:
+        return rate
+    # 🔴 The allowance veto has to apply here too, and forgetting it made the
+    # first fix worse rather than better: rejecting "€18 daily" as a rate simply
+    # let the salary pattern return "€18", which reads as a salary of eighteen
+    # euro. A guard on one of two paths is not a guard.
+    for m in MONEY.finditer(text):
+        lo, hi = max(0, m.start() - 40), min(len(text), m.end() + 40)
+        if not ALLOWANCE.search(text[lo:hi]):
+            return m.group(0).strip()
+    return ""
 
 _NOTHING = re.compile(r"(?!x)x")          # matches nothing, ever
 
@@ -713,10 +764,16 @@ def main(argv=None):
         c["_note"] = EMP.declined_note(c, emp) if emp else None
         c["tally"] = tally_of(c["title"] + " " + c.get("body", ""))
         if not c.get("pay"):
-            # Title first, then the body. A rate is named in the advert far more
-            # often than in the title, and a contract without its rate cannot be
-            # assessed at all -- which is the whole of the decision on one.
-            c["pay"] = pay_in(c["title"]) or pay_in(c.get("body", ""))
+            # Title first, for either a rate or a salary: a number beside a job
+            # title is the job's number.
+            #
+            # 🔴 Then the body FOR A RATE ONLY. Searching it for a salary too was
+            # tried and produced "$1.1" from "$1.1 trillion in assets under
+            # management" and "$0" from "grown products from $0 to $200M in
+            # revenue". Adverts are full of money that is not the salary, and
+            # nothing in body prose says which is which -- whereas a day rate
+            # carries its own unit, which is what makes it safe to look for.
+            c["pay"] = pay_in(c["title"]) or rate_in(c.get("body", ""))
         # A visible salary used to add 3 to the tally. It does not any more --
         # see signal(). The Pay column already tells a reader everything the
         # bonus was trying to say, and tells them the figure rather than three
