@@ -51,6 +51,10 @@ vault/                    everything that is theirs. Nothing here ships
   secrets/.env            an API key, and nothing else. Never commit, never bundle
   state/                  seen · raw · shortlist. Regenerable — deleting it costs nothing
   migration/              a drop zone. `tools/migrate.py` empties it
+  temp/                   🔴 the user's own scratch folder. READ it when they point at
+                          something in it; never write there and never file anything
+                          into it. Safe for them to empty at any moment, so nothing
+                          may depend on a file in it surviving
 
 tools/                    the system. Replaced wholesale by an update
   lib/paths.py            the only file that knows where anything lives
@@ -183,6 +187,20 @@ actually does. Keep a standing backlog of unanswered questions on `Operating Mod
 
 **Query.** Read `index.md`, drill into pages, answer with citations. If the answer is durable, offer to
 file it back as a page.
+
+**Market standards.** Research how CVs, cover letters and profiles should be built **for this user's
+country, level, industry and target roles**, and write four reference pages into `vault/wiki/`. See
+`/market-standards`.
+
+🔴 **Two standards govern an artefact, and they do not overlap. The MARKET standard decides structure —
+length, section order, what stays on the page, what a regulator requires. The WRITING standard decides
+sentences — vocabulary, cadence, what a claim may assert.** Where they conflict, that split *is* the
+answer: take structure from the market standard and sentences from the writing standard, and do not let
+either colonise the other.
+
+🔴 **The market standard is not universal, and treating it as universal is the failure it exists to
+prevent.** A one-page résumé is a US convention; two pages is the UK and Irish norm. **A page produced
+for one user is evidence about that user's market only.**
 
 **Lint.** Health-check: contradictions, expired `stale_after`, unverified claims used externally, orphan
 pages, concepts mentioned but lacking a page.

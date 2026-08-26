@@ -18,6 +18,22 @@ looked at.
 **So run this *before* a batch of applications, not after.** Fixing it afterwards means the inconsistency
 was live for the ones that matter.
 
+## 🔴 is there a market standard to build against?
+
+**Check `vault/wiki/` for `LinkedIn Profile Standards.md` and whichever board-standards pages exist, and check their `stale_after` has not passed.**
+
+**If missing or stale, say so plainly — name the page and why it matters for the profiles about to be rewritten**
+(*"nothing here knows whether a two-page CV is the norm in your market, or whether a cover letter is
+expected at all"*). **Then offer `/market-standards`**, and say it is a long job — four deep-research
+passes.
+
+🔴 **If they decline, PROCEED — and say out loud what assumption is being used instead.** For example:
+*"defaulting to two pages with education retained, on the assumption of a senior application in this
+market"* — and name the market you assumed.
+
+🔴 **Never hard-block on this.** A skill that refuses to work until research has run is a skill people
+route around, and **a stated assumption is more useful than a wall.**
+
 ## What to check first
 
 Read every page with an expired `stale_after`, plus anything describing a current state. The usual rot:
