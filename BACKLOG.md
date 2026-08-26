@@ -1393,6 +1393,34 @@ the most common phrases in director-level postings.
 
 ---
 
+### 🔴 `--reset` is global even when the run is not, and it destroyed a real baseline
+
+**Status: found 2026-08-26, by doing it. Not fixed.**
+
+**`--adapter google --all-open --reset` wiped the memory of all 6,462 seen roles**, not just Google's. The
+flag says *"forget everything seen before"* and means it — but it was typed on a run scoped to **one
+adapter**, while testing that adapter, and the scoping of the run does not carry to the flag.
+
+🔴 **The damage is quiet and total.** `seen.json` went from 6,462 entries to 48. Nothing assessed was lost —
+the scoring table, the role pages and `vault/postings/` are all outside it — **but the radar's entire notion
+of *new* was gone**, and the only way back is a full `--all-open` sweep whose output is, by definition,
+entirely "new". One careless flag on a single-adapter test costs a full re-sweep and one meaningless run.
+
+**Two candidate fixes, and the second is probably right:**
+
+| | |
+|---|---|
+| **Scope `--reset` to `--adapter` when both are given** | Reads naturally — *reset this source* — but it is a **silent change of meaning** for anyone who currently relies on the global behaviour |
+| 🟢 **Refuse the combination and make the user say which they meant** | `--reset` with `--adapter` errors, offering `--reset-adapter` for the narrow one. **Nothing silently does the wrong thing, and nothing silently changes** |
+
+🔴 **And whichever is chosen, a destructive flag should say what it is about to destroy**: *"forgetting 6,462
+seen roles"* before doing it, not after. **The count is known at that moment and printing it costs nothing.**
+
+🟡 **Note what worked:** `seen.json` is regenerable state and lived in `vault/state/`, so this was recoverable
+by re-running rather than being data loss. **The boundary did its job even though the flag did not.**
+
+---
+
 ### 🟡 A user guide — not yet, and the trigger is specific
 
 **Status: raised 2026-08-25. Deliberately deferred.**
