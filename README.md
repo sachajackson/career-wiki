@@ -208,6 +208,30 @@ employer is actually anxious about, score it against your framework, and file a 
 looking at one role is available for every role after it. That is the whole design: **by the twentieth
 application, the wiki writes a better CV in ten minutes than a fresh interview would in an hour.**
 
+### `/market-standards` — what the market expects, for *you*
+
+**Every other skill knows how a sentence should read. None of them knew how long a CV should be**, whether
+education stays on it, whether a cover letter is expected at all, or which of those answers changes when you
+move country. **A one-page résumé is a US convention, and applying it to a director-level application in
+Europe is simply wrong.**
+
+This researches those questions **against your own country, level, profession and target roles** — read out
+of the vault, not assumed — and writes four reference pages that `/build-application`, `/profile-refresh` and
+`/pre-submit` then read. It delegates to a deep-research skill rather than reimplementing one, runs each topic
+separately because they reach different confidence levels, and **marks every claim with how well evidenced it
+is.**
+
+**It carries the debunked claims so each run does not rediscover them.** *"75% of résumés are auto-rejected"*
+traces to a vendor that shut down in 2013 having published no study. The 7.4-second recruiter figure is one
+survey of thirty people, run by a company selling résumé services. **Both are still quoted everywhere.**
+
+🔴 **It never puts you into a search query.** It researches the category — *"senior delivery roles in
+<country>"* — never the person.
+
+**The skills that read these pages do not block when they are missing.** They say which page is absent, offer
+to run this, and **proceed anyway on a stated assumption** if you decline. A skill that refuses to work until
+research has run is one people route around.
+
 ### `/career-lint` — health check
 
 Contradictions between pages, claims that have expired, unverified assertions that have found their way
