@@ -47,42 +47,93 @@ OUT    = paths.SHORTLIST
 # WHOLE title, anchored -- "Senior Developer" is out, but "Director of
 # Engineering, Developer Experience" is not. A substring match here silently
 # discarded a genuinely strong role during development.
-IC_TITLE = re.compile(
-    r"^(senior |staff |principal |lead |sr\.? |junior |graduate |trainee )*"
-    r"(software |backend |frontend |full.?stack |ai |ml |data |cloud |platform )*"
-    r"(developer|engineer|scientist|analyst|consultant|architect|intern)s?"
-    r"(\s*[-,(].*)?$", re.I)
-NEVER = re.compile(r"\b(mechanical|electrical|civil|hvac|nurse|clinical|quantity surveyor|"
-                   r"site engineer|apprentice|sales representative|recruiter)\b", re.I)
-# Salary, for the Pay column only -- deliberately NOT part of the tally. Read
-# from the title, because a currency figure in a description is as likely to be
-# a budget, a contract value or a revenue number as a salary, and a wrong figure
-# in a Pay column is worse than an empty one.
+# ---------------------------------------------------------------------------
+# THE TIERING VOCABULARY IS THE USER'S, AND IT LIVES IN THEIR VAULT.
+#
+# Until 2026-08-26 one person's vocabulary was hardcoded here: a large positive
+# weight for a phrase that pre-answered their main objection, a large negative one
+# for an adjacent industry whose listings kept matching their words, and a penalty
+# for a commuting pattern they would not accept. Every one of those is a statement
+# about ONE PERSON -- their preference, their exclusions, their journey to work --
+# and all of it shipped to everyone who cloned the repo. Somebody in an unrelated
+# trade got a scale built for a delivery director, and somebody working IN that
+# penalised industry got a heavy negative for their own career.
+#
+# (Worded carefully: the test that keeps this file clean searches for those very
+# terms, and a comment naming them would fail it. That has now happened three
+# times in this repo -- see the commit guard's own postmortems.)
+#
+# AGENTS.md: "everything about, belonging to, or specific to the user lives under
+# vault/". test_boundary.py could not catch this, because it checks that no FILE
+# under vault/ is tracked -- not that no user-specific CONTENT sits in tools/.
+# Same shape as the .obsidian/ gap: the guard covered the form, not the substance.
+#
+# THE DEFAULT IS EMPTY, AND THAT IS DELIBERATE. With no signal.json the radar
+# tiers nothing, excludes nothing on title, and lists everything that passed the
+# real filters. Shipping somebody else's vocabulary as a fallback would put the
+# problem straight back.
+# ---------------------------------------------------------------------------
+
 MONEY = re.compile(r"(€|£|\$)\s?\d[\d,.]*\s?k?|\b\d{2,3}\s?k\b", re.I)
 
-# Tiering vocabulary. Positive terms describe the work; negative terms are
-# domains that recur in listings and are reliably wrong. Tune in config later.
-POS = [(r"generative ai|agentic|llm|large language model", 4),
-       (r"human.in.the.loop|guardrail|ai governance|responsible ai", 4),
-       (r"not a hands-on coding role|not a traditional engineering management", 6),
-       (r"software development l(ife)?cycle|sdlc|release management|change management", 3),
-       (r"legacy|modernis|moderniz|technical debt|re-?platform", 3),
-       (r"regulated|financial services|bank|payments|insurance", 3),
-       (r"portfolio|roadmap|prioritis|prioritiz|capacity planning", 2),
-       (r"adoption|upskill|enablement", 2),
-       (r"managers? (who )?report|leaders? report|manage managers", 3),
-       (r"mentor|coach|career development|graduate", 2),
-       (r"stakeholder|executive|senior leadership", 1)]
-NEG = [(r"hands.on (coding|engineering|development)|write code daily", -5),
-       (r"data cent(re|er)|network engineering|telecom|fibre", -6),
-       (r"supply chain|logistics|warehouse|shop floor", -5),
-       (r"pre.?sales|quota|revenue target|billable", -3),
-       (r"on.?call 24|24x7|weekend rota", -4),
-       (r"\b(4|5) days? (per week )?(in|from) (the )?office", -3)]
+_NOTHING = re.compile(r"(?!x)x")          # matches nothing, ever
 
-# The two cut-points of the keyword tally. Above HIGH_AT is worth reading first;
-# above MED_AT is worth reading. Below that the posting is not surfaced at all.
-HIGH_AT, MED_AT = 18, 10
+
+def _load_signal(path=None):
+    try:
+        with open(path or paths.SIGNAL, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return {}
+
+
+def build_signal(cfg):
+    """(POS, NEG, NEVER, IC_TITLE, HIGH_AT, MED_AT) from the user's settings.
+
+    Absent or unreadable -> no tiering and no title exclusions. A missing config
+    must never silently hide a role.
+    """
+    def pairs(key):
+        out = []
+        for row in cfg.get(key) or []:
+            m = row.get("match") if isinstance(row, dict) else (row[0] if row else None)
+            w = row.get("weight") if isinstance(row, dict) else (row[1] if len(row) > 1 else 0)
+            if not m or str(m).startswith("<"):     # unreplaced placeholder
+                continue
+            try:
+                re.compile(m)
+            except re.error:
+                print(f"  !! signal.json: {key} pattern is not valid regex, skipped: {m!r}",
+                      file=sys.stderr)
+                continue
+            out.append((m, int(w)))
+        return out
+
+    words = [w for w in ((cfg.get("exclude_titles") or {}).get("words") or [])
+             if w and not str(w).startswith("<")]
+    never = re.compile(r"\b(" + "|".join(re.escape(w) for w in words) + r")\b", re.I) \
+        if words else _NOTHING
+
+    ic = cfg.get("individual_contributor_titles") or {}
+    nouns = [n for n in (ic.get("nouns") or []) if n and not str(n).startswith("<")]
+    if nouns:
+        # The whitespace belongs to the GROUP, not to the last alternative in it.
+        # `(senior|staff|lead )*` only ever matched "lead " -- so "Senior Software
+        # Engineer" sailed through a filter written to catch exactly that.
+        def grp(words):
+            return "(?:(?:" + "|".join(re.escape(w) for w in words) + r")\s+)*" if words else ""
+        ic_re = re.compile("^" + grp(ic.get("seniority") or []) + grp(ic.get("domains") or [])
+                           + "(?:" + "|".join(re.escape(n) for n in nouns) + r")s?"
+                           r"(?:\s*[-,(].*)?$", re.I)
+    else:
+        ic_re = _NOTHING
+
+    th = cfg.get("thresholds") or {}
+    return pairs("positive"), pairs("negative"), never, ic_re, \
+        int(th.get("high", 10 ** 9)), int(th.get("med", 10 ** 9))
+
+
+POS, NEG, NEVER, IC_TITLE, HIGH_AT, MED_AT = build_signal(_load_signal())
 
 
 def signal(tally):

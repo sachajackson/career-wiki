@@ -57,6 +57,7 @@ SEARCH     = os.path.join(SETTINGS, "search.json")     # queries, locations, ada
 EMPLOYERS  = os.path.join(SETTINGS, "employers.json")  # watch and avoid. Occasional
 PROFILE    = os.path.join(SETTINGS, "profile.json")    # floor, anchors, notice. Yearly
 REVIEW     = os.path.join(SETTINGS, "review.json")     # which oversight provider. Rarely
+SIGNAL     = os.path.join(SETTINGS, "signal.json")     # the tiering vocabulary. PERSONAL. Rarely
 
 # --- secrets: an .env, and nothing else ------------------------------------
 SECRETS = _p("secrets")
@@ -90,7 +91,7 @@ def use(root):
     test, and a layout nothing can re-root is a layout nothing can test.
     """
     global VAULT, SOURCES, WIKI, ROLES, COMPANIES, POSTINGS, APPLICATIONS
-    global OVERSIGHT, SETTINGS, SEARCH, EMPLOYERS, PROFILE, REVIEW
+    global OVERSIGHT, SETTINGS, SEARCH, EMPLOYERS, PROFILE, REVIEW, SIGNAL
     global SECRETS, ENV, STATE, SEEN, RAW, SHORTLIST, MIGRATION, LAZY, CARRY, NEVER
     VAULT = os.path.abspath(root)
     SOURCES, WIKI, ROLES = _p("sources"), _p("wiki"), _p("roles")
@@ -101,6 +102,7 @@ def use(root):
     EMPLOYERS = os.path.join(SETTINGS, "employers.json")
     PROFILE = os.path.join(SETTINGS, "profile.json")
     REVIEW = os.path.join(SETTINGS, "review.json")
+    SIGNAL = os.path.join(SETTINGS, "signal.json")
     SECRETS = _p("secrets")
     ENV = os.path.join(SECRETS, ".env")
     STATE = _p("state")

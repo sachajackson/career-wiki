@@ -15,7 +15,7 @@ of 21 -- impossible, since that scale stops at 15. A warning was added to the
 output and the confusion recurred anyway, which is why the column is now a word:
 HIGH cannot be mistaken for a score out of 15 even by accident.
 """
-import contextlib, datetime, importlib.util, io, json, os, re, shutil, subprocess, sys, tempfile, unittest
+import contextlib, datetime, pathlib, importlib.util, io, json, os, re, shutil, subprocess, sys, tempfile, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RADAR_DIR = os.path.join(ROOT, "tools", "radar")
@@ -410,6 +410,76 @@ class RemoteIsCountryScoped(unittest.TestCase):
                  "location": {"ok": ["<home>", "remote"]}}) as r:
             self.assertIn("Remote (scope TBC)", r.out)
             self.assertNotIn("Remote - <home> (scope TBC)", r.out)
+
+
+class TheTieringVocabularyIsTheUsersNotTheRepos(unittest.TestCase):
+    """🔴 A +6 for "not a hands-on coding role", a -6 for data centres, a -3 for
+    four office days. Every one is a statement about ONE PERSON, and all of them
+    shipped in tools/radar/radar.py to everyone who cloned the repo until
+    2026-08-26. A florist got a scale built for a delivery director."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.f = os.path.join(self.tmp, "signal.json")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def write(self, cfg):
+        with open(self.f, "w") as fh:
+            json.dump(cfg, fh)
+        return radar.build_signal(radar._load_signal(self.f))
+
+    def test_no_file_means_no_tiering_and_no_exclusions(self):
+        """🔴 THE ONE THAT MATTERS. A missing config must never hide a role, and
+        must never fall back to somebody else's vocabulary."""
+        pos, neg, never, ic, high, med = radar.build_signal(radar._load_signal(
+            os.path.join(self.tmp, "absent.json")))
+        self.assertEqual(pos, [])
+        self.assertEqual(neg, [])
+        self.assertFalse(never.search("Nurse Manager"))
+        self.assertFalse(ic.match("Senior Software Engineer"))
+        self.assertGreater(high, 10 ** 6, "an absent config must tier nothing as HIGH")
+
+    def test_the_repo_ships_none_of_the_vocabulary(self):
+        """The point of the move. radar.py must not carry anybody's preferences."""
+        src = pathlib.Path(radar.__file__).read_text()
+        for leaked in ("not a hands-on coding role", "data cent", "quantity surveyor",
+                       "financial services", "weekend rota"):
+            self.assertNotIn(leaked, src, f"{leaked!r} is still hardcoded in radar.py")
+
+    def test_placeholders_are_ignored_rather_than_matched(self):
+        """A template copied and not filled in must do nothing, not match '<'."""
+        pos, neg, never, ic, _, _ = self.write({
+            "positive": [{"match": "<a technology>", "weight": 4}],
+            "exclude_titles": {"words": ["<a trade>"]},
+            "individual_contributor_titles": {"nouns": ["<noun>"]}})
+        self.assertEqual(pos, [])
+        self.assertFalse(never.search("a trade"))
+        self.assertFalse(ic.match("noun"))
+
+    def test_a_broken_regex_is_skipped_not_fatal(self):
+        pos, _, _, _, _, _ = self.write({"positive": [
+            {"match": "unclosed (group", "weight": 3}, {"match": "valid", "weight": 2}]})
+        self.assertEqual(pos, [("valid", 2)])
+
+    def test_seniority_prefixes_apply_to_the_whole_group(self):
+        """🔴 The bug this rewrite introduced and a check caught. Written as
+        `(senior|staff|lead )*` the space binds only to the LAST alternative, so
+        "Senior Software Engineer" passes a filter written to catch exactly it."""
+        _, _, _, ic, _, _ = self.write({"individual_contributor_titles": {
+            "seniority": ["senior", "staff", "lead"],
+            "domains": ["software", "data"], "nouns": ["engineer", "scientist"]}})
+        for t in ("Senior Software Engineer", "Staff Data Scientist", "Engineer"):
+            self.assertTrue(ic.match(t), t)
+        for t in ("Director of Engineering", "Engineering Manager", "Head of Delivery"):
+            self.assertFalse(ic.match(t), t)
+
+    def test_an_empty_ic_list_hides_nothing(self):
+        """🔴 If the user IS an individual contributor, this must be inert."""
+        _, _, _, ic, _, _ = self.write({"individual_contributor_titles": {"nouns": []}})
+        for t in ("Senior Software Engineer", "Data Scientist", "Developer"):
+            self.assertFalse(ic.match(t), t)
 
 
 class NothingThatPassesTheFiltersIsHidden(unittest.TestCase):

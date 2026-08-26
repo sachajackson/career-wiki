@@ -1,0 +1,72 @@
+{
+  "_README": [
+    "Copy to vault/settings/signal.json and REPLACE THE PLACEHOLDERS. vault/ is never committed.",
+    "",
+    "*** THIS FILE IS YOURS AND NOBODY ELSE'S. ***",
+    "It is the vocabulary the radar uses to guess which roles you might want read first. Every",
+    "line in it is a statement about YOU: what you do, what you will not do, and what you have",
+    "already ruled out. It lived in tools/radar/radar.py until 2026-08-26, which meant one",
+    "person's preferences shipped to everyone who cloned this repo -- a florist got a scale",
+    "built for a delivery director, and a data-centre engineer got a -6 for their own career.",
+    "",
+    "🔴 THE TIER IS A READING HINT, NOT A RANKING, AND NOT A FILTER.",
+    "Everything that clears the location filter and the avoid list is listed in the shortlist",
+    "whatever it scores here. Measured on a real run: a tally of 13 covered roles later assessed",
+    "at anywhere from 6 to 15 out of 15 on the actual scoring framework, and three roles the user",
+    "had already APPLIED FOR scored 6, 8 and 10. The tally measures how closely an advert's",
+    "WORDING matches these words. It does not measure whether the job suits you.",
+    "",
+    "LEAVING THIS FILE OUT IS A VALID CHOICE. With no signal.json the radar tiers nothing,",
+    "excludes nothing on title, and lists every role that passed the real filters. That is",
+    "honest behaviour, not broken behaviour.",
+    "",
+    "Patterns are regular expressions, matched case-insensitively against the title and the",
+    "description together. Keep them short. 'why' is for you, and is never read by the code."
+  ],
+
+  "thresholds": {
+    "_comment": "Above 'high' is worth reading first; above 'med' is worth reading. Nothing is dropped.",
+    "high": 18,
+    "med": 10
+  },
+
+  "positive": [
+    {"match": "<a technology or practice central to your work>", "weight": 4,
+     "why": "<why a role mentioning this is likely to suit you>"},
+    {"match": "<a phrase that would only appear in a role you want>", "weight": 6,
+     "why": "<the rarer and more specific, the higher the weight is worth>"},
+    {"match": "<your industry or regulatory context>", "weight": 3, "why": "<...>"},
+    {"match": "<a responsibility you want>", "weight": 2, "why": "<...>"}
+  ],
+
+  "negative": [
+    {"match": "<work you do not want to do>", "weight": -5,
+     "why": "<state it plainly -- this is the half people leave vague and regret>"},
+    {"match": "<an adjacent industry whose listings keep matching your words>", "weight": -6,
+     "why": "<the domains that recur and are reliably wrong for you>"},
+    {"match": "<a working pattern you will not accept>", "weight": -3, "why": "<...>"}
+  ],
+
+  "exclude_titles": {
+    "_comment": [
+      "Whole words matched against the TITLE only. A role whose title contains one is not",
+      "listed at all -- this is the one part of this file that does drop a role, so keep it",
+      "to things you are certain about.",
+      "🔴 One person's exclusion is another's profession. Do not copy somebody else's list."
+    ],
+    "words": ["<a trade or profession that is definitely not yours>", "<another>"]
+  },
+
+  "individual_contributor_titles": {
+    "_comment": [
+      "Titles that describe doing the work rather than leading it. Excluded from the shortlist.",
+      "🔴 If you ARE an individual contributor, LEAVE THIS EMPTY -- otherwise the tool hides",
+      "every role you want. It exists because a second-line manager kept being shown",
+      "engineer-level roles, and that is a fact about that person, not about the market.",
+      "A title matches when it is (optional seniority) + (optional domain) + one of the nouns."
+    ],
+    "seniority": ["senior", "staff", "principal", "lead", "sr", "junior", "graduate", "trainee"],
+    "domains": ["software", "backend", "frontend", "full stack", "ai", "ml", "data", "cloud", "platform"],
+    "nouns": []
+  }
+}
