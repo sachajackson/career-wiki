@@ -27,6 +27,13 @@ python3 tools/radar/radar.py --all-open
 |---|---|
 | `--days N` | Posting window. **7 is the right default for a routine run** — one day returns a handful, mostly noise. **Applies only to searched sources; watched boards ignore it** |
 | 🔴 `--all-open` | **No recency filter: everything still open.** Overrides `--days`. See below — it is not a bigger `--days` |
+
+🔴 **Google is the one source with NO posting date at all.** Not Workday's *"30+ days"* floor — **none**.
+Its rows show an empty Posted column and **may be any age**. **Never report a Google role as new**, and treat
+a long-open requisition as a live possibility. It reads Google's own **server-rendered** careers page, then
+fetches each matching role's detail page for the full description — **the listing alone carries only the
+minimum-qualifications bullets**, which tallied a maximum of 4 against a MED threshold of 10, so **not one
+Google role could ever have tiered without it.**
 | `--help` | **Works before anything is configured.** Lists every flag and every adapter name |
 | `--adapter NAME` | Restrict to one source. Default: whatever `vault/settings/search.json` enables |
 | `--reset` | Forget what has been seen and rebuild |
@@ -220,7 +227,7 @@ Then:
    truncation is asymmetric: it removes qualifiers (*"at least one of"*), alternatives (*"or internal
    product delivery"*) and the business driver — **the parts that make a candidate more eligible.** A
    system scoring from that text systematically under-scores its user, invisibly, because what is left
-   reads perfectly coherently. **Employer-board sources — Workday, Oracle, Greenhouse, Lever — are the
+   reads perfectly coherently. **Employer-board sources — Workday, Oracle, Greenhouse, Lever, Google — are the
    employer's own text and need no refetch.**
 3. 🔴 **Fetch the employer's own posting before scoring anything that came from an aggregator** — not
    before packaging. **By packaging time the score has already been used to decide.** In real use this
