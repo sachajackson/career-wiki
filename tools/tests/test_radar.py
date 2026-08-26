@@ -470,6 +470,33 @@ class Dedup(unittest.TestCase):
         b = self.r("Engineering Manager", "Acme", "Lyon, France")
         self.assertTrue(radar.same_role(a, b))
 
+    def test_an_abbreviated_country_folds_into_the_written_one(self):
+        """Found by hand, not by the checker. One employer posted the same role
+        as "Lyon, FRA" and "Lyon, Rhone, France" and the subset rule kept them
+        apart, because "fra" is not "france"."""
+        a = self.r("Senior Director of Engineering", "Acme", "Lyon, FRA")
+        b = self.r("Senior Director of Engineering", "Acme", "Lyon, Rhone, France")
+        self.assertTrue(radar.same_role(a, b))
+
+    def test_a_two_letter_token_never_prefix_matches(self):
+        """🔴 THE FALSE-POSITIVE CASE, and it is why there is a length floor.
+
+        "Ontario, CA" is Ontario, California. "Ontario, Canada" is a different
+        continent. Allow a two-letter token to prefix-match and those two
+        become one role, and the one that vanishes is never reported. Every
+        two-letter state and country code is this trap: CA, IN, ID, LA, MO."""
+        a = self.r("Delivery Manager", "Acme", "Ontario, CA")
+        b = self.r("Delivery Manager", "Acme", "Ontario, Canada")
+        self.assertFalse(radar.same_role(a, b))
+        c = self.r("Delivery Manager", "Acme", "Lyon, IN")
+        d = self.r("Delivery Manager", "Acme", "Lyon, Indiana")
+        self.assertFalse(radar.same_role(c, d))
+
+    def test_prefix_matching_does_not_merge_two_real_places(self):
+        a = self.r("Delivery Manager", "Acme", "Lyon, France")
+        b = self.r("Delivery Manager", "Acme", "Nice, France")
+        self.assertFalse(radar.same_role(a, b))
+
     def test_different_titles_never_merge(self):
         a = self.r("Engineering Manager", "Acme", "Lyon, France")
         b = self.r("Delivery Manager", "Acme", "Lyon, France")

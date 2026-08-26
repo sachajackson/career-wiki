@@ -225,7 +225,33 @@ def same_role(a, b):
     la, lb = _loc_tokens(a.get("loc")), _loc_tokens(b.get("loc"))
     if not la or not lb:
         return True
-    return la <= lb or lb <= la
+    return _within(la, lb) or _within(lb, la)
+
+
+MIN_PREFIX = 3
+
+
+def _same_token(x, y):
+    """Equal, or one is a prefix of the other and the shorter is long enough.
+
+    The prefix half exists because a country gets abbreviated: one employer
+    posted the same role as "Lyon, FRA" and as "Lyon, Rhone, France",
+    and a strict subset kept them apart because "fra" is not "france". Found by hand, which is the point of writing it down.
+
+    🔴 MIN_PREFIX is the whole safety of this. "Ontario, CA" is Ontario,
+    California; "Ontario, Canada" is a different continent. Let a two-letter
+    token prefix-match and those become one role, and the one that disappears
+    is never reported. Every two-letter state and country code is that trap --
+    CA, IN, ID, LA, MO -- so two characters never match anything but themselves.
+    """
+    if x == y:
+        return True
+    lo, hi = (x, y) if len(x) < len(y) else (y, x)
+    return len(lo) >= MIN_PREFIX and hi.startswith(lo)
+
+
+def _within(small, big):
+    return all(any(_same_token(s, b) for b in big) for s in small)
 
 
 def parse_location(loc):
