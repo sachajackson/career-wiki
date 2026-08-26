@@ -1345,6 +1345,54 @@ has a **"SAFETY VIOLATION on pre-existing dirty user file"** guard. Worth watchi
 
 ---
 
+### 🔴 A requisition number in a title defeats dedup
+
+**Status: found 2026-08-26 by scoring, not by a test. Not fixed — deliberately.**
+
+**Mastercard advertised one job twice**: `Director, Software Engineering` and `Director, Software
+Engineering R-281578`, **identical bodies**. Both survived dedup, because `same_role()` requires normalised
+titles to be **equal** and a trailing requisition number breaks equality. 🔴 **Both also sat below the tally
+threshold**, so neither was ever tiered — only the full triage caught it, by eye.
+
+🔴 **The obvious fix is the dangerous one.** Stripping requisition-shaped tokens from titles would merge these
+two correctly and would also merge **two genuinely different requisitions posted under one title** — which is
+routine at large employers, and is how a real vacancy disappears. **That is the same false positive the
+location dedup already taught**, where intersecting on a shared country would have merged Dublin with Cork.
+
+**So it needs a test before a fix**, and the test is the false-positive case: two postings, same title,
+different requisition numbers, **different bodies** — these must stay separate. Only merge when the bodies
+agree.
+
+🟡 **Note the asymmetry that makes this safe to leave for now**: the failure duplicates a row rather than
+hiding one. **A duplicate is visible; a wrongly merged role is not.**
+
+---
+
+### 🔴 Settle the budget-ownership question once, instead of seven times
+
+**Status: raised 2026-08-26, after the seventh occurrence.**
+
+**Seven roles have now been decided by the same gap** — Citi Custody, Ingenio Global, AXA XL, EPAM, Slalom,
+Mastercard VP and Mastercard Disputes. Each was scored, written up and reasoned about independently, and
+**each reached the same conclusion by the same route.** *"Own the business case"*, *"budgets and commercial
+performance"*, *"evaluate investment opportunities"*, *"influence investment planning"*.
+
+🔴 **Seven separate assessments of one unresolved fact is waste**, and it will keep happening — it is one of
+the most common phrases in director-level postings.
+
+**What needs settling, once, on a page:**
+
+- **What has he actually owned?** Forecasting, headcount, vendor spend and business cases contributed to are
+  all different things, and *"no P&L"* may be flattening a more useful answer.
+- **What does the phrase mean in practice at this level?** It appears in postings where the holder plainly
+  does not own a P&L, so it is partly boilerplate — and partly not.
+- **What is presentable without overclaiming?** 🔴 **This is a claim that would sit in front of a recruiter,
+  so it is exactly the kind `/career-lint` flags as unverified doing external work.**
+
+🟢 **The output is one wiki page, and then the scoring notes point at it** instead of re-deriving it.
+
+---
+
 ### 🟡 A user guide — not yet, and the trigger is specific
 
 **Status: raised 2026-08-25. Deliberately deferred.**
