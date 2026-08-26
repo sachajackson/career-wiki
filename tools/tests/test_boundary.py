@@ -46,9 +46,9 @@ class NothingOfTheUsersIsTracked(unittest.TestCase):
     def test_the_folders_a_user_puts_things_into_ship(self):
         """The vault used to be created entirely on first write, so a clean
         clone had no vault at all and nothing told a new user where their CV
-        went. These four are the ones a PERSON writes into; the rest are written
+        went. These five are the ones a PERSON writes into; the rest are written
         by the agent and are created when it first needs them."""
-        for folder in ("sources", "migration", "settings", "secrets"):
+        for folder in ("sources", "migration", "settings", "secrets", "temp"):
             self.assertIn(f"vault/{folder}/README.md", tracked(),
                           f"vault/{folder}/ must ship, or nobody knows it exists")
 
@@ -77,7 +77,8 @@ class NothingOfTheUsersIsTracked(unittest.TestCase):
             self.assertIsNone(hit, f"{p} looks personal: {hit.group(0) if hit else ''}")
 
     SHIPPED = {"vault/README.md", "vault/sources/README.md", "vault/settings/README.md",
-               "vault/secrets/README.md", "vault/migration/README.md"}
+               "vault/secrets/README.md", "vault/migration/README.md",
+               "vault/temp/README.md"}
 
     def test_the_ignore_rule_the_hook_and_the_repo_agree_on_the_same_five(self):
         """Three lists that must agree cannot drift apart quietly.

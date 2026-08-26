@@ -6,7 +6,7 @@
 have a pile of other material and no idea what is worth keeping, put all of it in
 [`migration/`](migration/) and ask the agent to sort it.
 
-**Four folders ship with this repo — the four you put things into.** The rest are created as they are
+**Five folders ship with this repo — the five you put things into.** The rest are created as they are
 first written to, so an empty vault does not present you with ten folders and ten decisions before you
 have done anything.
 

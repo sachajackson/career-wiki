@@ -19,15 +19,15 @@
 # documentation first. So the folders ship, with a README in each explaining
 # what belongs there. The READMEs are the system's words, not the user's.
 #
-# The exceptions name FIVE EXACT PATHS rather than a `**/README.md` pattern, and
+# The exceptions name SIX EXACT PATHS rather than a `**/README.md` pattern, and
 # that is not a relapse into listing files. A pattern looked cleaner and was
 # wrong: the agent writes README files inside vault folders as it works, and
 # `!vault/**/README.md` silently made every one of them stageable by `git add
 # -A`. This list only ever grows when the SYSTEM adds a folder -- never when the
 # USER adds a file, which is the failure mode that matters.
 #
-# tools/tests/test_boundary.py asserts these five, the five the pre-commit hook
-# allows, and the five actually tracked are the SAME FIVE. Three lists that must
+# tools/tests/test_boundary.py asserts these six, the six the pre-commit hook
+# allows, and the six actually tracked are the SAME SIX. Three lists that must
 # agree cannot drift apart quietly. If you want to add a sixth, that is usually
 # the signal that something is in the wrong folder.
 # ---------------------------------------------------------------------------
@@ -42,6 +42,8 @@ vault/**
 !vault/settings/README.md
 !vault/sources/
 !vault/sources/README.md
+!vault/temp/
+!vault/temp/README.md
 
 # Obsidian's own folder, and it is NOT just editor preferences.
 # workspace.json records which files are open and recently opened, BY PATH --

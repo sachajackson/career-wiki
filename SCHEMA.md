@@ -51,10 +51,12 @@ vault/                    everything that is theirs. Nothing here ships
   secrets/.env            an API key, and nothing else. Never commit, never bundle
   state/                  seen · raw · shortlist. Regenerable — deleting it costs nothing
   migration/              a drop zone. `tools/migrate.py` empties it
-  temp/                   🔴 the user's own scratch folder. READ it when they point at
-                          something in it; never write there and never file anything
-                          into it. Safe for them to empty at any moment, so nothing
-                          may depend on a file in it surviving
+  temp/                   🔴 the user's own scratch folder, and it SHIPS so they know it
+                          is there. READ it when they point at something in it; never
+                          write there and never file anything into it. Safe for them to
+                          empty at any moment, so nothing may depend on a file in it
+                          surviving. Not `migration/`: that one gets emptied INTO the
+                          vault, this one is context that was never meant to be kept
 
 tools/                    the system. Replaced wholesale by an update
   lib/paths.py            the only file that knows where anything lives
