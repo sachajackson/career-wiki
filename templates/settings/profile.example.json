@@ -17,7 +17,13 @@
     "Values: 'ie-uk' | 'us' | 'off'. Anything else is treated as 'off'.",
     "",
     "🔴 Delete the line below rather than leaving it as it stands. The angle brackets are not a",
-    "value: they match no locale, so the linter falls back to 'off' and quietly checks nothing."
+    "value: they match no locale, so the linter falls back to 'off' and quietly checks nothing.",
+    "",
+    "'working_days_per_year' annualises a contract day rate. Yours, not a market constant -- it is",
+    "how many days you would actually bill after annual leave. 220 is a common answer in Ireland",
+    "and the UK; 250 is the year with no leave at all and will overstate a contract by about 14%.",
+    "Omit it and nothing will annualise a rate for you rather than guessing one."
   ],
-  "spelling": "<ie-uk | us | off>"
+  "spelling": "<ie-uk | us | off>",
+  "working_days_per_year": 220
 }
