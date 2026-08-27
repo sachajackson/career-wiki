@@ -104,4 +104,54 @@ stale. Reworded rather than overridden — routine overriding is how a good chec
   set is complete, and **presenting a capped run as complete is the same silent failure as a filter nobody
   knew was on.**
 
+- 🔴 **A test that reads the user's configuration is not testing the code.** Moving one user's tiering
+  vocabulary out of shared code and into their vault was right — but the constants then loaded **at import**
+  from whatever vault was present, and the suite imports the module. On the author's machine 530 checks
+  passed; on a fresh clone five failed, because the vocabulary was empty. **Found by simulating an update
+  rather than arguing about one**: clone, rewind, populate a vault, pull, run the tests. That simulation is
+  now a check.
+
+- 🔴 **An update can require a vault file it has no way to deliver.** `git pull` replaces the system and
+  cannot touch `vault/` — that is the boundary and it is correct. The corollary is that a new required
+  setting arrives with the code and **not** the file it reads, and the failure is silent: the radar runs,
+  fetches, writes a shortlist, and nothing ever tiers. **`settings_drift.py` is the general check;
+  `doctor.py` names the specific ones.**
+
+- 🔴 **A settings file nobody can discover is a default nobody chose.** Two settings files existed in **no**
+  documentation at all — not the schema, not a skill, not the setup flow — so a new vault silently ran with
+  CV spelling checks off and no way to annualise a day rate. **A test now asserts every settings path the
+  system knows about is named in `SCHEMA.md` and in `career-init`.**
+
+- 🔴 **Never guess a number that is personal.** An agent annualised a contract day rate at 250 working days
+  and reported €700–750/day as €175–190k when at the user's own 220 it is €154–165k — **14% high, on the one
+  number deciding whether a contract cleared their floor.** *"How many days would you bill in a year?"* has
+  one right answer per person. **Ask; do not pick a market convention.**
+
+- 🔴 **A destructive flag must be scoped to the run it is typed on, or say what it will destroy.** `--reset`
+  on a run restricted to a single adapter wiped the memory of all 6,462 seen roles, because the scoping of
+  the run does not carry to the flag. **The count was known at that moment and printing it would have cost
+  nothing.**
+
+- 🔴 **Escape user-supplied text before putting it in a table.** A `|` in a job title splits the cell, and
+  recruiters use them constantly — *"Barden | B Corp"*, *"Engineering Manager | Build & Lead a New Team"*.
+  43 rows of one run rendered with every value shifted a column left and the link under the wrong heading.
+  **The row still looks like a row**, which is why it survived weeks in a hand-maintained table too.
+
+- 🔴 **A number without its unit can read as its own opposite.** A pay regex that searched only titles turned
+  *"€400-650/day"* into *"€400"* — against a €130k floor that reads as catastrophic when it is roughly €150k.
+  **And the guard must cover every path**: rejecting it as a rate simply let the salary pattern return the
+  same bare number.
+
+- 🔴 **Search prose for a value only when the value carries its own unit.** Searching adverts for a salary
+  produced *"$1.1"* from *"$1.1 trillion in assets under management"*. A day rate is safe to look for because
+  *"per day"* is part of it; a bare number in body text is not. **And benefits sections are full of per-day
+  numbers** — a *"€18 daily lunch stipend"* became a role's pay until a magnitude floor and an
+  allowance-word veto were added.
+
+- 🟢 **When one field can hold several values, join them — never pick one.** An employer listing a role in
+  London, Dublin and two more places renders them as separate spans; taking either end labelled Dublin roles
+  as Warsaw and London. **The location filter runs before any description is read**, so the wrong pick drops
+  a commutable role silently. This is the second adapter to hit it, which is why it is a lesson and not a
+  bug fix.
+
 ---

@@ -47,6 +47,9 @@ vault/                    everything that is theirs. Nothing here ships
       *.pdf *.docx        the output, not the knowledge
       *.md                working notes and ATS field packs for that one application
   oversight/<Employer Req>/      export folders for the independent reviewer
+  wiki/Search Findings.md 🟡 what the search has ESTABLISHED, as opposed to what happened
+                          when. Updated IN PLACE with a running count per pattern —
+                          never appended to, which is what separates it from log.md
   settings/               FIVE files, all optional, all the user's. Copy from
                           templates/settings/*.example.json and ASK — never invent a value:
                             search.json    queries, locations, which adapters run
@@ -546,6 +549,22 @@ will find out?"* govern which roles are a bad idea. **Use them to steer role sel
 a document.**
 
 ### 🔴 The employer watchlist is private, and the reason is not obvious
+
+### The tools, and when each one is run
+
+**Every one is `python3 tools/<name>`, needs nothing installed, and writes nothing the user owns.**
+
+| Tool | Run it |
+|---|---|
+| `doctor.py` | **First, and after any setup change.** Says what is configured and what will silently do nothing |
+| `wikilinks.py` | After writing pages. `--fix` repairs links split across lines |
+| `settings_drift.py` | 🔴 **After pulling an update** — what the system now reads that this vault has not got |
+| `template_drift.py` | After pulling an update — what the page templates gained that this vault never received |
+| `registry_check.py` | Monthly, or before trusting a quiet radar run |
+| `add_employer.py` | 🟡 **When adding an employer to the watch list** — probes their careers site, works out which ATS it is, and writes the registry entry. **Do not hand-edit `ats_registry.json`** |
+| `cv_lint.py` · `verify.py` · `known.py` | Before anything leaves the machine — see the writing standard |
+| `migrate.py` | Only from `/career-migrate` |
+| `radar/radar.py` · `radar/sources_check.py` | See the `role-radar` skill |
 
 ### 🔴 `vault/settings/profile.json` — the facts a tool needs and cannot guess
 

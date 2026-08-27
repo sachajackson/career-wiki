@@ -95,7 +95,33 @@ floor in PAY, their geography as vetoes.
 commute they would accept for enough money). Ask which their constraints are. Most people have both and
 have never separated them.
 
-## 6. Start the standing answers
+## 6. 🔴 Configure what the tools read — the step that decides whether anything works
+
+**Five files under `vault/settings/`, all optional, all copied from
+[`templates/settings/`](../../../templates/settings/) and then EDITED.** 🔴 **Every one of them fails
+silently when it is absent or left as the example.** A radar that finds nothing looks exactly like a quiet
+job market, and it will be believed.
+
+| File | Ask for | 🔴 What silence looks like without it |
+|---|---|---|
+| **`search.json`** | **Job titles they would actually take**, and how their boards write locations — *Dublin*, *Dublin, Ireland*, the county | **The radar returns nothing at all.** Its own location field once matched only the country and dropped 71 real roles |
+| **`signal.json`** | **The vocabulary of the work they want** — technologies, practices, the phrases that would only appear in a role for them — and what to exclude | 🔴 **Nothing ever reaches HIGH or MED.** The radar runs, fetches, writes a shortlist, and every role lands in the catch-all |
+| **`profile.json`** | **Spelling locale** (`ie-uk` \| `us` \| `off`) and 🔴 **`working_days_per_year`** | CV spelling checks silently off; **no way to annualise a contract day rate** |
+| **`employers.json`** | Employers to watch by name; any they will not work for, and why | Nobody watched, nothing filtered before scoring |
+| **`review.json`** | Only if they want automated oversight | Nothing — `review.py --dry-run` works without it |
+
+🔴 **`working_days_per_year` is the one with no safe default, so ask it as a question:** *"How many days
+would you actually bill in a year?"* **220 allows for annual leave; 250 is a year with none in it.** An agent
+guessed 250 once and reported a €700–750/day contract as €175–190k when at the user's own 220 it is
+€154–165k — **14% high, on the single number that decides whether a contract clears their floor.**
+
+🔴 **Never invent a value for any of these.** An invented geography or vocabulary produces a filter that
+matches nothing, and — unlike a wrong wiki page — **nobody ever reads it to notice.**
+
+🟡 **They do not have to fill in all five today.** `search.json` and `signal.json` are what make the radar
+work; the rest can wait. **But say which are missing rather than leaving it to be discovered.**
+
+## 7. Start the standing answers
 
 Instantiate `templates/Standing Answers.md`. **Do not try to fill it all now** — most of it is `TBC` until
 there is a real application. But get the three that block everything:
@@ -111,7 +137,7 @@ there is a real application. But get the three that block everything:
 them find the shortest true framing, and **do not push for detail.** It is common, it is not a mark against
 them, and over-explaining is the only real risk.
 
-## 7. Close the loop
+## 8. Close the loop
 
 Append to `log.md`. Then tell them:
 
@@ -121,6 +147,16 @@ Append to `log.md`. Then tell them:
 - That `/interview` is the thing to run next, and why
 - 🔴 **That `vault/AGENTS.md` exists and is theirs.** Give one concrete example of what belongs in it —
   *"if you tell me not to describe you as a leader, that is where it goes and it survives every update"*
+
+🔴 **Then run it, and read the result out:**
+
+```bash
+python3 tools/doctor.py
+```
+
+**It is the only thing that says what is configured and what will quietly do nothing.** `PLACEHOLDER` is
+the verdict that matters — a file copied from its example and never edited **looks configured and matches
+nothing.** `OPTIONAL` is not a fault and must not be reported as one.
 
 **Do not offer to write a CV yet.** There is not enough in the wiki, and a CV written from a
 single interview round is a formatted version of the document they already had.

@@ -245,6 +245,37 @@ class TheShippedExamples(unittest.TestCase):
                           f"SCHEMA.md never mentions {name}, so nobody setting up a vault "
                           f"can discover the setting exists")
 
+    def test_career_init_tells_the_user_which_settings_exist(self):
+        """🔴 The gap a new user actually falls into.
+
+        career-init scaffolds a wiki, runs an interview, builds a scoring
+        framework -- and on 2026-08-27 mentioned NONE of the five settings files
+        and never named doctor.py. A new user finished setup with no search.json
+        (the radar returns nothing), no signal.json (nothing ever tiers) and no
+        profile.json (spelling off, no day-rate annualisation), and nothing in
+        the flow said so.
+
+        Every one of those failures is silent. The radar runs, reports a quiet
+        week, and is believed.
+
+        The skill does not have to ask for all five -- most are optional -- but
+        it must NAME them, so the agent setting up a vault knows what exists and
+        can ask.
+        """
+        sys.path.insert(0, os.path.join(ROOT, "tools", "lib"))
+        import paths
+        skill = os.path.join(ROOT, ".claude", "skills", "career-init", "SKILL.md")
+        with open(skill, encoding="utf-8") as fh:
+            text = fh.read()
+        for attr in ("SEARCH", "EMPLOYERS", "PROFILE", "REVIEW", "SIGNAL"):
+            name = os.path.basename(getattr(paths, attr))
+            self.assertIn(name, text,
+                          f"career-init never mentions {name}, so a new vault gets set up "
+                          f"without it and the failure is silent")
+        self.assertIn("doctor.py", text,
+                      "career-init should end by running doctor.py -- it is the only thing "
+                      "that says what was set up and what will quietly do nothing")
+
     def test_every_settings_path_the_system_knows_has_an_example(self):
         """🔴 The gap this tool found in its first run.
 
