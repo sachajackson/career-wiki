@@ -219,6 +219,32 @@ class TheShippedExamples(unittest.TestCase):
                 with open(os.path.join(TEMPLATES, f), encoding="utf-8") as fh:
                     json.load(fh)
 
+    def test_every_settings_file_is_named_in_the_schema(self):
+        """🔴 A settings file nobody can discover is a default nobody chose.
+
+        On 2026-08-27, profile.json appeared in NO documentation at all -- not
+        SCHEMA.md, not AGENTS.md, not a skill, not doctor.py. Only paths.py and
+        the one tool that reads it knew it existed. signal.json was the same.
+        Both had been added in the previous two days.
+
+        The effect on a fresh clone is silent: cv_lint falls back to a spelling
+        locale nobody chose, and nothing annualises a contract day rate. The
+        agent setting that vault up has no way to learn either file exists.
+
+        This is the executable half. A line in SCHEMA.md saying "remember to
+        document new settings" is the kind of control this repo has watched fail;
+        a test that fails the build is not.
+        """
+        sys.path.insert(0, os.path.join(ROOT, "tools", "lib"))
+        import paths
+        with open(os.path.join(ROOT, "SCHEMA.md"), encoding="utf-8") as fh:
+            schema = fh.read()
+        for attr in ("SEARCH", "EMPLOYERS", "PROFILE", "REVIEW", "SIGNAL"):
+            name = os.path.basename(getattr(paths, attr))
+            self.assertIn(name, schema,
+                          f"SCHEMA.md never mentions {name}, so nobody setting up a vault "
+                          f"can discover the setting exists")
+
     def test_every_settings_path_the_system_knows_has_an_example(self):
         """🔴 The gap this tool found in its first run.
 

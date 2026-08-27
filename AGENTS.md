@@ -44,7 +44,7 @@ so moving the vault touches one file.
 | A role you assessed | `vault/roles/`, and archive the posting to `vault/postings/` |
 | Research about an employer | `vault/companies/` |
 | A CV, a letter, an interview pack | `vault/applications/<Employer Req>/` |
-| A setting a tool reads | `vault/settings/` — the right file of the four |
+| A setting a tool reads | `vault/settings/` — **the right one of the five**, listed in [`SCHEMA.md`](SCHEMA.md). 🔴 **Ask for the value; never invent one** |
 | An API key | `vault/secrets/.env`, and nowhere else. **Never in a JSON file, never in a commit** |
 | Anything regenerable | `vault/state/` — and it must be safe to delete |
 | Something you cannot classify | 🔴 **Say so by name.** Do not invent a home for it |

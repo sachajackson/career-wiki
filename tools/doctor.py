@@ -140,6 +140,45 @@ def check_radar_config():
                 + ". Run sources_check.py to see whether they answer")
 
 
+def check_profile():
+    """🟡 OPTIONAL, and reported anyway — because both defaults are silent.
+
+    Missing `spelling` means the CV linter checks no locale, which is correct
+    (enforcing one nobody declared was the original bug) but invisible. Missing
+    `working_days_per_year` means nothing can annualise a contract day rate, and
+    the failure there is worse than silence: an agent guessed 250 and reported a
+    €700-750/day contract as €175-190k when at the user's own 220 it is
+    €154-165k. Fourteen percent high, on the number that decides whether a
+    contract clears their floor.
+
+    So this never fails a run -- most people never need it -- but it says what is
+    not set rather than letting a guess stand in.
+    """
+    if not os.path.exists(paths.PROFILE):
+        return OPTIONAL, ("no settings/profile.json. CV spelling checks are off, and nothing can "
+                          "annualise a contract day rate — copy templates/settings/"
+                          "profile.example.json if either matters")
+    try:
+        with open(paths.PROFILE, encoding="utf-8") as fh:
+            cfg = json.load(fh)
+    except ValueError as e:
+        return PLACEHOLDER, f"settings/profile.json is not valid JSON: {e}"
+    have, missing = [], []
+    spelling = str(cfg.get("spelling", "")).lower()
+    (have if spelling in ("ie-uk", "us", "off") else missing).append(
+        f"spelling={spelling}" if spelling in ("ie-uk", "us", "off") else "spelling")
+    days = cfg.get("working_days_per_year")
+    # 🔴 261 is every weekday in a year with no leave taken at all, so anything
+    # above it is not a working year. The first version of this bound allowed
+    # 366 -- a year with no weekends in it -- which a test caught.
+    if isinstance(days, (int, float)) and not isinstance(days, bool) and 100 < days <= 261:
+        have.append(f"{int(days)} working days")
+    else:
+        missing.append("working_days_per_year")
+    return OK, (", ".join(have) or "nothing set")   + (
+        f". Not set: {', '.join(missing)}" if missing else "")
+
+
 def check_signal():
     """🔴 A vault without this file gets a completely clean bill of health while
     the radar tiers every role LOW.
@@ -234,6 +273,7 @@ CHECKS = [
     ("your wiki", check_wiki),
     ("job search", check_radar_config),
     ("signal", check_signal),
+    ("profile", check_profile),
     ("watch/avoid", check_employers),
     ("oversight", check_oversight),
 ]

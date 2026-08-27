@@ -322,3 +322,57 @@ class TheSignalCheck(unittest.TestCase):
             h.write("vault/settings/signal.json", "{not json")
             verdict, _ = doctor.check_signal()
             self.assertEqual(verdict, doctor.PLACEHOLDER)
+
+
+class TheProfileCheck(unittest.TestCase):
+    """🔴 A settings file nobody can discover is a default nobody chose.
+
+    profile.json appeared in no documentation at all until 2026-08-27 -- not
+    SCHEMA.md, not a skill, not doctor. Only paths.py and the one tool reading it
+    knew it existed, so a fresh vault silently ran with CV spelling checks off
+    and no way to annualise a contract day rate.
+    """
+
+    def test_a_missing_profile_is_reported_but_is_not_a_fault(self):
+        """🟡 Most people never need it. Telling them they are broken every week
+        is how a check gets ignored -- but saying nothing is how a guess stands
+        in for a number only the user knows."""
+        with Home() as h:
+            verdict, detail = doctor.check_profile()
+            self.assertEqual(verdict, doctor.OPTIONAL)
+            self.assertIn("annualise", detail)
+
+    def test_a_complete_profile_reports_both_values(self):
+        with Home() as h:
+            h.write("vault/settings/profile.json",
+                    {"spelling": "ie-uk", "working_days_per_year": 220})
+            verdict, detail = doctor.check_profile()
+            self.assertEqual(verdict, doctor.OK)
+            self.assertIn("220 working days", detail)
+            self.assertIn("ie-uk", detail)
+
+    def test_a_half_filled_profile_names_what_is_missing(self):
+        """The likeliest real state: somebody set the spelling months ago and has
+        never met a contract role."""
+        with Home() as h:
+            h.write("vault/settings/profile.json", {"spelling": "ie-uk"})
+            verdict, detail = doctor.check_profile()
+            self.assertEqual(verdict, doctor.OK)
+            self.assertIn("Not set: working_days_per_year", detail)
+
+    def test_an_implausible_day_count_is_not_accepted(self):
+        """🔴 366 days is a year with no weekends. A number that cannot be right
+        is worse than an absent one, because it will be used."""
+        for bad in (0, 12, 366, 400, "many", None, True):
+            with Home() as h:
+                h.write("vault/settings/profile.json", {"working_days_per_year": bad})
+                _, detail = doctor.check_profile()
+                self.assertIn("Not set:", detail, repr(bad))
+                self.assertIn("working_days_per_year", detail.split("Not set:")[1], repr(bad))
+                self.assertNotIn("working days", detail, repr(bad))
+
+    def test_broken_json_says_so(self):
+        with Home() as h:
+            h.write("vault/settings/profile.json", "{not json")
+            verdict, _ = doctor.check_profile()
+            self.assertEqual(verdict, doctor.PLACEHOLDER)

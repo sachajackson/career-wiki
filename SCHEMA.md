@@ -47,7 +47,14 @@ vault/                    everything that is theirs. Nothing here ships
       *.pdf *.docx        the output, not the knowledge
       *.md                working notes and ATS field packs for that one application
   oversight/<Employer Req>/      export folders for the independent reviewer
-  settings/               search.json · employers.json · review.json
+  settings/               FIVE files, all optional, all the user's. Copy from
+                          templates/settings/*.example.json and ASK — never invent a value:
+                            search.json    queries, locations, which adapters run
+                            signal.json    the tiering vocabulary. 🔴 Without it nothing
+                                           tiers HIGH or MED and the radar looks quiet
+                            profile.json   spelling locale, working_days_per_year
+                            employers.json watch / avoid / declined
+                            review.json    which oversight provider
   secrets/.env            an API key, and nothing else. Never commit, never bundle
   state/                  seen · raw · shortlist. Regenerable — deleting it costs nothing
   migration/              a drop zone. `tools/migrate.py` empties it
@@ -539,6 +546,23 @@ will find out?"* govern which roles are a bad idea. **Use them to steer role sel
 a document.**
 
 ### 🔴 The employer watchlist is private, and the reason is not obvious
+
+### 🔴 `vault/settings/profile.json` — the facts a tool needs and cannot guess
+
+**Small, boring, and the only place two tools look for numbers they must not invent.**
+
+| Key | Read by | 🔴 What happens without it |
+|---|---|---|
+| `spelling` | `tools/cv_lint.py` | **Silence.** ABSENT MEANS OFF, deliberately — the linter once enforced Ireland/UK conventions on everyone, so a US candidate writing a correct US CV got a finding for every *optimize* |
+| `working_days_per_year` | Contract scoring | 🔴 **An invented multiplier.** This exists because an agent guessed 250 and reported a €700–750/day contract as €175–190k when at the user's own 220 it is €154–165k — **14% high, on the number that decides whether a contract clears their floor** |
+
+🔴 **Both are PERSONAL and neither has a safe default.** *"How many days would you actually bill in a year?"*
+is a question with one right answer per person: 220 allows for annual leave, 250 is a year with none in it.
+**Ask. Do not pick a market convention and proceed.**
+
+🟡 **And an annualised day rate is still not a salary.** Say what it leaves out — no employer pension, no
+paid leave or sick pay, no notice or redundancy — and that the billed-days figure is an assumption, because
+gaps between contracts are unpaid.
 
 `vault/settings/employers.json` records who the user wants watched and who they will not work for — **and
 the second list contains factual assertions about named companies, some of them second-hand.** That is
