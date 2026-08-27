@@ -211,3 +211,43 @@ class TheScaffoldListStaysComplete(unittest.TestCase):
             self.assertTrue(os.path.exists(os.path.join(self.TEMPLATES, page)),
                             f"career-init tells the agent to create {page} and no template "
                             f"exists, so its structure gets invented every time")
+
+
+class TheInitStepsAreInAUsableOrder(unittest.TestCase):
+    """🔴 A step called 'most easily skipped' must not be placed last.
+
+    Found by walking career-init against a fixture. "Capture the baseline" sat
+    AFTER "Close the loop" -- the step that tells the user what the wiki holds
+    and what to run next. The skill named it the most easily skipped step and
+    then put it where skipping was the default outcome. It is now step 5, before
+    the framework that scores against it.
+    """
+
+    SKILL = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        ".claude", "skills", "career-init", "SKILL.md")
+
+    def _text(self):
+        with open(self.SKILL, encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_the_baseline_comes_before_the_close(self):
+        t = self._text()
+        self.assertLess(t.index("Capture the baseline"), t.index("Close the loop"),
+                        "the baseline is captured after the skill has already closed out")
+
+    def test_the_baseline_comes_before_the_framework_that_scores_against_it(self):
+        t = self._text()
+        self.assertLess(t.index("Capture the baseline"), t.index("Build the scoring framework"))
+
+    def test_the_numbered_steps_are_sequential(self):
+        nums = [int(n) for n in re.findall(r"^## (\d+)\.", self._text(), re.M)]
+        self.assertEqual(nums, list(range(1, len(nums) + 1)),
+                         f"career-init's steps are numbered {nums}")
+
+    def test_the_first_step_says_to_file_what_it_finds(self):
+        """🔴 This repo has already lost work to findings that existed only in a
+        reply. Step 1 produces the most valuable output of the whole skill."""
+        first = self._text().split("## 2. Scaffold")[0]
+        self.assertIn("file them", first.lower(),
+                      "step 1 tells the agent to say what it found and never to record it")

@@ -27,6 +27,19 @@ a page, anything that contradicts something else.
 **This first response sets expectations.** If it reads like a summary of their CV, you have wasted it.
 It should tell them something about their own document they did not know.
 
+🔴 **Then file them, in the same session.** This repo has already lost work exactly here — assessments that
+existed only in a reply and were never written down get re-derived from scratch weeks later. **A finding you
+say out loud is not recorded.**
+
+| Finding | Where it goes |
+|---|---|
+| A gap, a contradiction, a CV-versus-LinkedIn disagreement | **`CV.md`**, on the timeline, with which source you followed and why |
+| A number with nothing behind it | **`CV.md`**, recorded as the claim **and** as unsourced. 🔴 **Never resolve it by writing the figure in as fact** |
+| A role compressed into one sentence | **`Operating Model.md`** as an open question, and ask about it in round 1 |
+
+🟡 **Ask about the disagreements rather than resolving them.** The user knows which document is right, and
+which one they would rather a recruiter saw.
+
 ## 2. Scaffold
 
 **Place `templates/vault-AGENTS.md` at `vault/AGENTS.md` first, unedited.** It is the user's standing
@@ -88,7 +101,27 @@ it is probably real. If it has, ask what changed.
 obligation with a date behaves completely differently from a floor that is a preference: it makes
 starting salary dominate progression, and it makes illiquid equity a poor substitute for cash.
 
-## 5. Build the scoring framework
+## 5. 🔴 Capture the baseline — the step most easily skipped, so it is no longer last
+
+**Before any role can be scored, record what the user has now.** 🔴 **This used to sit after *Close the
+loop*, at the bottom of the file — the skill called it the most easily skipped step and then placed it
+where it was guaranteed to be skipped.** It is a numbered step now, and it comes before the framework
+because the framework scores against it. Every LIFE and SEC score is measured
+against it, and without it the framework reports *"best of what we found"* as *"best available"*.
+
+| Ask | Why it matters |
+|---|---|
+| **Days in an office now, and is that contractual or custom?** | 🔴 **A pattern in writing is a floor. A custom the employer could reverse is not** — and the difference changes what every alternative is worth |
+| **The commute today** — door to door, and is the time usable? | The unit every other commute is compared against |
+| **Notice period** | The binding constraint on every timeline. **Volunteer it early in a process, never at offer stage** |
+| **Unvested equity, and what leaving forfeits** | This is the price of an external move, and **it is what an internal move does not cost** |
+| **Length of service** | Redundancy entitlement and notice reset on a move |
+| **How exposed is the current function?** | The SEC score of staying put |
+
+🟢 **Put the current job in the table as a row.** A comparison table without the status quo in it cannot
+show a downgrade.
+
+## 6. Build the scoring framework
 
 Instantiate `templates/Role Scoring Framework.md` with what they just told you: **their two anchors as
 LIFE and SEC** — rename those dimensions if their anchors are not lifestyle and security — their salary
@@ -98,7 +131,7 @@ floor in PAY, their geography as vetoes.
 commute they would accept for enough money). Ask which their constraints are. Most people have both and
 have never separated them.
 
-## 6. 🔴 Configure what the tools read — the step that decides whether anything works
+## 7. 🔴 Configure what the tools read — the step that decides whether anything works
 
 **Five files under `vault/settings/`, all optional, all copied from
 [`templates/settings/`](../../../templates/settings/) and then EDITED.** 🔴 **Every one of them fails
@@ -124,7 +157,7 @@ matches nothing, and — unlike a wrong wiki page — **nobody ever reads it to 
 🟡 **They do not have to fill in all five today.** `search.json` and `signal.json` are what make the radar
 work; the rest can wait. **But say which are missing rather than leaving it to be discovered.**
 
-## 7. Start the standing answers
+## 8. Start the standing answers
 
 Instantiate `templates/Standing Answers.md`. **Do not try to fill it all now** — most of it is `TBC` until
 there is a real application. But get the three that block everything:
@@ -140,7 +173,7 @@ there is a real application. But get the three that block everything:
 them find the shortest true framing, and **do not push for detail.** It is common, it is not a mark against
 them, and over-explaining is the only real risk.
 
-## 8. Close the loop
+## 9. Close the loop
 
 Append to `log.md`. Then tell them:
 
@@ -163,20 +196,3 @@ nothing.** `OPTIONAL` is not a fault and must not be reported as one.
 
 **Do not offer to write a CV yet.** There is not enough in the wiki, and a CV written from a
 single interview round is a formatted version of the document they already had.
-
-## 🔴 Capture the baseline — the step most easily skipped
-
-**Before any role can be scored, record what the user has now.** Every LIFE and SEC score is measured
-against it, and without it the framework reports *"best of what we found"* as *"best available"*.
-
-| Ask | Why it matters |
-|---|---|
-| **Days in an office now, and is that contractual or custom?** | 🔴 **A pattern in writing is a floor. A custom the employer could reverse is not** — and the difference changes what every alternative is worth |
-| **The commute today** — door to door, and is the time usable? | The unit every other commute is compared against |
-| **Notice period** | The binding constraint on every timeline. **Volunteer it early in a process, never at offer stage** |
-| **Unvested equity, and what leaving forfeits** | This is the price of an external move, and **it is what an internal move does not cost** |
-| **Length of service** | Redundancy entitlement and notice reset on a move |
-| **How exposed is the current function?** | The SEC score of staying put |
-
-🟢 **Put the current job in the table as a row.** A comparison table without the status quo in it cannot
-show a downgrade.
