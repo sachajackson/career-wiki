@@ -97,6 +97,23 @@ achievement attached to the wrong job.
 
 ## 🔴 Check the outcomes first, because nothing else in the system will
 
+```bash
+python3 tools/outcomes.py
+```
+
+🔴 **This used to be an instruction, and the instruction failed twice** — once in `SCHEMA.md` and once as a
+step in this file, which called it *"the check most likely to be skipped, because nothing triggers it."*
+**Across seven applications and six weeks, one outcome was recorded.** It is a tool now.
+
+| Verdict | What it means |
+|---|---|
+| 🔴 **SUBMITTED, NO DATE** | **The quietest of the three.** Without a date the application can never cross either threshold, so it will never be chased however long it goes unanswered — **and the table looks complete.** Add `Submitted YYYY-MM-DD` |
+| **RECORD** | Over 21 days. **Write `no response`** — silence is data, and a blank field looks unasked rather than unanswered |
+| **ASK** | Over 7 days. Any acknowledgement, rejection, or silence? |
+
+🟢 **It never writes.** An outcome is something the user knows and the tool does not. **It tells you which
+questions are owed and to whom; you still have to ask them by name.**
+
 **Every application with a `Submitted` status and no recorded outcome. Ask about each one by name.**
 
 🔴 **This is the check most likely to be skipped, because nothing triggers it.** An employer replying, or

@@ -560,6 +560,7 @@ a document.**
 | `wikilinks.py` | After writing pages. `--fix` repairs links split across lines |
 | `settings_drift.py` | 🔴 **After pulling an update** — what the system now reads that this vault has not got |
 | `template_drift.py` | After pulling an update — what the page templates gained that this vault never received |
+| 🔴 `outcomes.py` | **Every lint, and before asking why nothing is landing.** Which applications were submitted and never heard about again — the one thing in this system with no natural trigger |
 | `registry_check.py` | Monthly, or before trusting a quiet radar run |
 | `add_employer.py` | 🟡 **When adding an employer to the watch list** — probes their careers site, works out which ATS it is, and writes the registry entry. **Do not hand-edit `ats_registry.json`** |
 | `cv_lint.py` · `verify.py` · `known.py` | Before anything leaves the machine — see the writing standard |
