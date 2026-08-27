@@ -88,6 +88,27 @@ for f in $staged; do
   fi
 done
 
+# 3. State some OTHER tool dropped beside the code, naming the user's files.
+#
+#    .obsidian/ sat at the repository root, untracked but not ignored, and its
+#    workspace.json recorded open files BY PATH -- naming vault settings and wiki
+#    pages. One `git add -A` would have published that list to a public remote.
+#
+#    Rules 1 and 2 both missed it and neither was malfunctioning: rule 1 blocks
+#    staged paths under vault/ and this was not under vault/; rule 2 looks for
+#    emails, LinkedIn URLs and salary phrasing, and a JSON file listing PATHS
+#    matches none of them. The guards covered the agent, not the desk.
+#
+#    Reported here rather than blocked on its own, because the offending file is
+#    not in this commit -- it is the NEXT `git add -A` that publishes it. Blocking
+#    is still right: staged is the last moment before history.
+if command -v python3 >/dev/null 2>&1 && [ -f tools/foreign_state.py ]; then
+  foreign=$(python3 tools/foreign_state.py --quiet 2>/dev/null) || true
+  if [ -n "$foreign" ]; then
+    blocked+="$foreign"$'\n'
+  fi
+fi
+
 if [ -n "$blocked" ]; then
   cat >&2 <<EOF
 

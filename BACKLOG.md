@@ -775,7 +775,29 @@ asking for a deliberately nonsense site and comparing counts. **One employer in 
 currently answering with ~7,300 roles for exactly this reason.**
 
 
-### 🔴 Nothing checks what OTHER tools leave beside the code
+### ✅ Nothing checks what OTHER tools leave beside the code — BUILT 2026-08-27
+
+**Status: `tools/foreign_state.py`, wired into `doctor.py` (warns) and `githooks/pre-commit` (blocks),
+exactly as this entry specified.**
+
+🟢 **The design followed the three traps named below, and the third one fired on the first run.** The check
+flagged **itself** — its own docstring names a vault path as an example, and while it was still untracked it
+looked like a leak. **Directories this repository maintains are now exempt**, because a new file under
+`tools/` or `docs/` is the author writing the system and is already covered by `test_boundary` and by both
+existing hook rules.
+
+🔴 **The hole that leaves is stated in the code rather than hidden**: a foreign tool writing into `tools/`
+would be missed. No editor or sync tool does — they write to dot-directories and the repository root — and
+narrowing there is what keeps the check quiet enough to stay switched on.
+
+**11 checks, including all three false-positive cases**: an ordinary new source file, a bare mention of
+`vault/`, and the repo's own directories. **Verified against the real incident**, reproduced from the
+original `.obsidian/workspace.json` shape.
+
+🟡 **And the non-check half of this entry still stands and is worth saying to the user**: pointing Obsidian
+at `vault/` rather than the repository root removes the symptom and the leak together.
+
+**Original entry:**
 
 **Found 2026-08-25.** `.obsidian/` sat at the repository root, **untracked but not ignored**. Its
 `workspace.json` records open and recently-opened files **by path**, so it named

@@ -140,6 +140,32 @@ def check_radar_config():
                 + ". Run sources_check.py to see whether they answer")
 
 
+def check_foreign_state():
+    """🔴 What another tool left beside the code, naming the user's files.
+
+    `.obsidian/` sat at the repository root, untracked but not ignored, and its
+    workspace.json named vault settings and wiki pages by path. One `git add -A`
+    would have published that list to a public remote.
+
+    Advisory here and hard-failing in pre-commit, which is the right split: this
+    runs every session and is a property of the working tree, not of a commit.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, here)
+    try:
+        import foreign_state
+        found = foreign_state.scan(os.path.dirname(here))
+    except Exception as e:
+        return WARN, f"could not check: {type(e).__name__}: {e}"
+    if not found:
+        return OK, ("nothing untracked names a file under vault/. "
+                    "Editors and sync tools drop state beside a repo and it is not ignored by default")
+    names = ", ".join(p for p, _ in found[:3])
+    return MISSING, (f"{len(found)} untracked, un-ignored file(s) name a file under vault/: "
+                     f"{names}. **Untracked is not ignored — one `git add -A` publishes them.** "
+                     f"Run `python3 tools/foreign_state.py` for detail")
+
+
 def check_profile():
     """🟡 OPTIONAL, and reported anyway — because both defaults are silent.
 
@@ -281,6 +307,7 @@ def check_registry():
 CHECKS = [
     ("python", check_python),
     ("this copy", check_git),
+    ("other tools", check_foreign_state),
     ("registry", check_registry),
     ("your CV", check_sources),
     ("your wiki", check_wiki),

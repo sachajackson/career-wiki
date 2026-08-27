@@ -411,8 +411,12 @@ class TheExamplesMustNeverLookConfigured(unittest.TestCase):
             self._copied_vault(h)
             offenders = []
             for name, fn in doctor.CHECKS:
-                if name in ("python", "registry", "this copy", "your CV", "your wiki"):
-                    continue        # these do not read settings
+                # None of these read vault/settings, so a vault of untouched
+                # examples tells us nothing about them. "other tools" reads
+                # git state; the rest read the environment or the wiki.
+                if name in ("python", "registry", "this copy", "your CV",
+                            "your wiki", "other tools"):
+                    continue
                 try:
                     verdict, detail = fn()
                 except Exception:
