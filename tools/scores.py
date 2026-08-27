@@ -173,10 +173,15 @@ def inline_pairs(text):
 
 
 def audit():
-    """([faults], [due review]) — everything computed from the vault."""
+    """([faults], [due review], scored) — everything computed from the vault.
+
+    🔴 `scored` is returned because zero is not the same as clean. A vault with
+    no scored assessments passes every check in here, and reporting that as OK
+    is the "looks configured and matches nothing" failure this repo tests for.
+    """
     rows = table_rows()
     postings = quotes.load_postings()
-    faults, due = [], []
+    faults, due, scored = [], [], 0
     for path in sorted(glob.glob(os.path.join(paths.ROLES, "*.md"))):
         name = os.path.basename(path)[:-3]
         try:
@@ -189,6 +194,8 @@ def audit():
 
         nde = page_nde or row_nde
         fit = page_fit if page_fit is not None else row_fit
+        if nde or fit is not None:
+            scored += 1
 
         # The page's own score, plus every row of a cluster page's table.
         for a, f in ([(page_nde, page_fit)] if page_nde and page_fit is not None
@@ -220,14 +227,14 @@ def audit():
             if quotes.postings_for(text, postings):
                 due.append((name, fit))
     due.sort(key=lambda r: -r[1])
-    return faults, due
+    return faults, due, scored
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--due", action="store_true", help="just the review queue")
     args = ap.parse_args()
-    faults, due = audit()
+    faults, due, scored = audit()
 
     if args.due:
         for name, fit in due:
@@ -235,6 +242,9 @@ def main():
         return 0
 
     print()
+    if not scored:
+        print("  no scored assessments yet — nothing to check.\n")
+        return 0
     if faults:
         print(f"  🔴 {len(faults)} fault(s) in the numbers:\n")
         for name, kind, detail in faults:

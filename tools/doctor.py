@@ -185,9 +185,11 @@ def check_scores():
     sys.path.insert(0, here)
     try:
         import scores
-        faults, due = scores.audit()
+        faults, due, scored = scores.audit()
     except Exception as e:
         return WARN, f"could not check: {type(e).__name__}: {e}"
+    if not scored:
+        return OPTIONAL, "no scored assessments yet — nothing to check"
     if faults:
         return MISSING, (f"{len(faults)} fault(s) in the score arithmetic or between a page "
                          f"and its table row. Run `python3 tools/scores.py`")
@@ -197,7 +199,7 @@ def check_scores():
     # Reporting it in both places made doctor exit non-zero on a healthy install
     # and broke four tests that were right to fail.
     note = f"; {len(due)} at FIT {scores.REVIEW_AT}+ await `role-review` (see pipeline)" if due else ""
-    return OK, f"score arithmetic, ranges and page/table agreement all hold{note}"
+    return OK, f"all {scored} score(s) add up and agree with the table{note}"
 
 
 def check_foreign_state():

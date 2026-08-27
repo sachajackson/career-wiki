@@ -69,7 +69,7 @@ class TheArithmetic(unittest.TestCase):
     def test_a_total_that_does_not_add_up_is_caught(self):
         with Vault() as v:
             v.role("Acme", block("4·4·2", 9))
-            faults, _ = sc.audit()
+            faults, _, _ = sc.audit()
             self.assertEqual(len(faults), 1)
             self.assertIn("= 10, but FIT reads 9", faults[0][2])
 
@@ -126,7 +126,7 @@ class TheClusterPages(unittest.TestCase):
     def test_a_single_bad_row_inside_a_cluster_is_still_caught(self):
         with Vault() as v:
             v.role("Cluster", self.CLUSTER.replace("| **4·2·4** | **10** |", "| **4·2·4** | **9** |"))
-            faults, _ = sc.audit()
+            faults, _, _ = sc.audit()
             self.assertEqual(len(faults), 1)
             self.assertIn("= 10, but FIT reads 9", faults[0][2])
 

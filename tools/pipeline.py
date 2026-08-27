@@ -281,13 +281,15 @@ def stage_scored():
     sys.path.insert(0, HERE)
     try:
         import scores
-        faults, _ = scores.audit()
+        faults, _, scored = scores.audit()
     except Exception as e:
         return True, f"could not check: {type(e).__name__}", []
+    if not scored:
+        return True, "no scored assessments yet", []
     if faults:
         return False, f"{len(faults)} fault(s) in the numbers", [
             f"{k}: {n[:40]} — {d}" for n, k, d in faults]
-    return True, "arithmetic, ranges and page/table agreement all hold", []
+    return True, f"all {scored} score(s) add up and agree with the table", []
 
 
 def stage_reviewed():
@@ -303,7 +305,7 @@ def stage_reviewed():
     sys.path.insert(0, HERE)
     try:
         import scores
-        _, due = scores.audit()
+        _, due, _ = scores.audit()
     except Exception as e:
         return True, f"could not check: {type(e).__name__}", []
     if due:
