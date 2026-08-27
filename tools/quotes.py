@@ -175,6 +175,46 @@ def postings_for(page_text, postings):
     return [postings[i] for i in sorted(ids_in(page_text)) if i in postings]
 
 
+# 🔴 An assessment that says its source was cut stops looking, and the caveat is
+# never revisited. Found on five pages at once, every one of them false -- and on
+# the two highest-scoring roles in the vault it is why LIFE, PAY and REQS were all
+# left unanswered for a week while the posting stated every one of them.
+TRUNCATED = re.compile(r"truncat", re.I)
+# A posting that reaches any of these reached its end. An aggregator cut lands
+# mid-body, long before the legal boilerplate.
+COMPLETE = re.compile(r"EEO|Equal Opportunit|Salary Range|Know Your Rights|"
+                      r"Recruitment Agenc|requisition", re.I)
+
+
+# 🔴 THE FIRST VERSION OF THIS CHECK FIRED ON ITS OWN FIXES. Correcting a page
+# means writing the word "truncated" on it -- "the truncation caveat here was
+# wrong" -- so all five pages still reported after three had been repaired. A
+# check that cannot tell a claim from its retraction reports its own successes as
+# failures, and gets switched off the same day.
+RETRACTED = re.compile(r"not truncated|wrong|is false|is complete|COMPLETE|corrected|checked \d{4}-", re.I)
+
+
+def false_truncation(page_text, postings):
+    """True when a page claims a cut source and the archive runs to its end.
+
+    🟡 Deliberately one-directional. A page that says nothing about its source is
+    not reported -- silence is the normal case, and flagging it would put every
+    assessment in the list. Only an explicit claim that turns out to be wrong.
+    """
+    # 🔴 PARAGRAPHS, NOT LINES. Markdown here wraps at ~100 characters, so the
+    # claim and its retraction routinely land on different lines -- "the
+    # truncation caveat that stood here was simply / wrong". Line-by-line, the
+    # first half fires and the second half is never seen.
+    paras = re.split(r"\n\s*\n", page_text)
+    claims = [pa for pa in paras
+              if TRUNCATED.search(pa) and not RETRACTED.search(pa)]
+    if not claims:
+        return False
+    bodies = postings_for(page_text, postings)
+    # postings_for yields (filename, body) pairs, not bare text.
+    return bool(bodies) and any(COMPLETE.search(b) for _, b in bodies)
+
+
 def load_postings():
     out = {}
     for f in glob.glob(os.path.join(paths.POSTINGS, "*")):
@@ -273,6 +313,7 @@ def main():
             return 1
 
     checked = unmatched = bad = quotes_total = paraphrased = advisory = 0
+    stale = []
     for path in pages:
         filename, missing, n = check(path, postings)
         quotes_total += n
@@ -282,6 +323,9 @@ def main():
             unmatched += 1
             continue
         checked += 1
+        with open(path, encoding="utf-8") as fh:
+            if false_truncation(fh.read(), postings):
+                stale.append(os.path.basename(path)[:-3])
         absent = [m for m in missing if m[0] == "absent" and m[2] == "claimed"]
         soft = [m for m in missing if m[0] == "absent" and m[2] == "inline"]
         near = [m for m in missing if m[0] == "elided"]
@@ -307,6 +351,12 @@ def main():
         print(f"  🟡 {paraphrased} quotation(s) were TIGHTENED — every word is in the posting, in "
               f"order,\n     but words were dropped without an ellipsis. A small fault, and the "
               f"commonest one.")
+    if stale:
+        print(f"\n  🔴 {len(stale)} page(s) say their source was TRUNCATED, and the archive runs to its "
+              f"end:\n" + "".join(f"       {n[:60]}\n" for n in stale) +
+              f"  🔴 The caveat is load-bearing. On the two highest-scoring roles in this vault it is\n"
+              f"     why LIFE, PAY and REQS were all left unanswered for a week — while the posting\n"
+              f"     stated every one of them, salary band included.")
     if bad:
         print(f"\n  🔴 {bad} page(s) quote something the posting does not contain.\n"
               f"  A score argued from a line that is not there rests on nothing, and the error\n"

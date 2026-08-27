@@ -4,7 +4,7 @@
 reports 28 of 56 pages, which is too high to gate on. These tests pin the
 behaviour that IS settled, so the remaining tuning cannot silently undo it.
 """
-import importlib.util, os, re, unittest
+import importlib.util, os, re, shutil, tempfile, unittest
 
 def words(text):
     """Tokenised exactly as the tool does. A test that splits differently is
@@ -78,3 +78,64 @@ class TheClassification(unittest.TestCase):
         """Same words, wrong order, is not the same sentence."""
         body = words("governance of delivery across four countries")
         self.assertEqual(q._classify("countries four across delivery of governance", body), "absent")
+
+
+class TheFalseTruncationCaveat(unittest.TestCase):
+    """🔴 Found on FIVE pages at once, every one of them false — including the two
+    highest-scoring roles in the vault, where it is why LIFE, PAY and REQS were
+    all left unanswered for a week. The posting stated every one of them, salary
+    band included.
+
+    An assessment that believes its source was cut STOPS LOOKING, and nothing
+    ever revisits the caveat. That makes it worse than a misquote: a misquote is
+    one wrong sentence, this suppresses whole dimensions.
+    """
+
+    PAGE = ("# A role\n\nIngested from https://www.linkedin.com/jobs/view/4456261092/\n\n"
+            "🔴 **Scored from cached aggregator text** — aggregators truncate.\n")
+    WHOLE = ("Source https://www.linkedin.com/jobs/view/4456261092/\n\nBody of the advert. "
+             "Salary Range: 130 000,00 € - 230 000,00 €\nView our EEO Policy Statement.\n")
+    CUT = ("Source https://www.linkedin.com/jobs/view/4456261092/\n\nBody of the advert, "
+           "stopping mid-sen\n")
+
+    def _postings(self, body):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        saved = q.paths.VAULT
+        self.addCleanup(q.paths.use, saved)
+        os.makedirs(os.path.join(d, "postings"))
+        with open(os.path.join(d, "postings", "Citi - A role.txt"), "w", encoding="utf-8") as fh:
+            fh.write(body)
+        q.paths.use(d)
+        return q.load_postings()
+
+    def test_a_claim_of_truncation_over_a_complete_archive_is_caught(self):
+        self.assertTrue(q.false_truncation(self.PAGE, self._postings(self.WHOLE)))
+
+    def test_a_genuinely_cut_archive_is_not_reported(self):
+        """🟡 The caveat is right far more often than it is wrong. Reporting the
+        true ones would bury the false ones."""
+        self.assertFalse(q.false_truncation(self.PAGE, self._postings(self.CUT)))
+
+    def test_a_page_that_says_nothing_about_its_source_is_not_reported(self):
+        """Silence is the normal case. Flagging it would list every assessment."""
+        self.assertFalse(q.false_truncation(
+            "# A role\n\nhttps://www.linkedin.com/jobs/view/4456261092/\n",
+            self._postings(self.WHOLE)))
+
+    def test_the_check_does_not_fire_on_its_own_correction(self):
+        """🔴 IT DID. Correcting a page means writing the word "truncated" on it —
+        "the truncation caveat that stood here was wrong" — so all five pages
+        still reported after three had been repaired. A check that cannot tell a
+        claim from its retraction reports its own successes as failures."""
+        fixed = ("# A role\n\nhttps://www.linkedin.com/jobs/view/4456261092/\n\n"
+                 "🟢 **Checked 2026-08-27: the archived text is COMPLETE, not truncated.**\n")
+        self.assertFalse(q.false_truncation(fixed, self._postings(self.WHOLE)))
+
+    def test_a_retraction_that_wraps_across_lines_still_counts(self):
+        """🔴 THE SECOND VERSION'S BUG. Markdown here wraps at ~100 characters, so
+        the claim and its retraction land on different lines. Line-by-line, the
+        first half fires and the second half is never seen. Paragraphs, not lines."""
+        wrapped = ("# A role\n\nhttps://www.linkedin.com/jobs/view/4456261092/\n\n"
+                   "🔴 **The truncation caveat that stood here was simply\nwrong.**\n")
+        self.assertFalse(q.false_truncation(wrapped, self._postings(self.WHOLE)))

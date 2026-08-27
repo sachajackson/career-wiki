@@ -263,6 +263,12 @@ def stage_quoted():
         if not fn:
             continue
         checked += 1
+        # 🔴 A false "the source was cut" caveat is not a misquote, but it does the
+        # same damage: the assessment stops looking. Five pages carried one at once.
+        with open(path, encoding="utf-8") as fh:
+            if quotes.false_truncation(fh.read(), postings):
+                bad.append(f"{os.path.basename(path)[:-3][:44]}: says its source is truncated; "
+                           f"the archive runs to its end")
         claimed = [m[1] for m in missing if m[0] == "absent" and m[2] == "claimed"]
         if claimed:
             bad.append(f"{os.path.basename(path)[:-3][:44]}: \"{claimed[0][:60]}\"")
