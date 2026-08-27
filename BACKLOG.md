@@ -1480,6 +1480,43 @@ by re-running rather than being data loss. **The boundary did its job even thoug
 
 ---
 
+### 🔴 `quotes.py` is built and does NOT gate anything yet — 28 of 56 unexplained
+
+**Status: built 2026-08-27, advisory, deliberately not wired into `doctor.py` or `pipeline.py`.**
+
+🟢 **The asymmetry it closes is real.** `verify.py` checks an outgoing CV against the wiki, because a model
+wrote the CV and a model reviewing its own work shares its failure modes. **But role pages are also
+model-written and they rest entirely on quotation** — every score in this system is argued from a line
+lifted out of a posting. **Nothing checked the quote**, and the error propagates: a misquote sets a score,
+the score enters the shortlist, the shortlist decides where an evening goes.
+
+🟢 **It has already found two genuine faults**: a posting reading *"manage i.t. related risks"* quoted as
+*"manage IT related risks"*, and *"Set safe-AI standards **for agentic systems**:"* quoted with those three
+words silently dropped.
+
+🔴 **And it reports 28 of 56 pages, which is far too high to gate on.** It was narrowed four times, each on a
+real bug in the check found by running it:
+
+| Attempt | Reported | The bug |
+|---|---|---|
+| First | **69 of 71** | A blockquote's `>` prefix leaked into every multi-line quotation |
+| Second | 63 of 71 | Fuzzy filename matching paired Guidewire's page with **Yuno's posting** |
+| Third | 5 of 6 | A URL regex requiring `https://` found no URLs on the pages it was written to check |
+| Fourth | 49 of 56 | A similarity ratio **cannot see an elision**, which is the commonest fault by far |
+| Now | **28 of 56** | Unexplained |
+
+🔴 **What is left is diagnosis, not more tuning.** The remaining 28 are a mix of at least three things and
+nobody has separated them: **genuine misquotes**; pages quoting an **employer's own posting** where only the
+aggregator's truncated copy was archived; and postings that **changed between being archived and being
+read**. **Until those are told apart, a gate here would fail honest work about half the time — and a check
+that does that is switched off in a week, which costs more than never having built it.**
+
+🟡 **The likely fix for the second class** is to archive the employer's own text at score time rather than the
+aggregator's, which `build-application` already does at packaging time. **That would shrink the problem
+before any more tuning of the matcher.**
+
+---
+
 ### 🟡 A user guide — not yet, and the trigger is specific
 
 **Status: raised 2026-08-25. Deliberately deferred.**
