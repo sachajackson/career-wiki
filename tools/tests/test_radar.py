@@ -139,6 +139,124 @@ class Run:
         shutil.rmtree(self.dir, ignore_errors=True)
 
 
+class TheRequisitionNumberInATitle(unittest.TestCase):
+    """🔴 One job advertised twice, and the obvious fix is the dangerous one.
+
+    Mastercard listed the same role as "Director, Software Engineering" and
+    "Director, Software Engineering R-281578" -- identical bodies. same_role()
+    compares normalised titles for EQUALITY, so a requisition number in one of
+    them defeats it and both survived dedup.
+
+    🔴 Stripping requisition tokens and merging on the remainder would fix that
+    case and break a commoner one: large employers post several genuinely
+    different requisitions under one title. Merging those makes a real vacancy
+    disappear, and nothing reports it -- the same shape as the location
+    intersection bug already documented in same_role.
+
+    So the strip only ever OPENS the question. The bodies then have to agree.
+    """
+
+    def _row(self, title, body="", company="Mastercard", loc="Dublin"):
+        return {"title": title, "company": company, "loc": loc, "body": body}
+
+    def test_the_same_role_twice_is_merged_when_the_bodies_agree(self):
+        body = "Lead a team building quantum and AI/ML products at scale in Leopardstown."
+        self.assertTrue(radar.same_role(
+            self._row("Director, Software Engineering", body),
+            self._row("Director, Software Engineering R-281578", body)))
+
+    def test_two_requisitions_under_one_title_stay_separate(self):
+        """🔴 THE FALSE POSITIVE, and the reason this was not fixed the easy way.
+        Same employer, same title, different requisition, DIFFERENT job."""
+        self.assertFalse(radar.same_role(
+            self._row("Director, Software Engineering R-281578",
+                      "Lead the payments platform team. Kotlin, Kafka, event-driven."),
+            self._row("Director, Software Engineering R-994411",
+                      "Lead the fraud analytics group. Python, model risk, data science.")))
+
+    def test_a_stripped_title_never_merges_when_a_body_is_missing(self):
+        """🔴 Unknown is not agreement. Without a body there is nothing to check
+        the merge against, so the conservative answer is two roles, not one."""
+        self.assertFalse(radar.same_role(
+            self._row("Director, Software Engineering", ""),
+            self._row("Director, Software Engineering R-281578", "Some description.")))
+
+    def test_identical_titles_are_unaffected_by_any_of_this(self):
+        """The overwhelmingly common case must not start depending on bodies."""
+        self.assertTrue(radar.same_role(
+            self._row("Head of Delivery", ""), self._row("Head of Delivery", "")))
+
+    def test_genuinely_different_titles_still_do_not_merge(self):
+        self.assertFalse(radar.same_role(
+            self._row("Director, Software Engineering", "x" * 80),
+            self._row("Director, Product Management", "x" * 80)))
+
+    def test_the_shapes_a_requisition_number_actually_takes(self):
+        for tail in ("R-281578", "JR354003", "REQ-12345", "210768893", "(R28621)", "- 2026-6489"):
+            self.assertEqual(radar.strip_req(f"Director, Software Engineering {tail}"),
+                             "Director, Software Engineering", tail)
+
+    def test_a_title_that_merely_ends_in_a_word_is_untouched(self):
+        """🔴 The other cry-wolf direction: real titles end in things that look
+        like codes. Stripping "II" or "EMEA" would merge distinct levels."""
+        for title in ("Software Engineer II", "Director Cloud Platform EMEA",
+                      "Engineering Manager III", "Analyst 2"):
+            self.assertEqual(radar.strip_req(title), title)
+
+
+class TheResetFlagIsScopedToItsRun(unittest.TestCase):
+    """🔴 It destroyed a real baseline, and the flag was doing what it said.
+
+    `--adapter google --all-open --reset`, typed while testing one new adapter,
+    wiped the memory of all 6,462 seen roles rather than Google's 48. The flag
+    says "forget everything seen before" and means it; the scoping of the RUN
+    does not carry to the flag.
+
+    Nothing assessed was lost -- the scoring table and role pages sit outside
+    seen.json -- but the radar's entire notion of "new" went with it, and the
+    only way back was a full sweep whose output is by definition entirely new.
+
+    🔴 Refusing the combination rather than silently rescoping it. Rescoping
+    would change what a destructive flag means for anyone relying on today's
+    behaviour, and doing that quietly is how the next person loses a baseline.
+    """
+
+    def test_reset_with_an_adapter_is_refused(self):
+        with self.assertRaises(SystemExit) as e:
+            radar.parse(["--adapter", "linkedin", "--reset"])
+        self.assertNotEqual(e.exception.code, 0)
+
+    def test_the_refusal_names_the_flag_that_does_what_was_meant(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err), self.assertRaises(SystemExit):
+            radar.parse(["--adapter", "linkedin", "--reset"])
+        self.assertIn("--reset-adapter", err.getvalue())
+
+    def test_reset_alone_still_works(self):
+        """🔴 The false-positive case. A global reset is a legitimate thing to
+        want, and breaking it would be the same mistake in the other direction."""
+        args = radar.parse(["--reset"])
+        self.assertTrue(args.reset)
+        self.assertIsNone(args.adapter)
+
+    def test_an_adapter_alone_still_works(self):
+        self.assertEqual(radar.parse(["--adapter", "linkedin"]).adapter, "linkedin")
+
+    def test_reset_adapter_scopes_to_the_named_source(self):
+        args = radar.parse(["--adapter", "linkedin", "--reset-adapter"])
+        self.assertTrue(args.reset_adapter)
+        self.assertFalse(args.reset)
+
+    def test_reset_adapter_without_an_adapter_is_refused(self):
+        """It has nothing to scope to, so it would silently mean nothing."""
+        with self.assertRaises(SystemExit):
+            radar.parse(["--reset-adapter"])
+
+    def test_a_scoped_reset_forgets_only_that_source(self):
+        seen = {"li-1": {"title": "a"}, "goog-2": {"title": "b"}, "li-3": {"title": "c"}}
+        self.assertEqual(radar.forget(seen, "goog-"), {"li-1": {"title": "a"}, "li-3": {"title": "c"}})
+
+
 class TheDayRate(unittest.TestCase):
     """🔴 A day rate read as a salary is a role thrown away.
 

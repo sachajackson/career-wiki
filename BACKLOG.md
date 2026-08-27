@@ -1345,9 +1345,17 @@ has a **"SAFETY VIOLATION on pre-existing dirty user file"** guard. Worth watchi
 
 ---
 
-### 🔴 A requisition number in a title defeats dedup
+### ✅ A requisition number in a title defeats dedup — FIXED 2026-08-27
 
-**Status: found 2026-08-26 by scoring, not by a test. Not fixed — deliberately.**
+**Status: fixed, and the false-positive case decided the design as predicted.**
+
+🟢 **`strip_req()` only ever OPENS the question; the bodies then have to agree.** A trailing token that is mostly digits is stripped — `R-281578`, `JR354003`, `210768893`, `2026-6489` — and a merge happens only when the two descriptions overlap by 60%. **No body on either side means no evidence, and the conservative answer is two roles.**
+
+🟢 **Measured on the live corpus: 3 title-pairs differ only by a requisition number. One merges because the bodies agree; two stay separate because they do not.** The body check is doing real work rather than rubber-stamping — which is exactly what the entry below said it had to prove.
+
+🔴 **Two cry-wolf directions are tested**: real titles ending in `II`, `III`, `EMEA` or `2` are untouched, and two genuinely different requisitions under one title stay separate.
+
+**Original entry, kept because the reasoning is the point:**
 
 **Mastercard advertised one job twice**: `Director, Software Engineering` and `Director, Software
 Engineering R-281578`, **identical bodies**. Both survived dedup, because `same_role()` requires normalised
@@ -1393,9 +1401,17 @@ the most common phrases in director-level postings.
 
 ---
 
-### 🔴 `--reset` is global even when the run is not, and it destroyed a real baseline
+### ✅ `--reset` is global even when the run is not — FIXED 2026-08-27
 
-**Status: found 2026-08-26, by doing it. Not fixed.**
+**Status: fixed by refusing the combination, which is the option this entry called probably right.**
+
+🟢 **`--adapter X --reset` now errors** and names `--reset-adapter` as the flag that means what was intended. **Refused rather than silently rescoped**, because rescoping changes what a destructive flag means for anyone relying on today's behaviour — and doing that quietly is how the next person loses a baseline.
+
+🟢 **And it says what it is about to destroy before destroying it**: *"--reset: forgetting all 6,534 seen role(s), from every source"*. The count was always known at that moment; printing it costs nothing.
+
+🟢 **Verified against the real command that caused it.** `--adapter google --all-open --reset` now exits non-zero with the explanation; the scoped form would keep 6,486 rows and forget 48.
+
+**Original entry:**
 
 **`--adapter google --all-open --reset` wiped the memory of all 6,462 seen roles**, not just Google's. The
 flag says *"forget everything seen before"* and means it — but it was typed on a run scoped to **one

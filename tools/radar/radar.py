@@ -326,6 +326,44 @@ def _loc_tokens(loc):
     return {w for w in re.split(r"\W+", (loc or "").lower()) if w}
 
 
+# 🔴 A requisition number in a title defeats an equality check, and stripping it
+# is the dangerous half of the fix.
+#
+# Mastercard listed one job as "Director, Software Engineering" and "Director,
+# Software Engineering R-281578" with identical bodies; both survived dedup. But
+# large employers also post SEVERAL genuinely different requisitions under one
+# title, and merging those makes a real vacancy disappear silently -- the same
+# shape as the location-intersection bug documented in same_role() below.
+#
+# So the strip only ever opens the question. The bodies then have to agree.
+#
+# Deliberately narrow: a trailing token that is mostly digits, or a letter prefix
+# bound to digits. Real titles end in II, III, EMEA, 2 -- stripping those would
+# merge distinct levels and regions, which is the same failure wearing a hat.
+REQ_TAIL = re.compile(
+    r"[\s(\[-]+(?:req[\s-]*)?"
+    r"(?:[A-Za-z]{1,3}[-_]?\d{3,}"          # R-281578, JR354003, REQ-12345
+    r"|\d{3,}(?:[-_]\d{3,})+"               # 2026-6489, a hyphenated pair
+    r"|\d{4,})"                             # 210778716
+    r"\)?\]?\s*$", re.I)
+BODY_AGREEMENT = 0.6
+
+
+def strip_req(title):
+    """A title with a trailing requisition number removed, if it has one."""
+    return REQ_TAIL.sub("", title or "").strip()
+
+
+def _bodies_agree(a, b):
+    """🔴 Unknown is not agreement. No body on either side means no evidence to
+    merge on, and the conservative answer is two roles rather than one."""
+    ta = set(re.findall(r"[a-z]{4,}", (a.get("body") or "").lower()))
+    tb = set(re.findall(r"[a-z]{4,}", (b.get("body") or "").lower()))
+    if not ta or not tb:
+        return False
+    return len(ta & tb) / min(len(ta), len(tb)) >= BODY_AGREEMENT
+
+
 def same_role(a, b):
     """Are these two rows the same posting reaching us from two places?
 
@@ -349,8 +387,14 @@ def same_role(a, b):
     are. An empty location is unknown rather than different, and does not
     split a role that is otherwise identical.
     """
-    if _norm(a.get("title")) != _norm(b.get("title")):
-        return False
+    ta, tb = _norm(a.get("title")), _norm(b.get("title"))
+    if ta != tb:
+        # Titles differ. They may still be one job if the only difference is a
+        # requisition number -- but that has to be evidenced, not assumed.
+        if _norm(strip_req(a.get("title"))) != _norm(strip_req(b.get("title"))):
+            return False
+        if not _bodies_agree(a, b):
+            return False
     if _norm(a.get("company")) != _norm(b.get("company")):
         return False
     la, lb = _loc_tokens(a.get("loc")), _loc_tokens(b.get("loc"))
@@ -482,10 +526,42 @@ def parse(argv=None):
                     help="no recency filter at all. Beats --days, being the more explicit of the two")
     ap.add_argument("--adapter", choices=sorted(ADAPTERS), metavar="NAME",
                     help=f"restrict to one source: {', '.join(sorted(ADAPTERS))}")
-    ap.add_argument("--reset", action="store_true", help="forget everything seen before")
+    ap.add_argument("--reset", action="store_true",
+                    help="forget everything seen before, from EVERY source. Refused with "
+                         "--adapter: use --reset-adapter for that")
+    ap.add_argument("--reset-adapter", action="store_true",
+                    help="forget only what --adapter has seen. Needs --adapter")
     ap.add_argument("--score-only", "--retier", dest="score_only", action="store_true",
                     help="re-score the cached corpus without re-fetching")
-    return ap.parse_args(argv)
+    args = ap.parse_args(argv)
+    # 🔴 REFUSED, not silently rescoped. `--adapter google --all-open --reset`
+    # once wiped the memory of all 6,462 seen roles rather than that adapter's
+    # 48, because the scoping of the run does not carry to the flag -- and the
+    # flag was doing exactly what it said.
+    #
+    # Rescoping it automatically would read better and would quietly change what
+    # a destructive flag means for anyone relying on today's behaviour. Making
+    # the user say which they meant costs one retry and cannot lose a baseline.
+    if args.reset and args.adapter:
+        ap.error("--reset forgets EVERY source, and --adapter says you meant one. "
+                 "Use --reset-adapter to forget only that source, or drop --adapter "
+                 "if you really meant all of them.")
+    if args.reset_adapter and not args.adapter:
+        ap.error("--reset-adapter has nothing to scope to. Name a source with --adapter.")
+    return args
+
+
+# Each adapter stamps its rows with a short id prefix. Kept here rather than
+# asked of the adapter, because a scoped reset must work for an adapter that is
+# not currently configured to run.
+PREFIX = {"linkedin": "li-", "greenhouse": "gh-", "google": "goog-",
+          "workday": "wd-", "oracle": "or-", "lever": "lv-",
+          "adzuna": "az-", "custom": "custom:"}
+
+
+def forget(seen, prefix):
+    """What is left of `seen` after one source is forgotten."""
+    return {k: v for k, v in seen.items() if not str(k).startswith(prefix)}
 
 
 # --- fetching -------------------------------------------------------------
@@ -690,7 +766,18 @@ def main(argv=None):
     routed, unrouted = EMP.route(emp, cfg) if emp else ([], [])
     clash = EMP.contradictions(emp) if emp else []
 
-    seen = {} if reset or not os.path.exists(SEEN) else json.load(open(SEEN))
+    seen = {} if not os.path.exists(SEEN) else json.load(open(SEEN))
+    # 🔴 Say what is about to be destroyed, before destroying it. The count is
+    # known at this moment and printing it costs nothing -- and "forgetting 6,462
+    # seen roles" is a sentence somebody can still interrupt.
+    if reset and seen:
+        print(f"  --reset: forgetting all {len(seen)} seen role(s), from every source")
+        seen = {}
+    elif args.reset_adapter and seen:
+        before = len(seen)
+        seen = forget(seen, PREFIX.get(args.adapter, args.adapter[:2] + "-"))
+        print(f"  --reset-adapter {args.adapter}: forgetting {before - len(seen)} of "
+              f"{before} seen role(s); the rest are other sources and are kept")
     today = datetime.date.today().isoformat()
     dead, capped, dupes = [], [], 0
     skipped = []
