@@ -193,6 +193,47 @@ def stage_outcomes():
     return True, "nothing owed", []
 
 
+# 🔴 THE ORDERED RUNBOOK. The radar skill is 323 lines across 18 sections and the
+# only ordered part is a five-item list two thirds of the way down — which is how
+# the `role-triage` instruction, named twice in that file, went unused for the
+# life of the repo. An agent reading prose picks up what it happens to land on.
+#
+# So the order lives here, executable, with the command for each step. Prose can
+# explain WHY; this says WHAT, NEXT.
+RUNBOOK = [
+    ("0  sources answer",
+     "python3 tools/radar/sources_check.py",
+     "A silent run and a quiet market look identical. 0 usable means the radar cannot speak."),
+    ("1  sweep or window",
+     "python3 tools/radar/radar.py --all-open      (or --days 7)",
+     "--all-open every 7 days for the backlog; --days 7 for freshness. Not the same run."),
+    ("2  read the header, not the command you typed",
+     "head -3 vault/state/shortlist.md",
+     "Three wordings mean three different things, and one says the window applied to nothing."),
+    ("3  open a batch from the SHORTLIST",
+     "python3 tools/batch.py --open <slug> --employer <name>",
+     "🔴 Never from raw.json. That is the corpus BEFORE the location filter."),
+    ("4  delegate the reading",
+     "role-triage agent — several in parallel above ~8 roles",
+     "🔴 Standing rule. Job adverts are the bulkiest thing that can enter a session."),
+    ("5  employer's own posting before scoring an aggregator row",
+     "python3 tools/radar/refresh.py <archived posting>",
+     "Aggregators truncate the qualifiers that make a candidate MORE eligible."),
+    ("6  score, and file in the same turn",
+     "page + scoring-table row + posting URL",
+     "🔴 All three, or the radar re-surfaces it and the work is done twice."),
+    ("7  archive the posting text",
+     "vault/postings/<Employer> - <Title>.txt",
+     "raw.json is overwritten every run. The archive is the only durable copy."),
+    ("8  log it",
+     "append to vault/wiki/log.md",
+     "An assessment that exists only in a reply gets re-derived next week."),
+    ("9  check the batch came back",
+     "python3 tools/batch.py --status <slug>  &&  python3 tools/pipeline.py",
+     "A delegation nobody verifies is the same failure one level up."),
+]
+
+
 STAGES = [
     ("sweep", "A full --all-open sweep is recent enough to trust", stage_sweep),
     ("triage", "Every HIGH-signal role is assessed or dispatched", stage_triage),
@@ -222,11 +263,23 @@ def render(results):
     return "\n".join(out)
 
 
+def runbook():
+    lines = ["", "  A radar run, in order", ""]
+    for step, cmd, why in RUNBOOK:
+        lines += [f"  {step}", f"      $ {cmd}", f"      {why}", ""]
+    return "\n".join(lines)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--runbook", action="store_true",
+                    help="print the ordered steps of a radar run and stop")
     ap.add_argument("--write", action="store_true",
                     help="refresh vault/state/progress.md as well as printing")
     args = ap.parse_args()
+    if args.runbook:
+        print(runbook())
+        return 0
     results = run()
     text = render(results)
     print(text)

@@ -262,3 +262,25 @@ that would change the decision:
 
 **Always ask, on every call:** base salary separately from bonus, equity and pension; the office pattern
 in days per week; and volunteer the notice period early rather than at offer stage.
+
+## 🔴 Contracts: the Security score is priced, and the rate must be converted first
+
+**A contract's stability score is a number to be MET, not a reason the role is out.** Report it as a cost.
+🔴 **Never present a high-scoring contract as ruled out on stability alone** — that is the user's call, and
+the rate may well buy it.
+
+### The conversion, and the number it uses
+
+🔴 **`working_days_per_year` in `vault/settings/profile.json`. ASK FOR IT — there is no safe default.**
+
+*"How many days would you actually bill in a year?"* has one right answer per person. **220 allows for annual
+leave; 250 is a year with none in it, and using it overstates a contract by about 14%.** An agent guessed 250
+once and reported a rate as 15% above a floor it was in fact below.
+
+| | |
+|---|---|
+| **Annualised gross** | `day rate × working_days_per_year` |
+| 🔴 **What that figure still leaves out** | No employer pension. No paid leave. No sick pay. No notice period and no redundancy protection — **which is the whole of the Security score.** And the billed-days figure is an assumption: **gaps between contracts are unpaid** |
+
+🟢 **State the gap rather than implying equivalence, then let the user decide.**
+

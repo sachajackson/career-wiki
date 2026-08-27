@@ -205,3 +205,34 @@ class TheReport(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TheRunbook(unittest.TestCase):
+    """🔴 The radar skill is 323 lines across 18 sections and the only ordered
+    part is a five-item list two thirds of the way down. That is how the
+    `role-triage` instruction — named twice in that same file — went unused for
+    the life of the repo. An agent reading prose picks up what it lands on."""
+
+    def test_it_is_ordered_and_numbered(self):
+        nums = [int(s.split()[0]) for s, _, _ in pl.RUNBOOK]
+        self.assertEqual(nums, list(range(len(nums))), "the runbook is not in order")
+
+    def test_every_step_names_a_command_or_an_artefact(self):
+        for step, cmd, why in pl.RUNBOOK:
+            self.assertTrue(cmd.strip(), f"{step} has no command")
+            self.assertTrue(why.strip(), f"{step} does not say why")
+
+    def test_the_steps_that_were_actually_skipped_are_in_it(self):
+        """Each of these was missed at least once in a single session, and each
+        cost real work: the triage delegation, the URL that stops a role being
+        re-surfaced, and building a batch from the unfiltered corpus."""
+        text = pl.runbook()
+        self.assertIn("role-triage", text)
+        self.assertIn("posting URL", text)
+        self.assertIn("raw.json", text)
+        self.assertIn("log.md", text)
+
+    def test_it_prints_without_a_vault(self):
+        """A runbook that needs a working vault to read is no use when the vault
+        is what you are about to set up."""
+        self.assertIn("A radar run, in order", pl.runbook())

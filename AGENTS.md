@@ -19,6 +19,25 @@ like *"frontmatter goes at the top of the page"* look identical on the page and 
 is personal and permanent, the other is system detail that changes when the tools change. Mixed together,
 an update either destroys the first or refuses to touch the second.
 
+### 🔴 First ask which kind of correction it is. Most are personal; some are not.
+
+**A correction that would be true for a DIFFERENT user is a system rule, and putting it in `vault/AGENTS.md`
+traps it in one person's vault where an update can never carry it to anybody else.**
+
+| The correction | Where it goes |
+|---|---|
+| *"Never call me a leader"* · *"I am tech, not finance"* · *"ask me questions as plain text"* | 🟢 **`vault/AGENTS.md`.** True of this person only |
+| *"Check a backlog entry still applies before recommending it"* · *"bulk reads go through the triage agent"* | 🔴 **`SCHEMA.md` or the relevant skill.** True of everyone |
+| *"Show the score breakdown, not just the total"* · *"a contract's rate must be annualised before it means anything"* | 🔴 **`templates/`**, so every vault is built with it |
+| *"CVs are written in the first person"* | 🔴 **Better still, a check.** `cv_lint.py` enforces that one in code, where it cannot be forgotten |
+
+🔴 **The test is one question: would this be true for somebody else using this repo?** If yes it is not a
+preference, whoever it came from. **Audited 2026-08-27 and two rules had been sitting in one user's vault for
+days that applied to everybody.**
+
+🟡 **Recording it in both places is fine and often right** — the personal file keeps the correction and its
+date; the system file carries the rule.
+
 🔴 **When the user corrects you, write it into `vault/AGENTS.md` with the date and the reason** — not
 into your reply, and not into `SCHEMA.md`. A correction you do not record is one you will need again next
 week. Where the two disagree, `vault/AGENTS.md` wins on style, tone and emphasis; `SCHEMA.md` wins on

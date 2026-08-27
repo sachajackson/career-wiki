@@ -550,6 +550,17 @@ a document.**
 
 ### 🔴 The employer watchlist is private, and the reason is not obvious
 
+### 🔴 Before recommending anything from `BACKLOG.md`, check its premises still hold
+
+**This repository changes daily, so an entry written last week may describe a problem something else has
+already solved.** Verify the specific things it claims are broken — **the file it names, the command it says
+fails** — before offering it as work.
+
+🟢 **And prefer testing the claim to arguing about it.** One entry asserted there was *"no way for a user to
+take an update"*; the two things it rested on had both stopped existing. **Simulating the update took a few
+minutes, confirmed the entry was wrong, and turned up a real defect in that morning's own work that no amount
+of discussion would have found.**
+
 ### The tools, and when each one is run
 
 **Every one is `python3 tools/<name>`, needs nothing installed, and writes nothing the user owns.**
