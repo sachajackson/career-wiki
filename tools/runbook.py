@@ -67,9 +67,15 @@ RADAR = [
     ("verify the batch came back",
      "python3 tools/batch.py --status <slug> && python3 tools/pipeline.py",
      "A delegation nobody verifies is the same failure one level up."),
+    ("argue with anything scoring 10 or more",
+     "python3 tools/scores.py --due, then the role-triage agent's opposite: role-review",
+     "🔴 Quoting a posting accurately and READING it wrongly look identical to every other check."),
 ]
 
 APPLICATION = [
+    ("check the score has been argued with before spending an evening on it",
+     "python3 tools/scores.py --due",
+     "🔴 An unreviewed score is where a soft bar read as a hard one turns into a wasted application."),
     ("confirm the posting is still open",
      "python3 tools/radar/refresh.py <archived posting>",
      "One role closed within 26 hours of being found. An evening spent on a dead req is gone."),

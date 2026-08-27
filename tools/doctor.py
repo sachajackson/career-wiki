@@ -173,6 +173,33 @@ def check_quotes():
                 f"their posting")
 
 
+def check_scores():
+    """🔴 Do the numbers hang together, and has anybody argued with them?
+
+    Two copies of every score exist -- the role page and the scoring table --
+    and they drift. One page had been rescored 13 -> 12 and said so in as many
+    words while its table row still read 13, which is the copy that gets read
+    when roles are compared against each other.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, here)
+    try:
+        import scores
+        faults, due = scores.audit()
+    except Exception as e:
+        return WARN, f"could not check: {type(e).__name__}: {e}"
+    if faults:
+        return MISSING, (f"{len(faults)} fault(s) in the score arithmetic or between a page "
+                         f"and its table row. Run `python3 tools/scores.py`")
+    # 🔴 The review BACKLOG is deliberately not a finding here. doctor reports
+    # whether the system is configured; a queue of unargued-with assessments is
+    # outstanding work, and `pipeline.py` already owns it as its own stage.
+    # Reporting it in both places made doctor exit non-zero on a healthy install
+    # and broke four tests that were right to fail.
+    note = f"; {len(due)} at FIT {scores.REVIEW_AT}+ await `role-review` (see pipeline)" if due else ""
+    return OK, f"score arithmetic, ranges and page/table agreement all hold{note}"
+
+
 def check_foreign_state():
     """🔴 What another tool left beside the code, naming the user's files.
 
@@ -342,6 +369,7 @@ CHECKS = [
     ("this copy", check_git),
     ("other tools", check_foreign_state),
     ("quotes", check_quotes),
+    ("scores", check_scores),
     ("registry", check_registry),
     ("your CV", check_sources),
     ("your wiki", check_wiki),

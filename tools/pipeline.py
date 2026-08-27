@@ -271,13 +271,56 @@ def stage_quoted():
     return True, f"all {checked} checked assessment(s) quote their posting accurately", []
 
 
+def stage_scored():
+    """🔴 N + D + E must equal FIT, and the page must agree with the table.
+
+    Real on the day this was written: a role scored 4·4·2 carried a FIT of 9 in
+    both places, under a heading reading "What holds it at 9". Every component
+    was argued for in prose; the total was a slip, and it had been read several
+    times without anyone noticing."""
+    sys.path.insert(0, HERE)
+    try:
+        import scores
+        faults, _ = scores.audit()
+    except Exception as e:
+        return True, f"could not check: {type(e).__name__}", []
+    if faults:
+        return False, f"{len(faults)} fault(s) in the numbers", [
+            f"{k}: {n[:40]} — {d}" for n, k, d in faults]
+    return True, "arithmetic, ranges and page/table agreement all hold", []
+
+
+def stage_reviewed():
+    """🔴 THE ONLY STAGE THAT NEEDS A MODEL, and the reason it is last.
+
+    Every other stage is a string operation. This one asks whether the posting
+    was READ correctly -- and "hands-on experience with agent frameworks",
+    quoted perfectly and scored as though it demanded daily coding, is a true
+    quote and a false conclusion that no matcher will ever catch.
+
+    🔴 A script cannot spawn the agent. What it can do is refuse to call the
+    work finished until the verdict is written down."""
+    sys.path.insert(0, HERE)
+    try:
+        import scores
+        _, due = scores.audit()
+    except Exception as e:
+        return True, f"could not check: {type(e).__name__}", []
+    if due:
+        return False, (f"{len(due)} assessment(s) at FIT {scores.REVIEW_AT}+ have a posting "
+                       f"and no recorded review"), [f"FIT {f}  {n}" for n, f in due[:12]]
+    return True, f"every assessment at FIT {scores.REVIEW_AT}+ has been argued with", []
+
+
 STAGES = [
     ("sweep", "A full --all-open sweep is recent enough to trust", stage_sweep),
     ("triage", "Every HIGH-signal role is assessed or dispatched", stage_triage),
     ("recorded", "Every assessment has a page, a table row and a posting URL", stage_recorded),
     ("quoted", "Every line attributed to an employer is in their posting", stage_quoted),
+    ("scored", "The score adds up and the page agrees with the table", stage_scored),
     ("logged", "The log records what was assessed", stage_logged),
     ("outcomes", "No application is waiting to be chased", stage_outcomes),
+    ("reviewed", "Every score about to be acted on has been argued with", stage_reviewed),
 ]
 
 
