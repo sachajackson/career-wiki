@@ -33,11 +33,16 @@ entries somebody has to notice are the same thing.
 > rests on as links, and one line on what it means. Ordered by how many roles evidence it, not by when it
 > was noticed.
 
-### 1. <The pattern, stated as a claim> — **N roles**
+### 1. &lt;The pattern, stated as a claim&gt; — **N roles**
 
 **The line from the postings that keeps recurring**, quoted.
 
-**[[Role A]] · [[Role B]] · [[Role C]]**
+**Then the roles it rests on, one wiki-link each**, separated by `·` — so the stated count and the
+number of links can be checked against each other.
+
+> 🟡 **Written as a description rather than as example links on purpose.** A template carrying real
+> double-bracket placeholders makes `wikilinks.py` report three missing pages on a vault that has
+> only just been created, which is the first thing a new user would see from that tool.
 
 🔴 **What to do about it** — and if the answer is *"stop re-deriving this"*, put it in `BACKLOG.md`.
 

@@ -189,3 +189,33 @@ class WhatItRefusesToDo(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TheFreshScaffoldIsClean(unittest.TestCase):
+    """🔴 The first thing a new user sees from this tool must not be wrong.
+
+    A vault scaffolded straight from templates/ was told three pages were
+    missing -- vault-AGENTS.md, sources-README.md and OVERSIGHT.md -- none of
+    which is a wiki page. They are copied elsewhere in the vault entirely. Three
+    findings, all false, on a vault that had done nothing wrong yet.
+    """
+
+    def test_a_vault_copied_from_the_templates_reports_nothing(self):
+        import shutil
+        root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        templates = os.path.join(root, "templates")
+        wiki = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, wiki, ignore_errors=True)
+        for f in os.listdir(templates):
+            if f.endswith(".md") and f not in td.SKIP:
+                shutil.copy(os.path.join(templates, f), os.path.join(wiki, f))
+        buf = io.StringIO()
+        argv = sys.argv
+        sys.argv = ["template_drift.py", "--wiki", wiki, "--templates", templates]
+        try:
+            with redirect_stdout(buf):
+                code = td.main()
+        finally:
+            sys.argv = argv
+        self.assertEqual(code, 0, buf.getvalue())
+        self.assertNotIn("vault-AGENTS.md", buf.getvalue())

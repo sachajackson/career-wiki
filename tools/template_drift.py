@@ -39,8 +39,17 @@ sys.path.insert(0, os.path.join(HERE, "lib"))
 import paths  # noqa: E402
 TEMPLATES = os.path.join(os.path.dirname(HERE), "templates")
 
-# Pages only. cv.html and the example JSON are not wiki pages.
-SKIP = {"application.example.json", "cv.html"}
+# 🔴 Pages only, and the three .md files below are NOT wiki pages -- they are
+# copied elsewhere in the vault entirely:
+#   vault-AGENTS.md    -> vault/AGENTS.md, which an update never touches
+#   sources-README.md  -> vault/sources/README.md
+#   OVERSIGHT.md       -> an oversight export folder, per application
+#
+# Without this a freshly initialised vault is told three pages are missing that
+# should never be in wiki/ -- the first thing a new user sees from this tool, and
+# every one of them wrong. Measured on a clean scaffold before the fix.
+SKIP = {"application.example.json", "cv.html",
+        "vault-AGENTS.md", "sources-README.md", "OVERSIGHT.md"}
 HEADING = re.compile(r"^(#{2,4})\s+(.*)$", re.M)
 NOISE = re.compile(r"[^a-z0-9 ]+")
 # Close enough that a reworded heading is recognised, far enough that two
