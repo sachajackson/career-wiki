@@ -1480,7 +1480,26 @@ by re-running rather than being data loss. **The boundary did its job even thoug
 
 ---
 
-### 🔴 `quotes.py` is built and does NOT gate anything yet — 28 of 56 unexplained
+### ✅ `quotes.py` — DIAGNOSED AND GATING, 2026-08-27
+
+**Status: 0 of 45 pages failing, wired into `doctor.py` and `pipeline.py`.**
+
+🟢 **The 28 were diagnosed and none of them was a fabricated quote.** They were three things:
+
+| Cause | Share | Fix |
+|---|---|---|
+| **The regex paired one quotation's closing mark with the next one's opening mark**, returning whole paragraphs of our own commentary as quotations | **14 pages** | Require emphasis markers around a quotation |
+| **Quotations of the USER, of our own findings, and of application-form questions** — all correctly absent from an employer's advert | **12 pages** | Two tiers: a blockquote is a claim about the employer and gates; an inline quote is advisory |
+| **Two genuine faults** | 2 pages | An employer's typo silently corrected inside a quotation, and Sacha's words quoted without attribution. Both fixed on the pages |
+
+🔴 **And a seventh bug appeared only after the last fix**: quoting the employer's typo faithfully with
+`[sic]` broke the match, so **quoting properly was the thing that made the check fail.** Editorial
+insertions are now stripped before comparison.
+
+🟢 **Coverage held through all of it**: 45 pages and 323 quotations checked. **Blockquote-only was tried
+and checked 17 — the narrowing that made it quiet nearly made it useless, which is the trade to watch.**
+
+**Original entry:**
 
 **Status: built 2026-08-27, advisory, deliberately not wired into `doctor.py` or `pipeline.py`.**
 

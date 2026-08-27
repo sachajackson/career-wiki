@@ -578,6 +578,7 @@ of discussion would have found.**
 | `registry_check.py` | Monthly, or before trusting a quiet radar run |
 | `add_employer.py` | 🟡 **When adding an employer to the watch list** — probes their careers site, works out which ATS it is, and writes the registry entry. **Do not hand-edit `ats_registry.json`** |
 | 🔴 `cv_docx.py` | **After writing the CV, every time.** Turns the filled `cv.html` into an ATS-clean `.docx` — **the default for an employer portal and mandatory for an agency**. No dependencies |
+| 🔴 `quotes.py` | **After scoring roles.** Does every line an assessment attributes to an employer appear in their posting? The score is argued from the quote and nothing else checked the quote |
 | `cv_lint.py` · `verify.py` · `known.py` | Before anything leaves the machine — see the writing standard |
 | `migrate.py` | Only from `/career-migrate` |
 | `radar/radar.py` · `radar/sources_check.py` | See the `role-radar` skill |

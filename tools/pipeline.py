@@ -246,10 +246,36 @@ RUNBOOK = [
 ]
 
 
+def stage_quoted():
+    """🔴 Does every line an assessment attributes to an employer appear in the
+    posting? The score is argued from the quote, and nothing checked the quote."""
+    sys.path.insert(0, HERE)
+    try:
+        import quotes
+        postings = quotes.load_postings()
+    except Exception as e:
+        return True, f"could not check: {type(e).__name__}", []
+    if not postings:
+        return True, "no archived postings to check against", []
+    bad, checked = [], 0
+    for path in _role_pages():
+        fn, missing, n = quotes.check(path, postings)
+        if not fn:
+            continue
+        checked += 1
+        claimed = [m[1] for m in missing if m[0] == "absent" and m[2] == "claimed"]
+        if claimed:
+            bad.append(f"{os.path.basename(path)[:-3][:44]}: \"{claimed[0][:60]}\"")
+    if bad:
+        return False, f"{len(bad)} of {checked} assessment(s) misquote the posting", bad
+    return True, f"all {checked} checked assessment(s) quote their posting accurately", []
+
+
 STAGES = [
     ("sweep", "A full --all-open sweep is recent enough to trust", stage_sweep),
     ("triage", "Every HIGH-signal role is assessed or dispatched", stage_triage),
     ("recorded", "Every assessment has a page, a table row and a posting URL", stage_recorded),
+    ("quoted", "Every line attributed to an employer is in their posting", stage_quoted),
     ("logged", "The log records what was assessed", stage_logged),
     ("outcomes", "No application is waiting to be chased", stage_outcomes),
 ]

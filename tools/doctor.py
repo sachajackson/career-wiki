@@ -140,6 +140,39 @@ def check_radar_config():
                 + ". Run sources_check.py to see whether they answer")
 
 
+def check_quotes():
+    """🔴 Does an assessment quote something the posting does not contain?
+
+    `verify.py` protects an outgoing CV against the wiki. Nothing protected the
+    wiki's own role pages, which are model-written and rest entirely on
+    quotation -- every score here is argued from a line lifted out of an advert.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, here)
+    try:
+        import quotes
+        postings = quotes.load_postings()
+        if not postings:
+            return OPTIONAL, "no archived postings yet — nothing to check assessments against"
+        import glob as _g
+        bad = 0
+        checked = 0
+        for path in _g.glob(os.path.join(paths.ROLES, "*.md")):
+            fn, missing, n = quotes.check(path, postings)
+            if not fn:
+                continue
+            checked += 1
+            if [m for m in missing if m[0] == "absent" and m[2] == "claimed"]:
+                bad += 1
+    except Exception as e:
+        return WARN, f"could not check: {type(e).__name__}: {e}"
+    if bad:
+        return MISSING, (f"{bad} of {checked} assessment(s) quote the employer on something the "
+                         f"posting does not say. Run `python3 tools/quotes.py`")
+    return OK, (f"{checked} assessment(s) checked; every line attributed to an employer is in "
+                f"their posting")
+
+
 def check_foreign_state():
     """🔴 What another tool left beside the code, naming the user's files.
 
@@ -308,6 +341,7 @@ CHECKS = [
     ("python", check_python),
     ("this copy", check_git),
     ("other tools", check_foreign_state),
+    ("quotes", check_quotes),
     ("registry", check_registry),
     ("your CV", check_sources),
     ("your wiki", check_wiki),

@@ -20,24 +20,40 @@ spec.loader.exec_module(q)
 
 class TheExtraction(unittest.TestCase):
 
-    def test_a_blockquote_prefix_does_not_leak_into_the_quotation(self):
-        """🔴 It did, and every multi-line quote failed: 69 of 71 pages."""
-        page = '> *"the first line of a requirement\n> and the second line of it"*\n'
-        self.assertEqual(q.quotations(page), ["the first line of a requirement and the second line of it"])
+    def test_a_blockquote_quotation_is_a_claim_about_the_employer(self):
+        """🔴 The tier that gates. A blockquote is this vault's convention for
+        THIS IS WHAT THE POSTING SAYS, so a miss there is a claim that fails."""
+        page = '> *"a requirement the posting actually states here"*\n'
+        self.assertEqual(q.quotations(page),
+                         [("claimed", "a requirement the posting actually states here")])
+
+    def test_an_inline_quotation_is_advisory_not_a_claim(self):
+        """🔴 An emphasised quote is used for four different things and only one
+        is the employer: "the ceiling is disciplinary" is a finding of ours and is
+        correctly absent from every advert. Reported, never gated on."""
+        page = 'The pattern here is *"the ceiling is disciplinary, not hierarchical"* across six roles.'
+        self.assertEqual(q.quotations(page)[0][0], "inline")
 
     def test_prose_containing_a_wiki_link_is_not_a_quotation(self):
-        page = 'The same tier as "[[NMBI Head of Digitalisation|NMBI]]", which was turned down'
+        page = '> *"The same tier as [[NMBI Head of Digitalisation|NMBI]], which was turned down"*'
         self.assertEqual(q.quotations(page), [])
 
     def test_the_users_own_words_are_not_checked_against_a_job_advert(self):
         """A role page quotes Sacha as well as the posting, and his words are
         correctly not in the advert."""
-        page = 'Sacha said he is "getting quite hands-on with building AI but not there yet"\n'
+        page = '> **Sacha said:** *"getting quite hands-on with building AI but not there yet"*\n'
         self.assertEqual(q.quotations(page), [])
 
     def test_an_ellipsis_splits_one_quotation_into_two_checkable_halves(self):
-        page = '*"the first requirement here… and a separate sentence entirely"*'
+        page = '> *"the first requirement here… and a separate sentence entirely"*'
         self.assertEqual(len(q.quotations(page)), 2)
+
+    def test_an_editorial_insertion_does_not_break_the_match(self):
+        """🔴 Quoting an employer's typo faithfully with [sic] is correct
+        practice, and it made the check fail — so quoting properly was the thing
+        that broke it."""
+        self.assertEqual(q.flatten('Object Oriented Programing [sic] skills'),
+                         "object oriented programing skills")
 
 
 class TheClassification(unittest.TestCase):

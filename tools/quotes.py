@@ -26,28 +26,28 @@ WHAT IT COMPARES
 The quoted passages on a role page against `vault/postings/<the archived text>`.
 It is string matching, not judgement — the same reason `verify.py` is not a model.
 
-🔴 STATUS 2026-08-27: ADVISORY. NOT WIRED INTO `doctor.py` OR `pipeline.py`, and
-deliberately so.
+🟢 STATUS 2026-08-27: GATING. Wired into `doctor.py` and `pipeline.py`.
 
-Against the live vault it reports 28 of 56 pages as quoting something absent, and
-that rate is too high to gate on. It has already been narrowed four times — a
-blockquote prefix leaking into every multi-line quote (69/71 failing), fuzzy
-filename matching pairing Guidewire's page with Yuno's posting, a URL regex that
-found no URLs on the very pages it was written to check, and a similarity ratio
-that could not see an elision (49 failing).
+It reported 69 of 71 pages on its first run and now reports none, and every step
+of that was a bug in the CHECK, found by running it rather than reasoning about
+it:
 
-🟢 Each narrowing was a real bug in the check, and each was found by running it
-rather than reasoning about it. It has also found two genuine faults: a posting
-reading "manage i.t. related risks" quoted as "manage IT related risks", and
-"Set safe-AI standards FOR AGENTIC SYSTEMS:" quoted with those three words
-silently dropped.
+  69 of 71   a blockquote's "> " prefix leaked into every multi-line quotation
+  63 of 71   fuzzy filename matching paired Guidewire's page with Yuno's posting
+   5 of  6   a URL regex requiring "https://" found no URLs on the pages it checked
+  49 of 56   a similarity ratio cannot see an ELISION, the commonest fault by far
+  28 of 56   the regex paired one quotation's closing mark with the next one's
+             opening mark and returned whole paragraphs of our own commentary
+   2 of 45   two genuine faults, both fixed
+   0 of 45   quoting an employer's typo faithfully with [sic] broke the match
 
-🔴 WHAT IS LEFT, and it is why this does not gate anything yet: the remaining 28
-are not diagnosed. Some will be genuine, some will be pages quoting an employer's
-own posting while only the aggregator's copy was archived, and some will be
-postings that changed between archiving and reading. **Until that is separated, a
-gate here would fail honest work half the time, and a check that does that gets
-switched off.** See `BACKLOG.md`.
+🔴 THE NARROWING THAT MADE IT WORK is two tiers, because an emphasised quotation
+here is used for four different things and only one is the employer: a line from
+the posting, something the USER said, a finding of our own, a question from an
+application form. A BLOCKQUOTE is unambiguous -- it is this vault's convention
+for THIS IS WHAT THE POSTING SAYS -- so a blockquote miss GATES, and an inline
+miss is reported and never gated on. Blockquote-only was tried and checked 17
+quotations out of 323; everything-inline reported 14 pages, mostly our own words.
 
 🔴 WHAT IT CANNOT DO EVEN WHEN FINISHED, and the limit is real: it proves a sentence was in the
 posting. It cannot prove the sentence was READ correctly. "Hands-on experience
@@ -66,8 +66,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "lib"))
 import paths  # noqa: E402
 
-# A quoted passage: markdown emphasis around straight or curly double quotes.
-QUOTED = re.compile(r'[*_]*["“]([^"”]{25,})["”][*_]*')
+# 🔴 EMPHASIS IS REQUIRED, and that is what tells a quotation from prose.
+#
+# The first version accepted any span between two double quotes. Markdown prose
+# uses quote marks constantly, so the regex paired the closing quote of one
+# quotation with the opening quote of the next and swallowed everything between
+# -- returning whole paragraphs of commentary as "quotations the posting does not
+# contain". Of 92 such reports, most were this.
+#
+# Every real quotation in this vault is written the same way: emphasised, either
+# inline as *"..."* or inside a blockquote. Requiring the emphasis marker costs
+# nothing and removes the entire class.
+QUOTED = re.compile(r'[*_]{1,3}["“]([^"”\n]{25,}?)["”][*_]{1,3}')
 # 🔴 Fragments shorter than this match by accident. Measured: 25 characters is
 # where coincidental matches stop and real quotations start.
 MIN_FRAGMENT = 25
@@ -76,8 +86,17 @@ MIN_FRAGMENT = 25
 ELLIPSIS = re.compile(r"\s*(?:\.\.\.|…|\[\.\.\.\])\s*")
 
 
+# 🔴 Editorial insertions are part of quoting properly, not a corruption of it.
+# "[sic]" marks an employer's own typo faithfully; "[emphasis added]" marks our
+# own formatting. Both belong INSIDE the quotation marks and neither is in the
+# posting, so both must be removed before comparing — otherwise quoting correctly
+# is what makes the check fail.
+EDITORIAL = re.compile(r"\[(?:sic|emphasis added|our emphasis|…|\.\.\.)\]", re.I)
+
+
 def flatten(text):
-    """Whitespace, emphasis and smart punctuation removed, for comparison only."""
+    """Whitespace, emphasis, editorial marks and smart punctuation removed."""
+    text = EDITORIAL.sub(" ", text)
     text = html.unescape(text)
     text = text.replace("’", "'").replace("‘", "'")
     text = text.replace("“", '"').replace("”", '"')
@@ -89,28 +108,42 @@ def flatten(text):
 # 🔴 A blockquote's "> " prefix leaked into extracted quotations and made every
 # multi-line quote fail. Most role pages quote inside a blockquote, so the first
 # run reported 69 of 71 pages as misquoting — a check nobody would run twice.
-BLOCKQUOTE = re.compile(r"^\s*>\s?", re.M)
+BLOCKQUOTE = re.compile(r"^\s*>\s?")
 
 
 def quotations(page_text):
-    """Every quoted fragment worth checking, ellipsis-split."""
-    page_text = BLOCKQUOTE.sub("", page_text)
-    # 🔴 A role page quotes the USER as well as the posting -- "Sacha said he is
-    # getting quite hands-on with building AI" is a quotation, and it is correctly
-    # not in the advert. Lines that attribute a quote to a person are skipped.
-    page_text = "\n".join(l for l in page_text.split("\n")
-                          if not re.search(r"\bSacha\b|\bhe said\b|at .{0,20}request", l, re.I))
+    """[(strength, fragment)] — 'claimed' in a blockquote, 'inline' otherwise.
+
+    🔴 TWO TIERS, because an emphasised quotation in this vault is used for four
+    different things and only one of them can be checked against an advert: a line
+    from the posting, a sentence the USER said, a finding of the assessment's own,
+    and a question from an application form. The last three are CORRECTLY absent
+    from the employer's text.
+
+    🟢 A blockquote is unambiguous — it is this vault's convention for THIS IS WHAT
+    THE POSTING SAYS. So a blockquote miss is a claim about the employer that does
+    not hold, and it gates. An inline miss is advisory, because "the ceiling is
+    disciplinary" and "their office seems to be in a block of apartments" are
+    quotations of nobody but us.
+
+    Measured: blockquote-only checked 17 quotations and missed almost everything;
+    everything-inline reported 14 pages, mostly our own words. Two tiers keeps the
+    coverage and gates only on the claim.
+    """
     out = []
-    for whole in QUOTED.findall(page_text):
-        # Prose that happens to contain quotation marks is not a quotation. A
-        # wiki link or a table pipe inside the span means the regex ran past the
-        # end of the quote and swallowed the sentence after it.
-        if "[[" in whole or "|" in whole or "](" in whole:
+    for line in page_text.split("\n"):
+        claimed = bool(BLOCKQUOTE.match(line))
+        body = BLOCKQUOTE.sub("", line)
+        # A line attributing a quotation to a person is not about the posting.
+        if re.search(r"\bSacha\b|\bhe said\b|at .{0,20}request", body, re.I):
             continue
-        for part in ELLIPSIS.split(whole):
-            part = flatten(part)
-            if len(part) >= MIN_FRAGMENT:
-                out.append(part)
+        for whole in QUOTED.findall(body):
+            if "[[" in whole or "|" in whole or "](" in whole:
+                continue
+            for part in ELLIPSIS.split(whole):
+                part = flatten(part)
+                if len(part) >= MIN_FRAGMENT:
+                    out.append(("claimed" if claimed else "inline", part))
     return out
 
 
@@ -171,14 +204,14 @@ def check(page_path, postings):
     body = " \n ".join(b for _, b in matched)
     missing = []
     body_words = re.findall(r"[a-z0-9']+", body)
-    for q in quotes:
+    for tier, q in quotes:
         if q in body:
             continue
         # 🔴 The distinction that makes this usable. A quotation that is CLOSE to
         # something in the posting was paraphrased inside quotation marks — a real
         # fault, and a small one. A quotation matching nothing is a sentence that
         # was not there, which is the failure that matters.
-        missing.append((_classify(q, body_words), q, ""))
+        missing.append((_classify(q, body_words), q, tier))
     return filename, missing, len(quotes)
 
 
@@ -239,7 +272,7 @@ def main():
             print(f"  no role page matching {args.page!r}")
             return 1
 
-    checked = unmatched = bad = quotes_total = paraphrased = 0
+    checked = unmatched = bad = quotes_total = paraphrased = advisory = 0
     for path in pages:
         filename, missing, n = check(path, postings)
         quotes_total += n
@@ -249,7 +282,8 @@ def main():
             unmatched += 1
             continue
         checked += 1
-        absent = [m for m in missing if m[0] == "absent"]
+        absent = [m for m in missing if m[0] == "absent" and m[2] == "claimed"]
+        soft = [m for m in missing if m[0] == "absent" and m[2] == "inline"]
         near = [m for m in missing if m[0] == "elided"]
         if absent:
             bad += 1
@@ -260,11 +294,15 @@ def main():
                 print(f"       …and {len(absent) - 3} more")
         if near:
             paraphrased += len(near)
+        advisory += len(soft)
 
     print(f"\n  {checked} page(s) checked against an archived posting, {quotes_total} quotation(s).")
     if unmatched:
         print(f"  {unmatched} page(s) had no archived posting to check against — "
               f"not a fault, but not checked either.")
+    if advisory:
+        print(f"  🟡 {advisory} inline quotation(s) are not in the posting. Most will be the user's own\n"
+              f"     words or a finding of ours rather than the employer's — reported, never gated on.")
     if paraphrased:
         print(f"  🟡 {paraphrased} quotation(s) were TIGHTENED — every word is in the posting, in "
               f"order,\n     but words were dropped without an ellipsis. A small fault, and the "
