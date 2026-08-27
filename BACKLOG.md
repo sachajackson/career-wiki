@@ -821,7 +821,28 @@ unlinked pages beside the user's own. **Pointing Obsidian at `vault/` scopes it 
 this repository already draws**, and removes the symptom and the leak together.
 
 
-### 🟡 No `.docx` route, and the one case that needs it is the agency application
+### ✅ No `.docx` route — BUILT 2026-08-27 as `tools/cv_docx.py`
+
+**Status: built, and it turned out to be more urgent than this entry said.**
+
+🔴 **The entry described a gap for agency applications. By the time it was built it was the DEFAULT case.**
+`Application Mechanics` was reversed on 2026-08-26 — *"upload the `.docx` to an employer portal; send the
+`.pdf` to a human"* — and `build-application` was still telling the user *"a PDF parses more predictably in
+an ATS than a .docx built by a library"*. **The skill was arguing with the vault**, and every application
+since the reversal followed a policy the tools could not support.
+
+🟢 **The objection in this entry was right and shaped the design.** Generating `.docx` with a library IS
+platform-specific — so the tool writes the ZIP-of-XML itself, from the standard library, with no
+dependencies at all.
+
+🟢 **It emits none of what breaks ATS parsing**: no tables, text boxes, columns, headers, footers, images or
+Word list numbering. Contact details go in the body, because a header is where they go to be lost. Headings
+use real Word styles, because an ATS finds sections by style name. **Verified against macOS `textutil` as
+well as by unit test — a third-party parser reads it correctly, in order.**
+
+**12 checks.**
+
+**Original entry:**
 
 **`build-application` Step 6 produces a PDF only** — the CV is written as HTML from `templates/cv.html`
 and the user prints it from their browser. 🟢 **That choice is right and should not be undone casually:**

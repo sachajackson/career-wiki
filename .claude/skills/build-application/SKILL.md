@@ -376,11 +376,32 @@ than either document alone.
 (Cmd/Ctrl+P → Save as PDF). The template carries print CSS with correct margins and page control.
 
 **This route is deliberate.** It needs nothing installed, works identically on macOS, Windows and Linux,
-and gives full typographic control. Generating .docx requires a library and converting it requires an
-office suite — both are platform-specific and both fail on someone else's machine.
+and gives full typographic control.
 
-**If the employer's form demands .docx specifically**, say so and let the user decide: many accept PDF,
-and a PDF parses more predictably in an ATS than a .docx built by a library.
+### 🔴 Then produce the `.docx` as well — it is the portal default, not a fallback
+
+```bash
+python3 tools/cv_docx.py <the filled CV>.html
+```
+
+🔴 **This corrects advice that used to sit here and was wrong.** It said *"a PDF parses more predictably in
+an ATS than a .docx built by a library"* — **the opposite of what the user's own vault settled**, and the
+skill was arguing with it for a day.
+
+| Going to | Send |
+|---|---|
+| 🔴 **An employer's ATS portal** | **`.docx`** — parsers were built around Word first and it remains at least as reliable everywhere, better in some |
+| **A human, by email** | **`.pdf`** — it looks the way it was designed to |
+| 🔴 **An agency recruiter** | **`.docx`, always.** They reformat onto their own letterhead and strip the direct contact details before forwarding. **Handed a PDF they retype it — badly — or forward it unchanged, which hands the client contact details the agency will not give away** |
+
+🟢 **No dependencies.** A `.docx` is a ZIP of XML and the tool writes one from the standard library, which
+is what makes it safe on somebody else's machine — the objection that kept this unbuilt.
+
+🔴 **It emits no tables, headers, footers, images or Word list numbering**, because each of those is a
+documented ATS parsing failure. **It will look plainer than the PDF. That is correct: the PDF is for a
+human and the `.docx` is for a parser.**
+
+🟡 **Open it once before it goes.** The tool converts structure, not judgement.
 
 Open the HTML yourself to check it before handing it over. **Confirm the page count rather than assuming
 it** — a CV that silently runs to three pages is a real failure.
