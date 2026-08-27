@@ -258,6 +258,7 @@ def stage_quoted():
     if not postings:
         return True, "no archived postings to check against", []
     bad, checked = [], 0
+    haystack = quotes.archive_text()
     for path in _role_pages():
         fn, missing, n = quotes.check(path, postings)
         if not fn:
@@ -266,15 +267,22 @@ def stage_quoted():
         # 🔴 A false "the source was cut" caveat is not a misquote, but it does the
         # same damage: the assessment stops looking. Five pages carried one at once.
         with open(path, encoding="utf-8") as fh:
-            if quotes.false_truncation(fh.read(), postings):
-                bad.append(f"{os.path.basename(path)[:-3][:44]}: says its source is truncated; "
-                           f"the archive runs to its end")
+            body = fh.read()
+        if quotes.false_truncation(body, postings):
+            bad.append(f"{os.path.basename(path)[:-3][:44]}: says its source is truncated; "
+                       f"the archive runs to its end")
+        for rid in quotes.untraceable_ids(body, haystack):
+            bad.append(f"{os.path.basename(path)[:-3][:44]}: requisition {rid} is in no archive")
         claimed = [m[1] for m in missing if m[0] == "absent" and m[2] == "claimed"]
         if claimed:
             bad.append(f"{os.path.basename(path)[:-3][:44]}: \"{claimed[0][:60]}\"")
     if bad:
-        return False, f"{len(bad)} of {checked} assessment(s) misquote the posting", bad
-    return True, f"all {checked} checked assessment(s) quote their posting accurately", []
+        # 🟡 Three different faults land here — a misquote, a false "the source was
+        # truncated" caveat, and a requisition number in no archive. Naming them
+        # "misquotes" sent a reader looking for a quotation that was never wrong.
+        return False, (f"{len(bad)} problem(s) between an assessment and its posting, "
+                       f"across {checked} checked"), bad
+    return True, f"all {checked} checked assessment(s) match their posting", []
 
 
 def stage_scored():

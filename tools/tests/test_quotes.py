@@ -139,3 +139,61 @@ class TheFalseTruncationCaveat(unittest.TestCase):
         wrapped = ("# A role\n\nhttps://www.linkedin.com/jobs/view/4456261092/\n\n"
                    "🔴 **The truncation caveat that stood here was simply\nwrong.**\n")
         self.assertFalse(q.false_truncation(wrapped, self._postings(self.WHOLE)))
+
+
+class TheArchiveThatWins(unittest.TestCase):
+    """🔴 TWO ARCHIVES ROUTINELY SHARE ONE POSTING ID — the radar's clean capture
+    and a raw page scrape of the same URL. load_postings keyed a dict by id with a
+    plain assignment, so whichever glob returned LAST won, unsorted.
+
+    For one role that was a scrape ending at LinkedIn's sign-in wall, which beat a
+    complete capture ending at the employer's own footer. Everything downstream —
+    quotation checking, truncation claims — then ran against the worse text.
+    """
+
+    def test_the_longer_body_wins_whatever_the_filename(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        saved = q.paths.VAULT
+        self.addCleanup(q.paths.use, saved)
+        os.makedirs(os.path.join(d, "postings"))
+        src = "Source https://www.linkedin.com/jobs/view/4457340972/\n"
+        # 'Zzz' sorts last and would win under a plain assignment.
+        for name, body in [("Aaa - full capture.txt", src + "The whole advert. " * 40),
+                           ("Zzz raw scrape.txt", src + "Sign in to view.")]:
+            with open(os.path.join(d, "postings", name), "w", encoding="utf-8") as fh:
+                fh.write(body)
+        q.paths.use(d)
+        (filename, body), = q.load_postings().values()
+        self.assertEqual(filename, "Aaa - full capture.txt",
+                         "the raw scrape won; the longer body must")
+        self.assertGreater(len(body), 100)
+
+
+class TheCompletenessMarkers(unittest.TestCase):
+    """🔴 Widened twice, and both misses were real pages. A posting's end matter is
+    legal boilerplate and every employer picks a different clause, so the pattern
+    has to match the CATEGORY rather than the two footers that happened to be in
+    front of me when it was written."""
+
+    def test_the_footers_that_were_missed_are_matched_now(self):
+        for tail in ["An employer who violates this law shall be subject to criminal penalties",
+                     "please review our candidate AI-use guidelines",   # not a marker on its own
+                     "employment without regard to race, colour or religion",
+                     "if you need a reasonable accommodation",
+                     "status as a protected veteran",
+                     "our Total Rewards package"]:
+            with self.subTest(tail=tail):
+                hit = bool(q.COMPLETE.search(tail))
+                if "AI-use guidelines" in tail:
+                    self.assertFalse(hit, "this one is NOT end matter and must not match")
+                else:
+                    self.assertTrue(hit, f"end matter not recognised: {tail!r}")
+
+    def test_mid_advert_prose_is_not_mistaken_for_an_ending(self):
+        """🟡 The false-positive direction. If ordinary body text matched, every
+        genuinely truncated archive would be reported as complete and the check
+        would invert."""
+        for body in ["You will lead a team of engineers building payment systems.",
+                     "Requirements: 10 years of delivery leadership in financial services."]:
+            self.assertIsNone(q.COMPLETE.search(body), body)

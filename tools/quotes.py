@@ -182,8 +182,15 @@ def postings_for(page_text, postings):
 TRUNCATED = re.compile(r"truncat", re.I)
 # A posting that reaches any of these reached its end. An aggregator cut lands
 # mid-body, long before the legal boilerplate.
-COMPLETE = re.compile(r"EEO|Equal Opportunit|Salary Range|Know Your Rights|"
-                      r"Recruitment Agenc|requisition", re.I)
+# 🔴 Widened twice. The first list was written from two employers' footers and
+# missed Toast (which closes on a Massachusetts lie-detector statute) and Pfizer
+# (candidate AI-use guidelines, then a job-family tag). A posting's end matter is
+# legal boilerplate, and every employer picks a different clause -- so match the
+# CATEGORY, not the phrasings that happened to be in front of me.
+COMPLETE = re.compile(r"EEO|Equal Opportunit|Salary Range|Know Your Rights|Recruitment Agenc|"
+                      r"requisition|protected veteran|without regard to (race|sex)|"
+                      r"reasonable accommodation|lie detector|criminal penalties|"
+                      r"Total Rewards|Diversity, Equity", re.I)
 
 
 # 🔴 THE FIRST VERSION OF THIS CHECK FIRED ON ITS OWN FIXES. Correcting a page
@@ -192,6 +199,39 @@ COMPLETE = re.compile(r"EEO|Equal Opportunit|Salary Range|Know Your Rights|"
 # check that cannot tell a claim from its retraction reports its own successes as
 # failures, and gets switched off the same day.
 RETRACTED = re.compile(r"not truncated|wrong|is false|is complete|COMPLETE|corrected|checked \d{4}-", re.I)
+
+
+# 🔴 A REQUISITION NUMBER IS THE ONE FACT THAT LEAVES THE VAULT. It goes in the
+# filename of the CV, in the covering letter, and into the portal field. Two of
+# the three stated in this vault traced to nothing archived -- and one of those
+# two is printed on four documents already sent to the employer.
+#
+# 🟡 It does not mean the number is wrong. Both were read off the employer's own
+# site at the time. It means NOTHING CAN CHECK THEM, because the page they were
+# read from was never archived -- runbook step 7, skipped.
+REQ_CELL = re.compile(
+    r"\|\s*\**(?:Job identification|Job ID|Job number|Requisition(?: number| ID)?)\**\s*"
+    r"\|\s*\**([A-Za-z0-9][A-Za-z0-9_-]{3,})\**\s*\|", re.I)
+
+
+def untraceable_ids(page_text, archive_text):
+    """[requisition ids] stated on a page and found in no archived posting."""
+    return [m.group(1) for m in REQ_CELL.finditer(page_text)
+            if m.group(1) not in archive_text]
+
+
+def archive_text():
+    """Every archived posting concatenated — the haystack for untraceable_ids."""
+    out = []
+    for f in sorted(glob.glob(os.path.join(paths.POSTINGS, "*"))):
+        if not os.path.isfile(f):
+            continue
+        try:
+            with open(f, encoding="utf-8", errors="replace") as fh:
+                out.append(fh.read())
+        except OSError:
+            pass
+    return "\n".join(out)
 
 
 def false_truncation(page_text, postings):
@@ -226,7 +266,19 @@ def load_postings():
         except OSError:
             continue
         for i in ids_in(body[:800]):                  # the archive header
-            out[i] = (os.path.basename(f), flatten(body))
+            # 🔴 TWO ARCHIVES ROUTINELY SHARE ONE ID -- the radar's clean capture
+            # and a raw page scrape of the same URL. This was a plain assignment,
+            # so whichever glob happened to return LAST won, unsorted. For Pfizer
+            # that was a scrape ending at LinkedIn's sign-in wall, which beat the
+            # complete capture ending at the employer's own footer.
+            #
+            # 🟢 Keep the longer body. It is the cruder rule and the right one: a
+            # truncated capture is always shorter than the posting it truncates,
+            # and every check downstream -- quotations, truncation claims -- is
+            # better served by more of the employer's text.
+            flat = flatten(body)
+            if i not in out or len(flat) > len(out[i][1]):
+                out[i] = (os.path.basename(f), flat)
     return out
 
 
@@ -314,6 +366,8 @@ def main():
 
     checked = unmatched = bad = quotes_total = paraphrased = advisory = 0
     stale = []
+    haystack = archive_text()
+    untraceable = []
     for path in pages:
         filename, missing, n = check(path, postings)
         quotes_total += n
@@ -324,8 +378,11 @@ def main():
             continue
         checked += 1
         with open(path, encoding="utf-8") as fh:
-            if false_truncation(fh.read(), postings):
-                stale.append(os.path.basename(path)[:-3])
+            body = fh.read()
+        if false_truncation(body, postings):
+            stale.append(os.path.basename(path)[:-3])
+        for rid in untraceable_ids(body, haystack):
+            untraceable.append((os.path.basename(path)[:-3], rid))
         absent = [m for m in missing if m[0] == "absent" and m[2] == "claimed"]
         soft = [m for m in missing if m[0] == "absent" and m[2] == "inline"]
         near = [m for m in missing if m[0] == "elided"]
@@ -357,6 +414,14 @@ def main():
               f"  🔴 The caveat is load-bearing. On the two highest-scoring roles in this vault it is\n"
               f"     why LIFE, PAY and REQS were all left unanswered for a week — while the posting\n"
               f"     stated every one of them, salary band included.")
+    if untraceable:
+        print(f"\n  🔴 {len(untraceable)} stated requisition number(s) appear in NO archived posting:")
+        for n, rid in untraceable:
+            print(f"       {rid:14} {n[:52]}")
+        print(f"  🟡 That does not make them wrong — they were read off the employer's site at the\n"
+              f"     time. It means nothing can check them, because the page was never archived.\n"
+              f"  🔴 A requisition number is the one fact that LEAVES the vault: the CV filename,\n"
+              f"     the covering letter, the portal field. Re-fetch before the next contact.")
     if bad:
         print(f"\n  🔴 {bad} page(s) quote something the posting does not contain.\n"
               f"  A score argued from a line that is not there rests on nothing, and the error\n"
