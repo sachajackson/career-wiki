@@ -162,4 +162,15 @@ stale. Reworded rather than overridden — routine overriding is how a good chec
   correct, on the one source it had been tested against.** Test a filter against every source that can
   supply the field it reads.
 
+- 🔴 **Never build a work batch from the unfiltered corpus.** The cache holds everything fetched; the
+  shortlist holds what passed the filters. Reaching past the filter for a richer source handed three triage
+  agents seventeen roles labelled as one city that were in eight others — **and the filter had been working
+  correctly the entire time.** The agents caught it, independently, three times over; no computational check
+  did, because the check had been bypassed rather than broken.
+
+- 🟢 **An inferential reviewer catches what a deterministic one cannot see.** Every check in this repo reads
+  files the pipeline produced. When a step *skips* the pipeline, those checks have nothing to look at. Three
+  agents reading job descriptions noticed a geography error in seconds that no test could have found.
+  **Guides and sensors are not enough on their own if a step can route around both.**
+
 ---
