@@ -40,9 +40,12 @@ rule they set and will be followed as one. Say the file exists and what it is fo
 **From then on, when the user corrects you, write the rule into `vault/AGENTS.md` with the date and the
 reason** — in their words, not a paraphrase.
 
-Then copy the rest of `templates/` into `vault/wiki/`, filling in what the sources support. Create `index.md`, `log.md`,
-`Career.md`, `Operating Model.md`, `CV.md`, `Standing Answers.md` and a `roles/` folder. OKF frontmatter on everything, per
-`SCHEMA.md`.
+Then copy the rest of `templates/` into `vault/wiki/`, filling in what the sources support:
+`index.md`, `log.md`, `Career.md`, `Operating Model.md`, `CV.md`, `Standing Answers.md`,
+`Role Scoring Framework.md` and `Search Findings.md` — **plus a `roles/` folder.** OKF frontmatter on
+everything, per `SCHEMA.md`.
+
+🟡 **`Search Findings.md` starts empty and that is correct.** It fills up once roles are being scored, and it is the page that stops the same conclusion being re-derived from scratch every few weeks.
 
 **Mark everything drawn from a document as unverified** — no `verified` key. It becomes human-reviewed
 only when the user confirms it in conversation. Most of it will turn out to be slightly wrong.

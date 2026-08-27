@@ -15,7 +15,7 @@ have somewhere to live, and do the two copies of a vocabulary agree?
 SHIP THE EMPTY TABLE. A rule saying "keep a table of X on page Y" is not in
 force until page Y has an empty table of X on it.
 """
-import os, re, unittest
+import os, re, re, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CLAUDE = os.path.join(ROOT, "SCHEMA.md")
@@ -169,3 +169,45 @@ class TheAggregatorRule(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TheScaffoldListStaysComplete(unittest.TestCase):
+    """🔴 A template nobody is told to copy is a template nobody copies.
+
+    Found by walking career-init on a fresh clone: it told the agent to create
+    `CV.md`, for which no template existed at all -- so the structure of the most
+    important page in the vault was left to be invented each time. And once
+    `Search Findings.md` was added as a template, nothing named it, so a new
+    vault would never have got one.
+
+    Both directions are checked, because both have now happened.
+    """
+
+    ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    SKILL = os.path.join(ROOT, ".claude", "skills", "career-init", "SKILL.md")
+    TEMPLATES = os.path.join(ROOT, "templates")
+    # Not wiki pages, so career-init has no reason to name them.
+    NOT_SCAFFOLDED = {"vault-AGENTS.md", "OVERSIGHT.md", "sources-README.md"}
+
+    def _skill(self):
+        with open(self.SKILL, encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_every_wiki_template_is_named_in_career_init(self):
+        text = self._skill()
+        for f in sorted(os.listdir(self.TEMPLATES)):
+            if not f.endswith(".md") or f in self.NOT_SCAFFOLDED:
+                continue
+            self.assertIn(f, text,
+                          f"templates/{f} exists but career-init never tells anyone to copy it, "
+                          f"so a new vault will not have it")
+
+    def test_every_page_career_init_names_has_a_template(self):
+        text = self._skill()
+        named = set(re.findall(r"`([A-Z][A-Za-z ]*\.md)`", text)) | {"index.md", "log.md"}
+        for page in sorted(named):
+            if page in ("SCHEMA.md", "AGENTS.md", "BACKLOG.md", "README.md", "CLAUDE.md"):
+                continue
+            self.assertTrue(os.path.exists(os.path.join(self.TEMPLATES, page)),
+                            f"career-init tells the agent to create {page} and no template "
+                            f"exists, so its structure gets invented every time")

@@ -175,8 +175,14 @@ def check_profile():
         have.append(f"{int(days)} working days")
     else:
         missing.append("working_days_per_year")
-    return OK, (", ".join(have) or "nothing set")   + (
-        f". Not set: {', '.join(missing)}" if missing else "")
+    # 🔴 An ABSENT profile is OPTIONAL — most people never need one. A profile
+    # that exists with nothing usable in it was copied from the example and never
+    # edited, which is a different thing and the one worth saying out loud.
+    if not have:
+        return PLACEHOLDER, ("settings/profile.json holds only example values, so it is doing "
+                             "nothing: CV spelling checks are off and no day rate can be "
+                             "annualised. 🔴 working_days_per_year has no safe default — ask")
+    return OK, ", ".join(have) + (f". Not set: {', '.join(missing)}" if missing else "")
 
 
 def check_signal():
@@ -227,6 +233,13 @@ def check_employers():
             e = json.load(fh)
     except ValueError as ex:
         return MISSING, f"employers.json is not valid JSON: {ex}"
+    # 🔴 The example's only watch entry is literally `<Employer name>`, and without
+    # this the check reported "1 watched, 1 avoided, 1 declined" on it. A watch
+    # list of placeholders watches nobody, and says nothing while doing it.
+    left = placeholders(e)
+    if left:
+        return PLACEHOLDER, (f"employers.json still has {len(left)} example value(s) in it — "
+                             f"{', '.join(left[:3])}. **Nobody is actually being watched**")
     return OK, (f"{len(e.get('watch', []))} watched, {len(e.get('avoid', []))} avoided, "
                 f"{len(e.get('declined', []))} declined")
 

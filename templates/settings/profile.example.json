@@ -25,5 +25,5 @@
     "Omit it and nothing will annualise a rate for you rather than guessing one."
   ],
   "spelling": "<ie-uk | us | off>",
-  "working_days_per_year": 220
+  "working_days_per_year": "<how many days would you actually bill in a year? 220 allows for annual leave>"
 }

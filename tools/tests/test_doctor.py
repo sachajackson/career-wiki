@@ -365,7 +365,10 @@ class TheProfileCheck(unittest.TestCase):
         is worse than an absent one, because it will be used."""
         for bad in (0, 12, 366, 400, "many", None, True):
             with Home() as h:
-                h.write("vault/settings/profile.json", {"working_days_per_year": bad})
+                # spelling is set so the file is not WHOLLY placeholder -- this
+                # test is about the day count alone, not the empty-file case.
+                h.write("vault/settings/profile.json",
+                        {"spelling": "ie-uk", "working_days_per_year": bad})
                 _, detail = doctor.check_profile()
                 self.assertIn("Not set:", detail, repr(bad))
                 self.assertIn("working_days_per_year", detail.split("Not set:")[1], repr(bad))
@@ -376,3 +379,56 @@ class TheProfileCheck(unittest.TestCase):
             h.write("vault/settings/profile.json", "{not json")
             verdict, _ = doctor.check_profile()
             self.assertEqual(verdict, doctor.PLACEHOLDER)
+
+
+class TheExamplesMustNeverLookConfigured(unittest.TestCase):
+    """🔴 The whole point of this tool, generalised.
+
+    Found by running career-init end to end on a fresh clone: a vault whose five
+    settings files were copied straight from the examples and never edited got
+    "OK — 1 watched, 1 avoided, 1 declined" from the watch/avoid check, on a list
+    whose only entry is literally `<Employer name>`. And the profile check
+    reported "220 working days" because the example shipped a REAL number rather
+    than a placeholder — so a user who never edited it silently inherited another
+    person's figure for the one value that has no safe default.
+
+    `search.json` got this right and reported PLACEHOLDER. The rule was applied
+    per-check, so each new settings file had to remember it independently. This
+    is the version that cannot be forgotten.
+    """
+
+    EXAMPLES = os.path.join(ROOT, "templates", "settings")
+
+    def _copied_vault(self, h):
+        for f in os.listdir(self.EXAMPLES):
+            if f.endswith(".example.json"):
+                shutil.copy(os.path.join(self.EXAMPLES, f),
+                            os.path.join(h.dir, "vault", "settings",
+                                         f.replace(".example.json", ".json")))
+
+    def test_no_check_reports_ok_on_an_untouched_example(self):
+        with Home() as h:
+            self._copied_vault(h)
+            offenders = []
+            for name, fn in doctor.CHECKS:
+                if name in ("python", "registry", "this copy", "your CV", "your wiki"):
+                    continue        # these do not read settings
+                try:
+                    verdict, detail = fn()
+                except Exception:
+                    continue
+                if verdict == doctor.OK:
+                    offenders.append(f"{name}: {detail[:90]}")
+            self.assertEqual(offenders, [],
+                             "a settings file copied from its example and never edited must "
+                             "never report OK — it looks configured and matches nothing")
+
+    def test_no_example_ships_a_usable_value_for_a_personal_number(self):
+        """🔴 An example may HINT at a number in its prose. It must not ship one
+        as the value, or the hint becomes somebody else's answer by default."""
+        with open(os.path.join(self.EXAMPLES, "profile.example.json"), encoding="utf-8") as fh:
+            profile = json.load(fh)
+        days = profile.get("working_days_per_year")
+        self.assertFalse(isinstance(days, (int, float)) and not isinstance(days, bool),
+                         "profile.example.json ships a real working_days_per_year, so a user "
+                         "who never edits it inherits it silently")
