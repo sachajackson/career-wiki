@@ -48,6 +48,18 @@ SWEEP_STALE_DAYS = 7
 URL = re.compile(r"https?://[^\s)\]|]+")
 LINK = re.compile(r"\[\[([^\]|\\]+)")
 
+# 🔴 A DECLARED ABSENCE IS NOT A GAP, and a check that cannot tell them apart
+# reports the same finding forever until somebody stops reading it.
+#
+# One role was assessed before postings were archived and its listing has since
+# closed. There is no URL to record and there never will be. Left as a blank it
+# is indistinguishable from work somebody forgot to finish -- the same "not
+# recorded versus recorded as absent" confusion that already cost this system an
+# outcome it had captured and could not find.
+#
+# So the page says so in frontmatter, in a form a machine can read.
+NO_POSTING = re.compile(r"^posting:\s*none\b", re.M)
+
 
 def _read(path):
     try:
@@ -150,7 +162,7 @@ def stage_recorded():
         body = _read(path)
         if name not in rows:
             problems.append(f"{name[:52]} — no row in the scoring table")
-        elif not any(rows[name]) and not URL.search(body):
+        elif not any(rows[name]) and not URL.search(body) and not NO_POSTING.search(body):
             problems.append(f"{name[:52]} — no posting URL anywhere")
     if problems:
         return False, f"{len(problems)} of {len(_role_pages())} assessment(s) incomplete", problems

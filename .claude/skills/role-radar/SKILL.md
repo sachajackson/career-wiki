@@ -5,6 +5,14 @@ description: Search job sources for new roles, filter and rank them against the 
 
 # role-radar
 
+> ## 🔴 THE ORDER COMES FIRST
+>
+> ```bash
+> python3 tools/runbook.py radar
+> ```
+>
+> **Everything else in this file is a caveat, not a sequence.** 🔴 **Read the order, then read the rest when a step raises a question** — the reverse is how the `role-triage` delegation, named twice in the radar skill, went unused for the life of this repo. **An agent reading prose picks up whatever it happens to land on.**
+
 Finds roles and ranks them against `Role Scoring Framework.md`. **Triage, not judgement** — the script
 produces a `SIGNAL` of HIGH/MED/LOW from a keyword tally; you produce the assessment.
 
@@ -214,17 +222,6 @@ Needs `vault/settings/search.json` — copy `templates/settings/search.example.j
 
 Writes `shortlist.md`, `raw.json` (cached descriptions) and `seen.json` in `tools/radar/`. All three are
 gitignored and regenerated.
-
-## 🔴 The order, before anything else
-
-```bash
-python3 tools/pipeline.py --runbook
-```
-
-**Ten steps, in order, each with its command.** 🔴 **This file is 323 lines across eighteen sections and
-everything below is a caveat, not a sequence** — which is how the `role-triage` delegation, named twice in
-this very file, went unused for the life of the repo. **Read the runbook first; read the rest when a step
-raises a question.**
 
 ## 🔴 Before and after: run the pipeline check
 

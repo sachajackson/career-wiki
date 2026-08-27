@@ -5,6 +5,14 @@ description: Move an existing career wiki, or a pile of career material from ano
 
 # career-migrate
 
+> ## 🔴 THE ORDER COMES FIRST
+>
+> ```bash
+> python3 tools/runbook.py migrate
+> ```
+>
+> **Everything else in this file is a caveat, not a sequence.** 🔴 **Read the order, then read the rest when a step raises a question** — the reverse is how the `role-triage` delegation, named twice in the radar skill, went unused for the life of this repo. **An agent reading prose picks up whatever it happens to land on.**
+
 **Run this instead of `/career-init` when the user already has a wiki, an export, or a folder of career
 material.** `/career-init` interviews from zero and scaffolds templates — on a populated vault it writes
 over pages that already exist and asks an hour of questions already answered.

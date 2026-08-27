@@ -568,6 +568,7 @@ of discussion would have found.**
 | Tool | Run it |
 |---|---|
 | `doctor.py` | **First, and after any setup change.** Says what is configured and what will silently do nothing |
+| 🔴 `runbook.py` | **Before starting any sequence.** The ordered steps of the six sequences in this system, each with its command and what goes wrong when it is skipped. Skill files are prose and prose has no order |
 | 🔴 `pipeline.py` | **First, and after any batch of work.** Where the search is up to and what the next action is — every stage COMPUTED from the vault, never asserted. `--write` refreshes `vault/state/progress.md` |
 | `wikilinks.py` | After writing pages. `--fix` repairs links split across lines |
 | `settings_drift.py` | 🔴 **After pulling an update** — what the system now reads that this vault has not got |

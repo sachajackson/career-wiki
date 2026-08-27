@@ -5,6 +5,14 @@ description: The last check before clicking submit on an application. Run it wit
 
 # pre-submit
 
+> ## 🔴 THE ORDER COMES FIRST
+>
+> ```bash
+> python3 tools/runbook.py application
+> ```
+>
+> **Everything else in this file is a caveat, not a sequence.** 🔴 **Read the order, then read the rest when a step raises a question** — the reverse is how the `role-triage` delegation, named twice in the radar skill, went unused for the life of this repo. **An agent reading prose picks up whatever it happens to land on.**
+
 **Run this with the form open and everything filled in, before the button.**
 
 Everything here is unfixable afterwards. An application is the one artefact in this system with no undo:

@@ -179,6 +179,22 @@ def main():
         if not SLUG.match(args.open):
             print("  slug must be lowercase letters, digits and hyphens")
             return 1
+        # 🔴 THE GUARDRAIL, not the reminder. A runbook is read; a precondition is
+        # enforced. Opening a batch is step 3 and it cannot precede step 1, so
+        # this refuses rather than warning -- a warning is a thing you scroll past.
+        sys.path.insert(0, HERE)
+        try:
+            import pipeline
+            fresh, why, fix = pipeline.stage_sweep()
+        except Exception:
+            fresh, why, fix = True, "", []
+        if not fresh:
+            print(f"\n  🔴 REFUSED: {why}.\n"
+                  f"  A batch built on a stale corpus hands out roles that may already be filled,\n"
+                  f"  and misses everything opened since.\n"
+                  + (f"\n  Run this first:\n     {fix[0]}\n" if fix else "")
+                  + "\n  Then open the batch again. `python3 tools/runbook.py radar` has the order.\n")
+            return 1
         p = open_batch(args.open, args.employer, args.title, args.limit)
         print(f"\n  batch '{p['slug']}': {len(p['roles'])} role(s) not yet assessed")
         for r in p["roles"]:

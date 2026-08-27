@@ -5,6 +5,14 @@ description: Bootstrap a new career wiki from scratch — read the user's CV, sc
 
 # career-init
 
+> ## 🔴 THE ORDER COMES FIRST
+>
+> ```bash
+> python3 tools/runbook.py init
+> ```
+>
+> **Everything else in this file is a caveat, not a sequence.** 🔴 **Read the order, then read the rest when a step raises a question** — the reverse is how the `role-triage` delegation, named twice in the radar skill, went unused for the life of this repo. **An agent reading prose picks up whatever it happens to land on.**
+
 Turns an empty repo and a CV into a working career wiki. **Run once.** Takes an hour, most of it
 conversation.
 

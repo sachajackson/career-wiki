@@ -5,6 +5,14 @@ description: Build a bespoke CV, cover letter and ATS field pack for one specifi
 
 # build-application
 
+> ## 🔴 THE ORDER COMES FIRST
+>
+> ```bash
+> python3 tools/runbook.py application
+> ```
+>
+> **Everything else in this file is a caveat, not a sequence.** 🔴 **Read the order, then read the rest when a step raises a question** — the reverse is how the `role-triage` delegation, named twice in the radar skill, went unused for the life of this repo. **An agent reading prose picks up whatever it happens to land on.**
+
 One role, one pack. **There is no master CV and there should not be one** — each CV is assembled on demand
 from the wiki, which is the persistent raw material. A master CV is a document that is wrong for every
 application instead of right for one.
