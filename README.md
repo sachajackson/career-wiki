@@ -76,7 +76,7 @@ an evening.
 
 ## What it actually does
 
-Seven commands, run inside Claude Code. Each is a *skill* — a set of instructions the agent follows.
+**Nine commands**, run inside Claude Code. Each is a *skill* — a set of instructions the agent follows. 🔴 **Instructions are not the interesting half** — see [The checks](#the-checks-and-why-they-exist) below.
 
 **The system covers everything up to the submit button and stops there.** Interview preparation, offers
 and negotiation are not in it yet.
@@ -234,11 +234,67 @@ research has run is one people route around.
 
 ### `/career-lint` — health check
 
-Contradictions between pages, claims that have expired, unverified assertions that have found their way
-into a CV, the same number attached to two different jobs across two application packs, roles with no
-posting link. Ranked by what could actually cause damage.
+**Two halves.** The mechanical one runs first and takes seconds: `doctor`, `wikilinks`, `template_drift`,
+`registry_check`, and the test suite. The judgement half is what a script cannot do — contradictions
+between pages, claims that have expired, unverified assertions that have found their way into a CV, the
+same number attached to two different jobs across two application packs, roles with no posting link.
+Ranked by what could actually cause damage.
+
+🟡 **And it asks about every application you sent and never heard back on**, because nothing else in the
+system ever will: an employer replying, or not replying, happens outside it.
 
 ---
+
+---
+
+## The checks, and why they exist
+
+**One rule governs this repository, and it was learned the hard way:**
+
+> 🔴 **Every instruction-shaped control here has failed at least once. Every executable one has held.**
+
+A skill file can say *always archive the posting* in bold red text, and the archiving still gets skipped —
+because prose is read by something that is trying to do a different job. So when something goes wrong
+twice, **the fix is not a stronger warning. It is a check that fails.**
+
+**`python3 tools/pipeline.py` runs eight of them and recomputes every one from the vault**, so a step
+skipped in the moment surfaces before the work is called finished:
+
+| | What it refuses to let pass |
+|---|---|
+| **`cv_lint` · `verify` · `known`** | A figure in an outgoing CV that traces to nothing in your wiki, or a real achievement attached to the wrong job |
+| **`quotes`** | A line an assessment attributes to an employer that is **not in their posting** — plus a stated requisition number that appears in no archived copy, and a *"the source was truncated"* caveat over a posting that is complete |
+| **`scores`** | A score that does not add up, and a role page that disagrees with its own row in the scoring table |
+| **`batch`** | 🟢 **A refusal, not a warning** — it will not open a batch of roles on a stale corpus, because a warning is a thing you scroll past |
+| **`doctor`** | A settings file copied from its example and never edited. **It looks configured and matches nothing** |
+| **`settings_drift` · `template_drift`** | An update that needs a file it has no way to deliver into your vault |
+| **`registry_check`** | An employer who changed recruiting system, so their board quietly returns nothing — **which looks exactly like a quiet week** |
+| **`test_boundary`** | Any of your data written outside `vault/` |
+
+**Those checks have their own test suite**, and `tools/tests/run.py` runs it. Most of them are not the success case: they are the *false
+positive* that a first draft produced, kept as a test. 🔴 **A check that cries wolf gets switched off
+within a day**, so the first version of one is not finished until it has been shown what a healthy vault
+looks like.
+
+### Two things the agent delegates to another agent
+
+**Some work cannot be a string operation, and pretending otherwise is how a system quietly lies to you.**
+
+- **`role-triage`** reads a batch of job adverts and returns a short ranked list. A week of postings is
+  two to three hundred adverts; reading them in the main session destroys it with text nobody needs to
+  keep.
+- **`role-review`** is **adversarial**. It takes a finished, scored assessment and the employer's own
+  posting and **tries to refute the score** — quoting the posting, never the assessment's summary of it.
+  It exists because *"hands-on experience with agent frameworks"* can be quoted perfectly and read
+  completely wrongly, and **no matcher will ever catch that.**
+
+### 🔴 What none of it proves
+
+**The chain is honest about where it stops:**
+
+`quotes` proves the sentence was in the posting. `scores` proves the numbers hang together.
+`role-review` proves the sentence was read correctly. **Nothing proves your wiki is true** — that part is
+yours, and it is why every output is a draft you have to stand over.
 
 ---
 
