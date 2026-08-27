@@ -223,3 +223,62 @@ class TheFileIsOptional(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TheDivisionThatPostsUnderItsOwnName(unittest.TestCase):
+    """🔴 An exclusion verified against one adapter, silently failing on another.
+
+    State Street is watched and its Charles River division is excluded. The note
+    recorded with that entry says every Charles River role "names it in the
+    title, which is where this filter looks" -- and that was true, measured on
+    State Street's own Workday board where the company field reads "State
+    Street".
+
+    LinkedIn labels the same roles "Charles River Development". The employer name
+    is checked FIRST, so _names_match("State Street", "Charles River
+    Development") fails and the division check never runs at all. Sixteen rows
+    reached a shortlist, including "Technical Delivery Manager" -- which matches
+    the user's query list exactly and is precisely the role the exclusion was
+    written to stop.
+
+    🔴 The exclusion looked like it was working because it WAS working, on the
+    source it was tested against.
+    """
+
+    CFG = {"avoid": [{"employer": "State Street", "divisions": ["Charles River"],
+                      "reason": "personal experience"}]}
+
+    def test_the_division_named_in_the_title_is_still_excluded(self):
+        """The case that already worked, kept so the fix cannot break it."""
+        why = EMP.excluded(
+            {"company": "State Street",
+             "title": "Technical Delivery Manager, Charles River Development"}, self.CFG)
+        self.assertTrue(why)
+        self.assertIn("Charles River", why)
+
+    def test_the_division_posting_under_its_own_name_is_excluded(self):
+        """🔴 The bug. Sixteen of these reached a live shortlist."""
+        why = EMP.excluded(
+            {"company": "Charles River Development", "title": "Technical Delivery Manager"},
+            self.CFG)
+        self.assertTrue(why, "a division posting under its own name escaped the exclusion")
+        self.assertIn("Charles River", why)
+
+    def test_the_parent_employer_is_still_watched(self):
+        """🔴 The false positive, and it matters more than the bug.
+
+        The user is happy to work for State Street and not for this one division.
+        An exclusion that swallowed the parent would remove a watched employer's
+        entire board -- 628 rows in one corpus -- and nothing would say so.
+        """
+        self.assertFalse(EMP.excluded(
+            {"company": "State Street", "title": "Technical Project Manager, AVP"}, self.CFG))
+
+    def test_an_unrelated_employer_is_untouched(self):
+        self.assertFalse(EMP.excluded(
+            {"company": "Citi", "title": "Technical Delivery Manager"}, self.CFG))
+
+    def test_a_whole_employer_exclusion_still_takes_everything(self):
+        emp = {"avoid": [{"employer": "Boyle Sports", "divisions": []}]}
+        self.assertTrue(EMP.excluded(
+            {"company": "Boyle Sports", "title": "Director of Engineering"}, emp))

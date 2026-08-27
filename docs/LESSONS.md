@@ -154,4 +154,12 @@ stale. Reworded rather than overridden — routine overriding is how a good chec
   a commutable role silently. This is the second adapter to hit it, which is why it is a lesson and not a
   bug fix.
 
+- 🔴 **An exclusion verified against one source is not verified.** A watched employer's excluded division
+  was filtered correctly on that employer's own ATS, where the company field carries the parent's name and
+  the division sits in the title — which is what the check was written and measured against. **An
+  aggregator labelled the same roles with the DIVISION as the company**, the parent name never matched, the
+  division test never ran, and sixteen rows reached a shortlist. **It looked correct because it was
+  correct, on the one source it had been tested against.** Test a filter against every source that can
+  supply the field it reads.
+
 ---

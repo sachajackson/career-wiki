@@ -150,9 +150,26 @@ def excluded(row, emp):
     company, title = row.get("company", ""), row.get("title", "")
     for a in emp.get("avoid", []):
         name = a.get("employer", "")
-        if not _names_match(name, company):
-            continue
         divisions = a.get("divisions") or []
+        if not _names_match(name, company):
+            # 🔴 A DIVISION OFTEN POSTS UNDER ITS OWN NAME, and checking the
+            # parent's name first made the exclusion unreachable when it does.
+            #
+            # State Street is watched and its Charles River division excluded.
+            # That was verified against State Street's own Workday board, where
+            # the company field says "State Street" and the division is in the
+            # title -- and it worked. LinkedIn labels the same roles "Charles
+            # River Development", so the parent never matched, the division check
+            # never ran, and 16 rows reached a shortlist. One was "Technical
+            # Delivery Manager", which matches the user's query list exactly and
+            # is the role the exclusion was written to stop.
+            #
+            # The exclusion looked correct because it WAS correct, on the one
+            # source it had been tested against.
+            hit = next((d for d in divisions if d and _names_match(d, company)), None)
+            if not hit:
+                continue
+            return f"{name}: {hit} division excluded"
         if not divisions:
             return f"{name}: on the avoid list"
         # A whole employer can be fine and one division inside it not. Found in
