@@ -15,7 +15,7 @@ have somewhere to live, and do the two copies of a vocabulary agree?
 SHIP THE EMPTY TABLE. A rule saying "keep a table of X on page Y" is not in
 force until page Y has an empty table of X on it.
 """
-import os, re, re, unittest
+import os, re, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CLAUDE = os.path.join(ROOT, "SCHEMA.md")
