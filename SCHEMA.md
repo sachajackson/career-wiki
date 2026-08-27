@@ -557,6 +557,7 @@ a document.**
 | Tool | Run it |
 |---|---|
 | `doctor.py` | **First, and after any setup change.** Says what is configured and what will silently do nothing |
+| 🔴 `pipeline.py` | **First, and after any batch of work.** Where the search is up to and what the next action is — every stage COMPUTED from the vault, never asserted. `--write` refreshes `vault/state/progress.md` |
 | `wikilinks.py` | After writing pages. `--fix` repairs links split across lines |
 | `settings_drift.py` | 🔴 **After pulling an update** — what the system now reads that this vault has not got |
 | `template_drift.py` | After pulling an update — what the page templates gained that this vault never received |

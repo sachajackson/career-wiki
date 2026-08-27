@@ -215,6 +215,24 @@ Needs `vault/settings/search.json` — copy `templates/settings/search.example.j
 Writes `shortlist.md`, `raw.json` (cached descriptions) and `seen.json` in `tools/radar/`. All three are
 gitignored and regenerated.
 
+## 🔴 Before and after: run the pipeline check
+
+```bash
+python3 tools/pipeline.py
+```
+
+**It says which stage the search is on and what the next action is**, computed from the vault rather than
+remembered. **Run it before starting and again when you think you are finished** — the second run is the one
+that matters.
+
+🔴 **It exists because two things failed silently in one session.** A cluster page said *"recorded so the
+radar does not re-surface them"* and shipped without the posting URLs, so it re-surfaced all ten — **written
+twice, the same way, an hour apart.** And the `role-triage` delegation below **had never once been used** in
+the life of this repo, because nothing was looking.
+
+🟡 **`--write` leaves `vault/state/progress.md`** behind, which is regenerable and safe to delete. Useful
+when a batch spans more than one sitting.
+
 ## Then do the part the script cannot
 
 For anything beyond a handful of promising roles, **delegate the reading to the `role-triage` agent** —
