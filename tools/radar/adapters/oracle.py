@@ -76,6 +76,50 @@ def _rows(payload):
     return (items[0].get("requisitionList") or []), items[0].get("TotalJobsCount")
 
 
+def tenant(host):
+    """The first label of the host — `jpmc.fa.oraclecloud.com` -> `jpmc`.
+
+    🟡 Not a display name, but unlike the site slug it is UNIQUE PER TENANT, so
+    two employers sharing Oracle's default site stop looking like one employer.
+    """
+    return (host or "").split(".")[0] or "oracle"
+
+
+def employer_name(o, host, site):
+    """The employer to write on a row from this tenant and site.
+
+    🔴 THIS USED TO BE `names.get(site, site)`, AND SITE ALONE IS NOT AN IDENTITY.
+    `CX_1001` is Oracle's DEFAULT site value and two shipped registry entries
+    already use it, so one label was applied to two different employers and their
+    roles deduped against each other as though they were one company.
+
+    🔴 The company field is not cosmetic either — `employers.py` matches every
+    avoid, avoid_sectors and watch rule against it, so while it read `CX_1001`
+    none of them could fire on this adapter at all.
+
+    🟢 Keys are tried most-specific first, and `"<host>|<site>"` is the form to
+    write for a tenant on a shared site.
+
+    🔴 A SITE-ONLY KEY STILL WORKS, and that is deliberate rather than lazy.
+    Several employers have a genuinely unique site and their labels were written
+    against it; requiring the compound form would leave every one of those
+    lookups missing and silently revert good labels to raw slugs — the fix for
+    unhelpful labels producing no labels at all.
+    """
+    names = o.get("names") or {}
+    if names.get(f"{host}|{site}"):
+        return names[f"{host}|{site}"]
+    if names.get(site):
+        # 🔴 Only trust a site-only label when ONE configured tenant uses that
+        # site. Otherwise it is a confidently wrong employer name, which is worse
+        # than a slug because it gets believed.
+        hosts = {e.get("host") for e in (o.get("employers") or [])
+                 if isinstance(e, dict) and e.get("site") == site and e.get("host")}
+        if len(hosts) <= 1:
+            return names[site]
+    return tenant(host)
+
+
 def fetch(cfg, query, days):
     global TRUNCATED
     TRUNCATED = False
@@ -128,7 +172,7 @@ def fetch(cfg, query, days):
                 out.append({
                     "id": f"or-{site}-{jid}",
                     "title": (r.get("Title") or "").strip(),
-                    "company": o.get("names", {}).get(site, site),
+                    "company": employer_name(o, host, site),
                     "loc": "; ".join([p for p in [loc] + extra if p]) or "?",
                     "date": posted,
                     "url": PUBLIC.format(host=host, site=site, jid=jid),
@@ -158,6 +202,33 @@ def fetch(cfg, query, days):
         elif not ran_out_of_window and total is not None and got >= PAGE * pages:
             TRUNCATED = True
 
+        # 🔴 AN UNRECOGNISED SITE DOES NOT FAIL HERE, IT WIDENS. Oracle ignores a
+        # siteNumber it does not know and answers with the whole tenant instead,
+        # so a typo returns MORE roles rather than none -- on a multi-brand
+        # tenant, other employers' roles under this employer's name. There is no
+        # error to notice and the run looks unusually productive.
+        #
+        # `probe()` has caught this since 2026-08-25, but only when somebody runs
+        # sources_check. A real run never asked, so the one place the answer
+        # changes what you are looking at was the one place it was not checked.
+        #
+        # 🟢 Two counts settle it: a site value Oracle honours scopes the result,
+        # a nonsense one does not. One extra request per TENANT, cached, not per
+        # employer -- and it says so once rather than per page.
+        if total:
+            if host not in _control_cache:
+                _control_cache[host] = _count(host, CONTROL_SITE)
+            control, cstatus = _control_cache[host]
+            if cstatus == 200 and control == total:
+                print(f"  !! oracle {site}: {total} roles, and a NONSENSE site value returns the "
+                      f"same {control}.\n"
+                      f"  !! Oracle is probably ignoring this site and searching the whole tenant "
+                      f"({tenant(host)}).\n"
+                      f"  !! Harmless if that employer runs one site. Otherwise these rows may "
+                      f"belong to other\n"
+                      f"  !! employers on the same tenant — check the site segment of the careers "
+                      f"URL.", flush=True)
+
     return out
 
 
@@ -181,6 +252,10 @@ def fetch_body(row):
 
 # A site value no tenant will have. Its only job is to be the control below.
 CONTROL_SITE = "zzNoSuchSiteZZ"
+# Per-tenant, not per-employer: several employers can share one host and the
+# control count is a property of the tenant. Cleared between runs by process
+# lifetime, which is the right scope -- a tenant can be reconfigured.
+_control_cache = {}
 
 
 def _count(host, site):

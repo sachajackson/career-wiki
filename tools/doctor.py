@@ -227,13 +227,28 @@ def check_oracle_names():
     sites = [e for e in (oracle.get("employers") or []) if isinstance(e, dict)]
     if not sites:
         return OPTIONAL, "no Oracle employers configured"
-    names = oracle.get("names") or {}
-    unnamed = [e.get("site") for e in sites if e.get("site") and not names.get(e.get("site"))]
+    # 🟢 Ask the adapter rather than reimplementing its key order. A site-only
+    # label is still valid where one tenant uses that site, and a second
+    # implementation of that rule would drift from the first.
+    here = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, os.path.join(here, "radar"))
+    try:
+        from adapters import oracle as _ora
+    except Exception as e:
+        return WARN, f"could not load the Oracle adapter: {type(e).__name__}: {e}"
+    unnamed = []
+    for e in sites:
+        host, site = e.get("host") or "", e.get("site") or ""
+        if not site:
+            continue
+        if _ora.employer_name(oracle, host, site) == _ora.tenant(host):
+            unnamed.append(f"{_ora.tenant(host)}/{site}")
     if unnamed:
-        return MISSING, (f"{len(unnamed)} Oracle site(s) have no entry in `names`: "
-                         f"{', '.join(str(u) for u in unnamed[:3])}. Their rows carry the site "
-                         f"slug as the employer, so avoid/watch rules never match them")
-    return OK, f"all {len(sites)} Oracle site(s) map to an employer name"
+        return MISSING, (f"{len(unnamed)} Oracle tenant(s) resolve to no employer name: "
+                         f"{', '.join(unnamed[:3])}. Their rows carry the tenant slug, so "
+                         f"avoid/watch rules never match them. Key on \"<host>|<site>\" when two "
+                         f"tenants share a site")
+    return OK, f"all {len(sites)} Oracle tenant(s) resolve to an employer name"
 
 
 def check_foreign_state():

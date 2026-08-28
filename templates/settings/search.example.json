@@ -92,7 +92,8 @@
    "  https://<host>/hcmUI/CandidateExperience/en/sites/<site>/jobs",
    "Take host and site verbatim. Do not derive the host: tenants appear both with a",
    "region (<pod>.fa.us2.oraclecloud.com) and without (<pod>.fa.oraclecloud.com).",
-   "'names' maps each site to the EMPLOYER'S NAME, and it is NOT cosmetic. Without it a row's company field is the site slug (CX_1001), and every filter that matches on employer -- avoid, avoid_sectors, watch -- silently stops applying to this adapter, while dedup can never recognise the same job arriving from LinkedIn. doctor reports a configured site with no name."
+   "'names' maps a tenant to the EMPLOYER'S NAME, and it is NOT cosmetic. Without it a row's company field is the site slug (CX_1001), and every filter that matches on employer -- avoid, avoid_sectors, watch -- silently stops applying to this adapter, while dedup can never recognise the same job arriving from LinkedIn. doctor reports a configured site with no name.",
+   "Key it \"<host>|<site>\" when two tenants share a site -- CX_1001 is Oracle's DEFAULT site value and is not unique. A bare \"<site>\" key still works, and is only refused when two configured tenants use that same site, because a confidently wrong employer name is worse than a slug."
   ],
   "employers": [],
   "names": {},

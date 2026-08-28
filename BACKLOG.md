@@ -737,7 +737,7 @@ of that pile by tally was *.NET Technical Lead*, *Principal Software Engineer*, 
 is the tier order presented above it, not the existence of a floor.**
 
 
-### 🟡 Oracle identifies an employer by `site` alone, and the default site value is not unique
+### ✅ Oracle identifies an employer by `site` alone, and the default site value is not unique — FIXED 2026-08-28
 
 **Found 2026-08-25 while making the radar label rows with employer names instead of ATS slugs.** The
 Oracle adapter carries `host` and `site` per employer, **but everything downstream keys on `site` only**
@@ -1975,10 +1975,15 @@ employer have a site nearer than the one advertised, and can the role be worked 
 answer as a question to ask, not an assumption** — but the upside is the difference between a two-hour
 round trip and none.
 
-### 🔴 Oracle does not reject an unrecognised site. It widens the search
+### ✅ Oracle does not reject an unrecognised site. It widens the search — DETECTED AT RUN TIME 2026-08-28
 
-**Status: found 2026-08-25 while building the source check, against three live tenants. Detected, not
-fixable.**
+**Status: found 2026-08-25 while building the source check, against three live tenants. Still not
+fixable — Oracle offers no way to make it fail. 🟢 But detected where it matters, 2026-08-28.**
+
+**`probe()` had caught it since the day it was found, and only when somebody ran `sources_check.py`.**
+A real radar run never asked — so the one place the answer changes what you are looking at was the one
+place it was not checked. `fetch()` now runs the same two-count comparison, **once per tenant rather than
+per employer**, and says so on the run.
 
 A mistyped or wrong `site` value in the Oracle config **does not fail.** Oracle ignores a `siteNumber` it
 does not know and answers with the tenant's default set instead, so the search **silently widens to
