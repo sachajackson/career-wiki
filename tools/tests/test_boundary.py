@@ -446,8 +446,14 @@ class TheExampleSettingsAreOnlyPlaceholders(unittest.TestCase):
 
     🔴 The existing substance check catches only a PROPER NOUN, and a settings
     file's locations are conventionally lowercase. Tested 2026-08-28 by planting
-    the original shape: `["drogheda", "louth", "dublin 1"]` passed the whole
-    suite. The job titles beside it were caught; the geography was not.
+    the original shape — a real town, its county, and a postal district, all
+    lowercase — passed the whole suite. The job titles beside it were caught;
+    the geography was not.
+
+    🔴 The first version of this test named the real places, to prove they could
+    never be allowlisted. That put the user's home county into a public repo to
+    assert that it must not be in a public repo. **Fictional places prove the
+    same property.**
 
     🟢 So the rule is the entry's own: an example is written as placeholders, not
     as a sanitised real one. `<your city>` cannot leak, and it documents the
@@ -502,6 +508,6 @@ class TheExampleSettingsAreOnlyPlaceholders(unittest.TestCase):
     def test_the_original_leak_would_now_fail(self):
         """🔴 The regression this exists for, in its exact shape — lowercase, and
         therefore invisible to a proper-noun rule."""
-        for value in ("drogheda", "louth", "dublin 1", "County Louth"):
+        for value in ("halfingham", "shireton", "narnia 1", "County Obscure"):
             self.assertNotIn(value.lower(), {a.lower() for a in self.ALLOWED},
                              f"{value!r} must never be allowlisted")

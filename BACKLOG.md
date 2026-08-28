@@ -282,7 +282,7 @@ the next search will land.
 ### 🟡 Example and template files are a leak vector — VERIFIED AND HALF-CLOSED 2026-08-28
 
 🔴 **The rules below were rules and not checks, and testing them found three gaps.** The original
-leak shape was replanted on 2026-08-28 — `["drogheda", "louth", "dublin 1"]` in
+leak shape was replanted on 2026-08-28 — a real town, its county and a postal district — all lowercase — in
 `templates/settings/search.example.json` — and **it passed the entire suite.** The substance check
 matched only a PROPER NOUN, and a settings file's locations are conventionally lowercase. The job
 titles beside it were caught; **the geography, which is what actually leaked, was not.**

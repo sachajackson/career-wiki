@@ -194,4 +194,4 @@ class AMarkdownExtensionStillResolves(unittest.TestCase):
         self.assertEqual(wikilinks.split_target("CLAUDE.md"), ("CLAUDE", ""))
         self.assertEqual(wikilinks.split_target("Weight Log.md#Table"), ("Weight Log", "Table"))
         # A page whose name genuinely ends in something else is untouched.
-        self.assertEqual(wikilinks.split_target("Sacha Jackson.pdf"), ("Sacha Jackson.pdf", ""))
+        self.assertEqual(wikilinks.split_target("Jane Doe.pdf"), ("Jane Doe.pdf", ""))
