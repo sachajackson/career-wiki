@@ -403,6 +403,64 @@ def same_role(a, b):
     return _within(la, lb) or _within(lb, la)
 
 
+# 🔴 SURFACE A CROSS-SOURCE DUPLICATE, NEVER MERGE ONE.
+#
+# same_role() runs only against roles found in THIS run. `seen` is consulted by
+# id, and an id is source-prefixed -- so one job reaching the vault as
+# li-4453618843 on Monday and or-210778716 on Tuesday is two roles forever. That
+# happened: it was scored twice, 9 and 13, and both rows sat in the table.
+#
+# 🔴 The obvious repair is to match `seen` on employer and title and drop the
+# second. MEASURED BEFORE BUILDING, and it is not safe: 6,534 seen roles hold 318
+# (employer, title) pairs that repeat, ONE OF THEM EIGHTEEN TIMES. Those eighteen
+# are eighteen real vacancies separated only by location -- and location is the
+# field `seen` did not store. Merging on title alone deletes seventeen jobs and
+# reports nothing, which this file already calls its worst possible failure.
+#
+# 🟢 So this suppresses NOTHING. Every row still reaches the shortlist. The run
+# adds a section naming the pairs it thinks are one job, and a person decides.
+def _seen_key(rec):
+    return _norm(rec.get("company")), _norm(strip_req(rec.get("title")))
+
+
+def duplicate_candidates(row, seen):
+    """[(seen_id, rec, why)] — seen roles that look like this new row.
+
+    🔴 BOTH SIDES MUST CARRY A LOCATION. That rule is the whole difference
+    between a usable check and an unusable one, measured over 6,534 real
+    sightings replayed in order:
+
+        treat a missing location as agreement   494 sightings flagged   7.6%
+        require one on both sides                 3 sightings flagged   0.0%
+
+    🔴 A section that fires on 7.6% of a sweep is a section nobody reads, and
+    every one of those 494 was the same artefact: not one record in `seen`
+    carried a location, because nothing had ever stored it.
+
+    🟡 So records written before this shipped do not participate at all, and the
+    check is quiet on day one by construction. It fills in as `seen` refills.
+    **The measured 0.0% is therefore a floor, not the steady state** — the
+    corpus it was measured against could only supply locations for the sources
+    that also wrote `raw.json`, so the very pairs this exists to catch (one job
+    from LinkedIn and from the employer's own board) were not scoreable yet.
+    """
+    key = _seen_key(row)
+    mine = _loc_tokens(row.get("loc"))
+    if not all(key) or not mine:
+        return []
+    out = []
+    for sid, rec in seen.items():
+        if sid == row.get("id") or _seen_key(rec) != key:
+            continue
+        theirs = _loc_tokens(rec.get("loc"))
+        # 🟢 Subset, not intersection — every location in a country carries the
+        # country's name, so Lyon and Nice intersect on "france". Same reasoning
+        # as same_role(), and the same bug avoided.
+        if theirs and (_within(mine, theirs) or _within(theirs, mine)):
+            out.append((sid, rec, "same employer, title and location"))
+    return out
+
+
 MIN_PREFIX = 3
 
 
@@ -882,6 +940,13 @@ def main(argv=None):
     high = [c for c in keep if c["signal"] == "HIGH"]
     med  = [c for c in keep if c["signal"] == "MED"]
 
+    # 🔴 SURFACED, NEVER SUPPRESSED. Every row above stays exactly where it is;
+    # this only asks whether one of them is a job already seen from another
+    # source under a different id. Merging instead would be the cheaper change
+    # and the wrong one -- see duplicate_candidates().
+    for c in high + med:
+        c["_dupes"] = duplicate_candidates(c, seen)
+
     # The window applies only to sources that were asked for one. A board adapter
     # returns everything currently open at any age, so a file carrying board rows
     # cannot claim a window -- and this header is the only thing telling a reader
@@ -951,6 +1016,27 @@ def main(argv=None):
         # posting outrank a real mediocre one. Only roles with something to say
         # appear: between a fifth and a third of listings are ghost jobs, but
         # listing every clean role here would bury the few that are not.
+        dupes = [c for c in high + med if c.get("_dupes")]
+        if dupes:
+            f.write(f"## 🔴 Possibly the same job, already seen from another source "
+                    f"({len(dupes)})\n\n")
+            f.write("**Nothing has been dropped and nothing has been merged.** Every role below is "
+                    "also in the tables above, and this section exists because the alternative — "
+                    "merging them — silently deletes real vacancies. Two of these reached one vault "
+                    "a day apart under a LinkedIn id and an Oracle id, were scored separately at 9 "
+                    "and 13, and both sat in the scoring table.\n\n")
+            f.write("🟡 **Same employer, same title, same place is strong evidence and not proof.** "
+                    "Large employers do post several genuinely different requisitions that differ "
+                    "only in the description. **Open both before deciding.**\n\n")
+            for c in dupes:
+                f.write(f"- **{cell(c['title'])[:70]}** — {cell(c['company'])[:30]}, "
+                        f"{cell(c['loc'])[:28]}\n")
+                f.write(f"  - now: `{c['id']}` [link]({c['url']})\n")
+                for sid, rec, why in c["_dupes"][:3]:
+                    f.write(f"  - seen: `{sid}` on {rec.get('first_seen', 'an earlier run')} "
+                            f"— {why}\n")
+            f.write("\n")
+
         flagged = [(c, LEGIT.concerns(c, seen)) for c in high + med]
         flagged = [(c, w) for c, w in flagged if w]
         if flagged:
@@ -1040,7 +1126,12 @@ def main(argv=None):
             # the same requisition number reappearing under a new id with a newer
             # date. Records written before this shipped have neither, and the
             # check degrades to silence rather than to a false positive.
-            rec = {"title": c["title"], "company": c["company"], "first_seen": today}
+            # 🔴 `loc` is here for duplicate_candidates(), and it is the field
+            # whose ABSENCE made cross-source duplicates undetectable: one job
+            # arrived as li-4453618843 and or-210778716 a day apart, was scored
+            # twice at 9 and 13, and both rows sat in the table.
+            rec = {"title": c["title"], "company": c["company"], "first_seen": today,
+                   "loc": c.get("loc", "")}
             if c.get("requisition"):
                 rec["requisition"] = c["requisition"]
             if c.get("date"):
