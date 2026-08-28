@@ -125,6 +125,20 @@ def route(emp, cfg):
             # employer's own board, so it sees only what they syndicate.
             cfg.setdefault("queries", []).append(e["query"])
             hit = True
+        # 🔴 A ROUTE CAN COME FROM THE SHIPPED REGISTRY INSTEAD OF THIS FILE, and
+        # not knowing that produced an output which contradicted itself: the
+        # workday probe reported two boards answering with 343 and 1,384 open
+        # roles, directly under a line saying those same two employers had
+        # "NO ROUTE" and were not being watched.
+        #
+        # registry.resolve() writes the route into the ADAPTER config and records
+        # the employer in that adapter's `names` map. It does not write it back
+        # into the watch entry, which is all this function used to read. So the
+        # coverage was real and the warning was false -- and the skill tells a
+        # reader to act on that warning by reporting the employer as unwatched.
+        if not hit:
+            hit = any(name in (cfg.get(a, {}).get("names") or {}).values()
+                      for a in ("workday", "oracle"))
         (routed if hit else unrouted).append(name)
     return routed, unrouted
 

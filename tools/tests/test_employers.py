@@ -332,3 +332,50 @@ class TheWatchListHasTwoShapesAndBothMustWork(unittest.TestCase):
         avoid = [{"employer": "First Bank", "divisions": []}]
         for watch in (["First Bank"], [{"employer": "First Bank"}]):
             self.assertEqual(EMP.contradictions({"watch": watch, "avoid": avoid}), ["First Bank"])
+
+
+class ARouteCanComeFromTheRegistry(unittest.TestCase):
+    """🔴 THE OUTPUT CONTRADICTED ITSELF, and the false half is the one the skill
+    tells a reader to act on.
+
+    `sources_check.py` printed, three lines apart:
+
+        watchlist: 0 employer(s) routed, 2 with NO ROUTE: SS&C Technologies, State Street
+        OK  workday  ... ssctech (343 open) ... statestreet (1384 open)
+
+    Both were computed correctly and they disagree. `registry.resolve()` writes a
+    route into the ADAPTER config and records the employer in that adapter's
+    `names` map; it does not write it back into the watch entry, which is the
+    only place `route()` looked. **The coverage was real and the warning false**
+    — and `role-radar`'s own instruction is that "no route ... NOT watched" means
+    say so and do not report coverage the run did not have.
+    """
+
+    ENTRY = {"employer": "First Bank"}
+
+    def test_an_employer_resolved_by_the_registry_counts_as_routed(self):
+        cfg = {"workday": {"employers": [{"host": "h", "tenant": "fb", "site": "s"}],
+                           "names": {"fb": "First Bank"}}}
+        routed, unrouted = EMP.route({"watch": [self.ENTRY]}, cfg)
+        self.assertEqual((routed, unrouted), (["First Bank"], []))
+
+    def test_an_inline_route_still_counts(self):
+        """🟡 The original mechanism. Writing the route into employers.json must
+        keep working — the registry is a convenience, not a replacement."""
+        entry = {"employer": "First Bank", "workday": {"host": "h", "tenant": "fb", "site": "s"}}
+        routed, unrouted = EMP.route({"watch": [entry]}, {})
+        self.assertEqual((routed, unrouted), (["First Bank"], []))
+
+    def test_an_employer_with_neither_is_still_reported(self):
+        """🔴 The warning must survive. An employer on the list with no route
+        anywhere is genuinely not being watched, and silence there would be the
+        original failure this whole line exists to prevent."""
+        routed, unrouted = EMP.route({"watch": [{"employer": "Nowhere Ltd"}]}, {})
+        self.assertEqual((routed, unrouted), ([], ["Nowhere Ltd"]))
+
+    def test_a_different_employers_registry_entry_does_not_count(self):
+        """🟡 The false-positive direction: matching on presence in the names map
+        must be by NAME, not by the map being non-empty."""
+        cfg = {"workday": {"names": {"other": "Second Bank"}}}
+        routed, unrouted = EMP.route({"watch": [self.ENTRY]}, cfg)
+        self.assertEqual((routed, unrouted), ([], ["First Bank"]))
