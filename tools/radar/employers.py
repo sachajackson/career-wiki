@@ -76,7 +76,7 @@ def _names_match(rule_name, company):
     if a in b or b in a:
         return True
     # And again with the spaces gone. norm() collapses whitespace but keeps it,
-    # so "State Street" never matched "statestreet" -- and adapters label a row
+    # so "First Bank" never matched "statestreet" -- and adapters label a row
     # with whatever the SOURCE calls the employer, which for an ATS is the
     # tenant slug, and a tenant slug has no spaces in it. A real avoid entry
     # naming a two-word employer therefore matched nothing: configured,
@@ -155,9 +155,9 @@ def excluded(row, emp):
             # 🔴 A DIVISION OFTEN POSTS UNDER ITS OWN NAME, and checking the
             # parent's name first made the exclusion unreachable when it does.
             #
-            # State Street is watched and its Charles River division excluded.
-            # That was verified against State Street's own Workday board, where
-            # the company field says "State Street" and the division is in the
+            # First Bank is watched and its Halfling division excluded.
+            # That was verified against First Bank's own Workday board, where
+            # the company field says "First Bank" and the division is in the
             # title -- and it worked. LinkedIn labels the same roles "Charles
             # River Development", so the parent never matched, the division check
             # never ran, and 16 rows reached a shortlist. One was "Technical

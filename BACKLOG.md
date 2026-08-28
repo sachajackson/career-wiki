@@ -297,10 +297,20 @@ where the private data is. It reports employers from the user's own watch and av
 in tracked files. 🔴 **The first draft scanned every settings value and reported 229 findings**,
 because a signal vocabulary is generic by design; scoped to employer names it reports 12.
 
-🔴 **STILL OPEN: those 12.** Six are in `tools/tests/` fixtures, which this entry explicitly said to
-add and which nothing had. Some are legitimate — `ats_registry.json` maps employers to their ATS and
-is contributed back deliberately — and **only the user can say which**, so the check WARNs and names
-files rather than gating.
+🟢 **Twelve became seven on 2026-08-28.** The excluded DIVISION — the one genuinely sensitive entry,
+because refusing to work somewhere is a fact about a person rather than about a company — is gone
+from every tracked file. `tools/radar/employers.py` and `tools/tests/test_employers.py` now carry
+the repo's own fiction, and the test still proves the bug it was written for: **a division posting
+under its own name escapes a parent-keyed exclusion**, which put 16 rows on a live shortlist.
+
+🔴 **Genericising it exposed a wrapping bug in my own edit**, and it is the third time this week: a
+line-by-line replacement left two occurrences intact because they wrapped across lines. **Sweep on
+the flattened text, not the raw lines.**
+
+🟡 **Seven remain and they are a different question.** All name a WATCHED employer, in ATS-mapping
+code and in findings — `ats_registry.json` maps employers to their ATS and is contributed back
+deliberately, which is a public fact about a company. **Whether being seen to watch an employer
+matters is the user's call**, so the check WARNs and names files rather than gating.
 
 ---
 
