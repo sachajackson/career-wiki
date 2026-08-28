@@ -224,12 +224,21 @@ live entry, and two measurements named the board they were taken from. **All now
 substring-collision test that needed two names sharing a prefix uses *Stateline Capital* and
 *Statesman Bank*.
 
-🔴 **ONE REMAINS AND IT IS A REAL QUESTION, not an oversight.** `tools/radar/ats_registry.json` maps
-employers to their ATS and is contributed back deliberately — *X uses Workday* is a public fact
-about a company. 🔴 **But the registry holds 18 employers and its CONTENTS reflect who one person
-looked up**, including a current employer and a live application. `doctor` now says so rather than
-excluding it silently. **Decide before public launch**: either the registry is seeded to be
-obviously general, or it ships empty and fills from use.
+🟢 **The registry was settled on 2026-08-28 by seeding it.** It held 18 employers whose composition
+reflected who one person had looked up; it now holds **24**, and the added six — Airbnb, Coinbase,
+Duolingo, Pinterest, Spotify, Vercel — were chosen to be recognisable and unconnected to any one
+search. **Every endpoint answered and every canary was present** on a full `registry_check.py` run.
+
+🔴 **Every addition was verified BY CONTENT, never by name**, and one probe shows why that rule is
+not ceremony: `greenhouse/wise` answers with 21 roles and is **not Wise** — it belongs to *National
+Teachers Associates, a subsidiary of Horace Mann*. **A token guessed from a company name is a
+different company's board that looks identical from the outside**, and `add_employer.py` refuses to
+write one without a human saying so.
+
+🟡 **What seeding does and does not fix.** The three sensitive entries are still there — they are
+real ATS facts and removing them would break the coverage they provide. **What changed is the
+inference**: three names among 24 household ones read as a resource, where three among 18 read as
+somebody's shortlist. `doctor` still reports the count rather than excluding the file silently.
 
 🟡 **The old wording, kept because the reasoning still applies:** All name a WATCHED employer, in ATS-mapping
 code and in findings — `ats_registry.json` maps employers to their ATS and is contributed back

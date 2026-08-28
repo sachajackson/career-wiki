@@ -31,6 +31,17 @@
   "version": 1,
   "employers": [
     {
+      "employer": "Airbnb",
+      "ats": "greenhouse",
+      "params": {
+        "token": "airbnb"
+      },
+      "careers_url": "https://careers.airbnb.com/",
+      "publishes_salary": false,
+      "last_verified": "2026-08-28",
+      "verified_returned": 180
+    },
+    {
       "employer": "Anthropic",
       "ats": "greenhouse",
       "params": {
@@ -65,6 +76,17 @@
       "publishes_salary": false,
       "last_verified": "2026-08-25",
       "verified_returned": 306
+    },
+    {
+      "employer": "Coinbase",
+      "ats": "greenhouse",
+      "params": {
+        "token": "coinbase"
+      },
+      "careers_url": "https://www.coinbase.com/careers/positions",
+      "publishes_salary": false,
+      "last_verified": "2026-08-28",
+      "verified_returned": 184
     },
     {
       "employer": "Databricks",
@@ -111,6 +133,17 @@
       "last_verified": "2026-08-25",
       "verified_returned": 300,
       "notes": "Ashby underneath -- every row carries an ashby_id -- but the public Ashby board returns empty, so this must target deel.com. Publishes a salary band on every role, which is rare and takes PAY out of TBC before any call"
+    },
+    {
+      "employer": "Duolingo",
+      "ats": "greenhouse",
+      "params": {
+        "token": "duolingo"
+      },
+      "careers_url": "https://careers.duolingo.com/",
+      "publishes_salary": false,
+      "last_verified": "2026-08-28",
+      "verified_returned": 83
     },
     {
       "employer": "Figma",
@@ -199,6 +232,17 @@
       "verified_returned": 70
     },
     {
+      "employer": "Pinterest",
+      "ats": "greenhouse",
+      "params": {
+        "token": "pinterest"
+      },
+      "careers_url": "https://www.pinterestcareers.com/jobs/",
+      "publishes_salary": false,
+      "last_verified": "2026-08-28",
+      "verified_returned": 215
+    },
+    {
       "employer": "Reddit",
       "ats": "greenhouse",
       "params": {
@@ -222,6 +266,17 @@
       "last_verified": "2026-08-25",
       "verified_returned": 1527,
       "notes": "The careers page is JavaScript-rendered and carries no ATS marker, so add_employer.py finds nothing in it. Resolve this one by probing the shards directly against the tenant name. Shard is wd12: wd1, wd3 and wd5 all answer 422, which means wrong shard rather than bad request, exactly as settings/search.json documents -- so a 422 is a signal to keep going, not to stop. 138 Ireland roles at time of verification"
+    },
+    {
+      "employer": "Spotify",
+      "ats": "lever",
+      "params": {
+        "handle": "spotify"
+      },
+      "careers_url": "https://www.lifeatspotify.com/jobs",
+      "publishes_salary": false,
+      "last_verified": "2026-08-28",
+      "verified_returned": 89
     },
     {
       "employer": "SS&C Technologies",
@@ -262,6 +317,17 @@
       "publishes_salary": false,
       "last_verified": "2026-08-25",
       "verified_returned": 583
+    },
+    {
+      "employer": "Vercel",
+      "ats": "greenhouse",
+      "params": {
+        "token": "vercel"
+      },
+      "careers_url": "https://vercel.com/careers",
+      "publishes_salary": false,
+      "last_verified": "2026-08-28",
+      "verified_returned": 91
     }
   ],
   "_endpoints": {
