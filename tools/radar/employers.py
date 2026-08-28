@@ -129,9 +129,24 @@ def route(emp, cfg):
     return routed, unrouted
 
 
+def _watch_entries(emp):
+    """The watch list, normalised. 🔴 A bare string is a legal shorthand — the
+    registry resolves the route from the shipped ATS list — and reading it as a
+    dict raised AttributeError inside excluded(), which is the exception nobody
+    saw because the list has always been empty."""
+    out = []
+    for e in emp.get("watch", []):
+        if isinstance(e, str):
+            if e.strip() and not e.startswith("_"):
+                out.append({"employer": e})
+        elif isinstance(e, dict):
+            out.append(e)
+    return out
+
+
 def contradictions(emp):
     """An employer on both lists. Silence here would let either one win."""
-    watched = [e.get("employer", "") for e in emp.get("watch", [])]
+    watched = [e.get("employer", "") for e in _watch_entries(emp)]
     out = []
     for a in emp.get("avoid", []):
         for w in watched:
@@ -180,7 +195,7 @@ def excluded(row, emp):
         for d in divisions:
             if d and d.lower() in hay:
                 return f"{name}: {d} division excluded"
-    for e in emp.get("watch", []):
+    for e in _watch_entries(emp):
         if not _names_match(e.get("employer", ""), company):
             continue
         hay = f"{title} {company}".lower()

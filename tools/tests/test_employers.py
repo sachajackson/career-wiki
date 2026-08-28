@@ -282,3 +282,53 @@ class TheDivisionThatPostsUnderItsOwnName(unittest.TestCase):
         emp = {"avoid": [{"employer": "Widget Retail", "divisions": []}]}
         self.assertTrue(EMP.excluded(
             {"company": "Widget Retail", "title": "Director of Engineering"}, emp))
+
+
+class TheWatchListHasTwoShapesAndBothMustWork(unittest.TestCase):
+    """🔴 THE WATCH LIST WAS UNUSABLE IN BOTH DIRECTIONS AND NOBODY FOUND OUT,
+    because it had always been empty.
+
+        watch: ["Name"]        registry.py's own docstring, and the only shape
+                               resolve() would read -- and it raised
+                               AttributeError inside employers.excluded(),
+                               which reads watch entries as dicts
+
+        watch: [{...}]         the shape templates/settings/employers.example.json
+                               ships, carrying the route and avoid_divisions --
+                               and resolve() skipped every one of them, so the
+                               config named employers and watched nobody
+
+    🟢 Both are accepted now. The object is canonical because it is the only one
+    that can carry a route and a division exclusion; a bare name is shorthand the
+    registry fills in.
+    """
+
+    ROW = {"company": "First Bank", "title": "Technical Project Manager, AVP"}
+    DIVISION = {"company": "First Bank", "title": "Delivery Manager, Halfling Analytics"}
+
+    def test_a_bare_string_does_not_raise(self):
+        self.assertIsNone(EMP.excluded(self.ROW, {"watch": ["First Bank"], "avoid": []}))
+
+    def test_an_object_does_not_raise(self):
+        self.assertIsNone(EMP.excluded(self.ROW, {"watch": [{"employer": "First Bank"}], "avoid": []}))
+
+    def test_avoid_divisions_on_a_watch_entry_still_excludes(self):
+        """🟢 The case this shape exists for: watch the parent, refuse one
+        division. Putting the parent on the avoid list instead would report a
+        contradiction and risk excluding the whole employer."""
+        cfg = {"watch": [{"employer": "First Bank", "avoid_divisions": ["Halfling"]}], "avoid": []}
+        self.assertIsNone(EMP.excluded(self.ROW, cfg))
+        self.assertTrue(EMP.excluded(self.DIVISION, cfg))
+
+    def test_a_comment_string_in_the_array_is_ignored(self):
+        """People leave comments in JSON arrays. Neither reader may choke."""
+        cfg = {"watch": ["_a note to self", "", "First Bank"], "avoid": []}
+        self.assertIsNone(EMP.excluded(self.ROW, cfg))
+        self.assertEqual([e["employer"] for e in EMP._watch_entries(cfg)], ["First Bank"])
+
+    def test_contradictions_reads_both_shapes(self):
+        """🔴 An employer on both lists means whichever won was an accident. That
+        warning must not go quiet just because the entry is a string."""
+        avoid = [{"employer": "First Bank", "divisions": []}]
+        for watch in (["First Bank"], [{"employer": "First Bank"}]):
+            self.assertEqual(EMP.contradictions({"watch": watch, "avoid": avoid}), ["First Bank"])

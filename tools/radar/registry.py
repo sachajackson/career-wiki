@@ -83,7 +83,18 @@ def resolve(config, registry=None):
     labelled_by_hand = {s for k in ("workday", "oracle")
                          for s in (config.get(k, {}).get("names") or {})}
 
-    for name in config.get("watch", []):
+    for raw in config.get("watch", []):
+        # 🔴 TWO SHAPES EXIST AND ONLY ONE WAS READ HERE. This file's own docstring
+        # shows `"watch": ["Name"]`, while templates/settings/employers.example.json
+        # ships an OBJECT per employer, with its route and its avoid_divisions --
+        # and employers.py reads that object shape. So a config written from the
+        # template resolved to nothing and watched nobody, silently, while one
+        # written from this docstring crashed employers.excluded() on a string.
+        #
+        # 🟢 Both are accepted now. The object is canonical because it is the one
+        # that can carry a route and a division exclusion; a bare name is a
+        # shorthand that the registry fills in.
+        name = raw.get("employer", "") if isinstance(raw, dict) else raw
         if not isinstance(name, str) or name.startswith("_") or not name.strip():
             continue                      # people leave comments in arrays; do not resolve them
         entry, problem = match(name, employers)
