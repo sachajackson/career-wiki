@@ -135,40 +135,6 @@ at nothing.
 
 ## 🟡 Gaps — things the system does not do yet
 
-### 🟡 `Migrate` is a documented operation with no log prefix
-
-**Found 2026-08-25, running `/career-migrate` on a real vault.** `SCHEMA.md` lists **Migrate** among the
-operations under *Operations*, and every operation ends *"update `index.md`, append to `log.md`."* But the
-prefix list — in `SCHEMA.md` under *Log format* and again in `templates/log.md` — is:
-
-```
-ingest · interview · radar · build · data · query · lint · fix
-```
-
-**There is no `migrate`.** The entry was written as `ingest`, which is the closest fit and is wrong: an
-ingest is one source being read into the wiki, and a migration is a hundred files being sorted, three
-deleted and one retyped. **The prefixes exist to be grepped**, and the one operation that reshapes the
-whole vault is the one that cannot be found:
-
-```bash
-grep "^## \[" vault/wiki/log.md | grep migrate
-```
-
-**Two ways to close it, and they are not equivalent:**
-
-1. **Add `migrate` to both prefix lists.** One line in each. But 🔴 **a prefix list in prose is exactly the
-   class of control this repo has watched fail** — it drifted here because two files carry the same list and
-   nothing compares them.
-2. 🔴 **Better: make the list mechanical.** One definition, and a test that fails when `SCHEMA.md`,
-   `templates/log.md` and the set of documented operations disagree. That catches this instance *and* the
-   next operation added without a prefix.
-
-**Check the false-positive case before shipping the test:** a user's own log will contain entries this
-system never wrote, and a check that rejects unknown prefixes in *their* log rather than in *our* templates
-would fire on every hand-written line. **It should compare the two shipped lists to each other, and say
-nothing about the contents of any vault.**
-
-
 ## What already exists, in the wrong shape
 
 🔴 **In one week of real use, five employers' endpoints were found by hand and scattered across five

@@ -1079,3 +1079,59 @@ file warns about: an entry that has gone stale sends work at a problem that no l
 
 The adapter architecture exists and Adzuna, Greenhouse and Lever are written. Indeed is confirmed unavailable — `401` on job pages, `403` on search, tested 2026-08-23.
 **Adzuna needs a real key and a real run before the adapter can be called working.**
+
+
+---
+
+### 🟡 `Migrate` is a documented operation with no log prefix
+
+**Found 2026-08-25, running `/career-migrate` on a real vault.** `SCHEMA.md` lists **Migrate** among the
+operations under *Operations*, and every operation ends *"update `index.md`, append to `log.md`."* But the
+prefix list — in `SCHEMA.md` under *Log format* and again in `templates/log.md` — is:
+
+```
+ingest · interview · radar · build · data · query · lint · fix
+```
+
+**There is no `migrate`.** The entry was written as `ingest`, which is the closest fit and is wrong: an
+ingest is one source being read into the wiki, and a migration is a hundred files being sorted, three
+deleted and one retyped. **The prefixes exist to be grepped**, and the one operation that reshapes the
+whole vault is the one that cannot be found:
+
+```bash
+grep "^## \[" vault/wiki/log.md | grep migrate
+```
+
+**Two ways to close it, and they are not equivalent:**
+
+1. **Add `migrate` to both prefix lists.** One line in each. But 🔴 **a prefix list in prose is exactly the
+   class of control this repo has watched fail** — it drifted here because two files carry the same list and
+   nothing compares them.
+2. 🔴 **Better: make the list mechanical.** One definition, and a test that fails when `SCHEMA.md`,
+   `templates/log.md` and the set of documented operations disagree. That catches this instance *and* the
+   next operation added without a prefix.
+
+**Check the false-positive case before shipping the test:** a user's own log will contain entries this
+system never wrote, and a check that rejects unknown prefixes in *their* log rather than in *our* templates
+would fire on every hand-written line. **It should compare the two shipped lists to each other, and say
+nothing about the contents of any vault.**
+
+---
+
+## ✅ CLOSED 2026-08-28 — and it was two operations, not one
+
+**Both prefix lists now carry `migrate`, and the check is mechanical rather than prose.**
+`tools/tests/test_log_prefixes.py` compares `SCHEMA.md` and `templates/log.md` to each other and to the
+operations the schema documents.
+
+🔴 **Building it found a second instance immediately: `market standards` had the same gap**, logging as
+`research` with no prefix documented anywhere. **So the drift was never about `migrate` — it was the
+absence of anything comparing the lists**, exactly as the entry predicted when it said option 2 was
+better than option 1.
+
+🟢 **The false-positive case the entry named was the whole design.** A real log carries `tools`,
+`framework` and `correction` — one user's words for one user's work. **The check reads only the two
+shipped files and never opens a vault**, and there is a test asserting those three must NOT be added to
+the shipped list.
+
+🟡 An operation whose prefix is not its name is declared, not guessed: `market standards` → `research`.

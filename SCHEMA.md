@@ -842,6 +842,15 @@ this order: **what changed, what it unlocked, and what is still unknown.**
 
 Append-only, newest at the bottom, one entry per operation, greppable prefixes:
 
+*Prefixes: `ingest`, `interview`, `radar`, `build`, `data`, `query`, `lint`, `fix`, `migrate`,
+`research`, `outcome`.*
+
+🔴 **`migrate` and `research` were missing for weeks, and the failure was silent both times.** A
+migration reshapes the whole vault and was being logged as `ingest` — which is one source being read,
+not a hundred files sorted — so **the one operation that changes everything could not be grepped for.**
+`market-standards` had the same gap. **The prefixes exist to be found; a missing one is an operation
+that leaves no trace.**
+
 ```
 ## [2026-08-21] ingest | Source Title
 ## [2026-08-21] interview | round 3 — delivery mechanics
