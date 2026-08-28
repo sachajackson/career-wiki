@@ -221,6 +221,37 @@ def check_settings_not_shipped():
     return OK, f"none of your {len(names)} listed employer(s) appear in tracked files"
 
 
+def check_gaps():
+    """🔴 Are the wiki's closed questions findable, and do any pages reopen them?
+
+    `not recorded` and `recorded as not held` look identical to a search and mean
+    opposite things. A capability was put to the user three days after the wiki
+    had closed it in two places with the words "stop asking", because searching
+    for EVIDENCE of it found none.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, here)
+    try:
+        import gaps as _g
+        rows = _g.gaps()
+    except Exception as e:
+        return WARN, f"could not check: {type(e).__name__}: {e}"
+    if not rows:
+        return OPTIONAL, "no standing-gaps table yet — nothing has been closed"
+    unfindable = [r["gap"] for r in rows if not _g.RESOLVED.search(r["status"])]
+    risky = [(r["gap"], p) for r in rows for p, _ in _g.undistinguished(r)]
+    if unfindable or risky:
+        bits = []
+        if unfindable:
+            bits.append(f"{len(unfindable)} gap(s) have no resolution word in their status")
+        if risky:
+            bits.append(f"{len(risky)} declared near-miss page(s) carry no distinction")
+        return MISSING, "; ".join(bits) + ". Run `python3 tools/gaps.py`"
+    pressing = [r["gap"] for r in rows if _g.demands(r["where"]) >= 3]
+    note = (f"; {len(pressing)} demanded 3+ times and worth deciding once" if pressing else "")
+    return OK, f"all {len(rows)} closed question(s) findable, no page reopens one{note}"
+
+
 def check_sources():
     d = paths.SOURCES
     files = [f for f in os.listdir(d) if not f.startswith(".") and f != "README.md"] \
@@ -566,6 +597,7 @@ CHECKS = [
     ("scores", check_scores),
     ("oracle names", check_oracle_names),
     ("settings leak", check_settings_not_shipped),
+    ("closed questions", check_gaps),
     ("registry", check_registry),
     ("your CV", check_sources),
     ("your wiki", check_wiki),
