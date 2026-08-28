@@ -225,3 +225,43 @@ class TheHonestLimit(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TheRowsTheCheckCouldNotSee(unittest.TestCase):
+    """🔴 A 19% blind spot in a check that reported completeness.
+
+    LINK anchored `[[` directly after the pipe. This vault decorates the first
+    cell as readily as the score cells — `| 🟢 [[…`, `| **[[…`, `| ~~[[…` — so
+    the parser saw 78 of 96 rows and said "all scores agree with the table"
+    about the 78. The 18 it could not see included four submitted applications
+    and both internal moves.
+    """
+
+    def test_a_status_marker_before_the_link_does_not_hide_the_row(self):
+        with Vault() as v:
+            v.role("Acme", block("4·4·2", 9))
+            v.table(["| 🟢 [[Acme\\|X]] — a role | 4·4·2 | **10** | 3 | 3 |"])
+            kinds = {k for _, k, _ in sc.audit()[0]}
+            self.assertIn("agreement", kinds, "the decorated row was not seen at all")
+
+    def test_bold_around_the_link_does_not_either(self):
+        with Vault() as v:
+            v.table(["| **[[Acme\\|X]]** — a role | 5·4·5 | **14** | 2 | 4 |"])
+            self.assertEqual(sc.table_rows().get("Acme"), ((5, 4, 5), 14))
+
+    def test_a_struck_row_is_still_parsed_rather_than_skipped(self):
+        """🟡 A merged or withdrawn row still holds a score, and silently not
+        reading it is what this test exists to stop. Deciding whether to ACT on
+        it is a separate question from being able to see it."""
+        with Vault() as v:
+            v.table(["| ~~[[Acme\\|X]] — a role~~ | ~~4·2·3~~ | ~~**9**~~ | — | — |"])
+            self.assertIn("Acme", sc.table_rows())
+
+    def test_a_row_that_is_not_a_role_does_not_become_a_phantom_score(self):
+        """🟡 The false-positive direction. A looser regex also matches rows in
+        the comparison tables — `| **[[Compensation\\|€17,000 unvested equity]]**
+        | Forfeited | Retained |`. It must parse to no score, not a wrong one."""
+        with Vault() as v:
+            v.table(["| **[[Compensation\\|equity]]** | Forfeited | **Retained** |"])
+            self.assertEqual(sc.table_rows().get("Compensation"), (None, None))
+            self.assertEqual(sc.audit()[0], [])

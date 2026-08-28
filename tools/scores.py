@@ -63,7 +63,12 @@ REVIEW_AT = 10
 # `4·4·2`, in a page's score block or a table cell, with or without emphasis.
 NDE = re.compile(r"(?<![\d·])(\d)\s*·\s*(\d)\s*·\s*(\d)(?![\d·])")
 REVIEWED = re.compile(r"^\*\*Review\s+(\d{4}-\d{2}-\d{2})\s*[—-]\s*([A-Z][A-Z -]+)", re.M)
-LINK = re.compile(r"^\|\s*\[\[([^\]\\|]+)")
+# 🔴 THE SAME BUG AS THE SCORE CELLS, ONE COLUMN LEFT. This anchored `[[`
+# directly after the pipe, and this vault decorates the first cell too --
+# `| 🟢 [[…`, `| **[[…`, `| ~~[[…`. It saw 78 of 96 rows and reported "all
+# scores agree with the table" about the other 78. The 18 it could not see
+# included four submitted applications and both SS&C internal moves.
+LINK = re.compile(r"^\|[^|\[]{0,40}\[\[([^\]\\|]+)")
 HEADER = re.compile(r"^\|\s*Role\s*\|")
 # 🔴 THE BUG THAT MADE THIS TOOL'S FIRST RUN REPORT 17 FAULTS WHERE THERE WAS 1.
 # This vault's own convention puts a status marker INSIDE a score cell -- the real
