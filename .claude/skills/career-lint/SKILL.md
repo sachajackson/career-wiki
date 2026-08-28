@@ -21,7 +21,7 @@ never happened. **`OPTIONAL` is not a fault** and must not be reported as one: m
 optional, and telling someone to fix what they never wanted is how a check gets ignored.
 
 ```
-python3 tools/wikilinks.py wiki
+python3 tools/wikilinks.py
 ```
 
 🔴 **Three ways a link fails without looking broken**, and the checker finds all three: **split across two
@@ -35,7 +35,7 @@ and a renamed heading wants repointing at whatever replaced it.
 **And after pulling any update to the tools:**
 
 ```
-python3 tools/template_drift.py --wiki wiki
+python3 tools/template_drift.py
 ```
 
 🔴 **`/career-init` copies `templates/` into `wiki/` once and nothing ever revisits it**, and

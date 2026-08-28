@@ -8,7 +8,7 @@ description: Interview the user about what they actually do at work, and file th
 ## 🔴 Run this before the first question, and before any question you are unsure about
 
 ```
-python3 tools/known.py "<the thing>" --wiki wiki
+python3 tools/known.py "<the thing>"
 ```
 
 **Every question has a cost. A question the user has already answered has a much larger one** — it tells

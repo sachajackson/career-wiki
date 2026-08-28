@@ -240,7 +240,7 @@ getting a considered answer rather than a documented process.
 **This is not advice. It is a precondition, and it exists because the alternative has failed three times.**
 
 ```
-python3 tools/known.py "<the thing>" --wiki wiki
+python3 tools/known.py "<the thing>"
 ```
 
 🔴 **Searching for evidence of something and finding nothing returns the same empty result whether it was
@@ -439,7 +439,7 @@ employer · Withdrew · Declined · Closed · Vetoed · Not applied.**
 deterministic check.** Not at the end of the session. Not before delivery. **On every write.**
 
 ```bash
-python3 tools/verify.py "<artefact>" --config "<its application.json>" --wiki wiki --coverage
+python3 tools/verify.py "<artefact>" --config "<its application.json>" --coverage
 ```
 
 **A hook enforces this.** `.claude/hooks/verify-artefact.sh` fires on every `Write` or `Edit` inside an

@@ -82,7 +82,7 @@ correct is the applicant's call, not yours.
 
 ```bash
 pdftotext -layout "<the CV>.pdf" - | python3 tools/verify.py - \
-    --wiki wiki --employer "<Employer>" --employers "<all past employers, comma separated>" \
+    --employer "<Employer>" --employers "<all past employers, comma separated>" \
     --ban "<anything the cover letter concedes>" --spelling us|uk
 ```
 

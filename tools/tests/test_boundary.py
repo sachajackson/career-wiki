@@ -279,6 +279,39 @@ class NoToolNamesAFileThatMoved(unittest.TestCase):
                             r"was removed|does not exist|no more|~~|moved to|was passed|used to", re.I)
     BARE = ("employers.example.json", "search.example.json", "review.example.json")
 
+    # 🔴 A DOCUMENTED COMMAND IS A CONTROL, AND FOUR OF THEM WERE DEAD.
+    # `--wiki wiki` appeared in four SKILL.md files and SCHEMA.md, pointing at a
+    # folder that moved to vault/wiki. Every tool involved defaults that argument
+    # to paths.WIKI and was correct; the documentation overrode a correct default
+    # with a literal. One of them was the interview skill's duplicate-question
+    # guard -- instructed in bold, before the first question, returning
+    # `known: no wiki at wiki` for as long as it said so.
+    VAULT_FOLDERS = ("wiki", "roles", "postings", "sources", "companies",
+                     "applications", "state", "settings")
+
+    def test_no_documented_command_names_a_bare_vault_folder(self):
+        offenders = []
+        for base, dirs, files in os.walk(ROOT):
+            dirs[:] = [d for d in dirs if d not in (".git", "__pycache__", "vault", "tests")]
+            for f in files:
+                if not f.endswith(".md"):
+                    continue
+                path = os.path.join(base, f)
+                with open(path, encoding="utf-8", errors="ignore") as fh:
+                    text = fh.read()
+                for block in re.findall(r"```(?:bash|sh)?\n(.*?)```", text, re.S):
+                    for line in block.split("\n"):
+                        line = line.strip()
+                        if not line.startswith("python3 tools/"):
+                            continue
+                        for tok in re.findall(r"(?<!\S)(?:--wiki\s+)?([A-Za-z][\w.-]*)(?!\S)", line):
+                            if tok in self.VAULT_FOLDERS:
+                                offenders.append(f"{os.path.relpath(path, ROOT)}: {tok!r} in {line[:60]}")
+        self.assertEqual(sorted(set(offenders)), [],
+                         "a documented command names a vault folder as if it were at the repo "
+                         "root. These tools default to paths.WIKI — drop the argument: "
+                         + str(sorted(set(offenders))))
+
     def test_no_user_facing_file_names_a_path_that_moved(self):
         offenders = []
         for base, dirs, files in os.walk(ROOT):

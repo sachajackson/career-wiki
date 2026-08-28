@@ -283,7 +283,7 @@ Ask: what is the first bullet of the current role? That single choice is the app
 ## Step 2.5 — check what you are about to leave out
 
 ```bash
-python3 tools/verify.py <a recent CV>.txt --wiki wiki --coverage --posting <this posting>.txt
+python3 tools/verify.py <a recent CV>.txt --coverage --posting <this posting>.txt
 ```
 
 **Run this while choosing the angle, not after writing.** With `--posting` it reads three things — the
