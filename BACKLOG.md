@@ -1419,9 +1419,21 @@ hiding one. **A duplicate is visible; a wrongly merged role is not.**
 
 ---
 
-### 🔴 Settle the budget-ownership question once, instead of seven times
+### ✅ Settle the budget-ownership question once, instead of seven times — DONE 2026-08-28
 
-**Status: raised 2026-08-26, after the seventh occurrence.**
+**Status: raised 2026-08-26 after the seventh occurrence. Settled 2026-08-28** in one conversation,
+written to `vault/wiki/Budget and Commercial Scope.md`, and the framework's standing-gaps table now
+points there instead of restating the binary.
+
+🔴 **The finding that made it worth doing: the prior record was true and misleading.** *"Budget / P&L
+ownership — confirmed absent"* had survived two reconfirmations. **The budget in that organisation is
+denominated in headcount rather than money** — so he builds the case for it, produces the estimates
+that become it, and decides its shape, while correctly answering *no* to every question about owning
+one. **A confirmed-absent gap is not a finished one.**
+
+🟢 **What it changed:** not the seven roles — a bank asking for accountability for budgets still means
+money. It changed which REQUIREMENTS he clears outright, because *capacity planning* and *resource
+planning* had been conceded alongside budget ownership for arriving in the same sentence.
 
 **Seven roles have now been decided by the same gap** — Citi Custody, Ingenio Global, AXA XL, EPAM, Slalom,
 Mastercard VP and Mastercard Disputes. Each was scored, written up and reasoned about independently, and
