@@ -323,6 +323,35 @@ posting contradicts itself — a "reasonable technical fluency" overview against
 minimums. Naming the gap forces the hiring manager to decide which role they are recruiting for, which is
 the question that decides the application anyway. It is also the only version that survives an interview.
 
+### 🟡 The closing paragraph — offer the repo link, or do not, but decide it ONCE
+
+**Read `repo_link_in_cover_letter` from `vault/settings/profile.json`.** Values are `ask`, `always`,
+`never`; **absent means `ask`**.
+
+🔴 **On `ask`, ask — as plain text, once, and record the answer to that file.** Re-deciding it every
+application is how it ends up added silently, and it must never be added silently.
+
+**What it is:** one line in the closing offering a link to the repository, so a hiring manager can see the
+*process* rather than only its output. **For a technical or AI-adjacent role it is a strong
+differentiator** — the hard thing to prove in that market is having built and governed something rather
+than talked about it.
+
+| | |
+|---|---|
+| 🔴 **Never publish a score** | A bare number means nothing to a reader, and *"DELIVER 4/5"* invites *"so what is the missing point?"* |
+| 🟢 **The requirement count works as prose** | *"Nine of your twelve outright, two partially, one not at all"* proves the posting was read |
+| 🟡 **It belongs in the closing, not the opening** | The first reader is usually a recruiter or an ATS, and links are not clicked at that stage |
+| 🔴 **It advertises that the application is AI-assisted** | For most technical roles that helps. **Say so when asking** — it is the part the user is actually deciding |
+| 🔴 **The framework also scores the employer** | A reader who follows the link will find that. Do not offer it anywhere the user would not want that read |
+
+🟢 **Even on `always`, skip a role where it would read as odd.** Say which way it leans and why; the
+decision is the user's.
+
+**The wording that worked, offered rather than asserted:**
+
+> *"If it is of interest, the process I used to assess this role, including the requirement-by-requirement
+> scoring, is open source at …"*
+
 ## Step 5 — the ATS pack
 
 **Recruiters search structured fields, not attachment contents.** A form filled in thinly wastes the
