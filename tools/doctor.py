@@ -466,6 +466,18 @@ def check_oracle_names():
             cfg = json.load(fh)
     except (OSError, ValueError):
         return OPTIONAL, "search.json unreadable — reported by the search check"
+    # 🔴 A configured Oracle employer usually does NOT appear in search.json's
+    # oracle.employers. It arrives from `watch`, which registry.resolve() expands
+    # against the shipped ATS list -- which is what the radar itself does. Reading
+    # the raw file reported "no Oracle employers configured" while two tenants
+    # were being fetched, so the naming check never ran on the config in use.
+    here = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, os.path.join(here, "radar"))
+    try:
+        import registry as _reg
+        cfg, _ = _reg.resolve(dict(cfg))
+    except Exception:
+        pass                              # fall back to the file as written
     oracle = cfg.get("oracle") or {}
     sites = [e for e in (oracle.get("employers") or []) if isinstance(e, dict)]
     if not sites:

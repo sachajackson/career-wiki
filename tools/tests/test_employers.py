@@ -340,8 +340,8 @@ class ARouteCanComeFromTheRegistry(unittest.TestCase):
 
     `sources_check.py` printed, three lines apart:
 
-        watchlist: 0 employer(s) routed, 2 with NO ROUTE: SS&C Technologies, State Street
-        OK  workday  ... ssctech (343 open) ... statestreet (1384 open)
+        watchlist: 0 employer(s) routed, 2 with NO ROUTE: <two employers>
+        OK  workday  ... <tenant> (343 open) ... <tenant> (1384 open)
 
     Both were computed correctly and they disagree. `registry.resolve()` writes a
     route into the ADAPTER config and records the employer in that adapter's
