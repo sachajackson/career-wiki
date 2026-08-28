@@ -34,6 +34,7 @@ You never write the wiki. You answer questions and make the decisions.
 | **[DISCLAIMER.md](docs/DISCLAIMER.md)** | What it cannot do, and what it will decline to do |
 | **[LESSONS.md](docs/LESSONS.md)** | **Rules learned by shipping the opposite** — kept with the failure that taught each one, so a later change does not quietly reverse it |
 | **[BACKLOG.md](BACKLOG.md)** | **Future work only.** What does not work yet |
+| **[RUNNING.md](docs/RUNNING.md)** | **How to run each command, and what to have ready** |
 | **[SHIPPED.md](docs/SHIPPED.md)** | What was built, and what was wrong before it existed |
 | **[DESIGN.md](docs/DESIGN.md)** | How the parts that needed a decision actually work |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Using it and developing it, in the same clone |
@@ -78,10 +79,18 @@ an evening.
 
 ## What it actually does
 
-**Nine commands**, run inside Claude Code. Each is a *skill* — a set of instructions the agent follows. 🔴 **Instructions are not the interesting half** — see [The checks](#the-checks-and-why-they-exist) below.
+**Nine commands**, run inside Claude Code. Each is a *skill* — a set of instructions the agent
+follows. 🔴 **Instructions are not the interesting half** — see [The checks](#the-checks-and-why-they-exist)
+below.
 
-**The system covers everything up to the submit button and stops there.** Interview preparation, offers
-and negotiation are not in it yet.
+🔴 **[`docs/RUNNING.md`](docs/RUNNING.md) is how to run each one** — what to type, what to have
+ready before you type it, and a worked example of each. **The second part is what decides whether a run
+is any good**: none of these takes arguments, so what they need is context, and most of it comes from the
+conversation or from your vault.
+
+🟡 **You never have to remember an order either.** `python3 tools/runbook.py` prints the sequences —
+`radar`, `application`, `outcome`, `update`, `init`, `migrate` — each step with its command and what goes
+wrong when it is skipped.
 
 ### `/career-init` — run once, first
 
