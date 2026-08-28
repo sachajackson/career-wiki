@@ -1135,3 +1135,34 @@ shipped files and never opens a vault**, and there is a test asserting those thr
 the shipped list.
 
 🟡 An operation whose prefix is not its name is declared, not guessed: `market standards` → `research`.
+
+
+---
+
+### 🟡 Employer research — two details still outstanding
+
+🟢 **Built 2026-08-24 as `build-application` Step 0.4.** The record and the original design are in
+[`docs/SHIPPED.md`](docs/SHIPPED.md). **Two things from that design did not make it:**
+
+- **`stale_after` on a company page.** Financial results age in months, and a reused company page is
+  exactly the artefact that rots invisibly. **Twelve weeks is the sensible default.**
+- **A scope rule.** Employer due diligence has a natural size and **padding it produces noise that gets
+  skimmed**, which is worse than a shorter page that gets read.
+
+## ✅ CLOSED 2026-08-28 — and one of the two is now a check
+
+**`stale_after`, twelve weeks.** Instructed in `build-application` Step 0.4, **and enforced by `doctor`**,
+because instructing it was what failed the first time: **five of seven company pages had none.**
+
+🔴 **The reason it needed a check rather than a reminder: `/career-lint` reports an EXPIRED page and
+cannot report one that never claimed an expiry.** An undated research page is permanently fresh and
+permanently wrong — the worst of both, and completely invisible.
+
+🟡 **The false-positive case is the interesting half.** `vault/companies/` also holds the user's OWN
+employers — where they worked, not who they investigated. Four of the seven are that, and demanding an
+expiry on them would be asking somebody to date their own career. **Scoped by tag, and there is a test
+for it.**
+
+**The scope rule** is prose in the skill, and honestly so — it is a judgement, not a threshold. It carries
+the measurement (**2,350–4,500 words, 10–15 sections across three real pages**) and the test that decides
+inclusion: *would this change whether he applies, what he asks on the call, or what he writes?*

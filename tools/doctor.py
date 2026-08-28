@@ -19,7 +19,7 @@ and cannot tell you an endpoint answers -- `sources_check.py` does that and says
 so. And OPTIONAL never means broken: most of this is optional, and reporting an
 unconfigured thing as a fault sends people to fix something they never wanted.
 """
-import glob, json, os, re, subprocess, sys
+import datetime, glob, json, os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # Seven paths were pinned in this file, which made it the place a vault move
@@ -271,6 +271,55 @@ def check_gaps():
     pressing = [r["gap"] for r in rows if _g.demands(r["where"]) >= 3]
     note = (f"; {len(pressing)} demanded 3+ times and worth deciding once" if pressing else "")
     return OK, f"all {len(rows)} closed question(s) findable, no page reopens one{note}"
+
+
+RESEARCH_TAG = re.compile(r"^tags:.*\b(company-research|employer-due-diligence|due-diligence)\b",
+                          re.I | re.M)
+STALE_AFTER = re.compile(r"^stale_after:\s*(\d{4}-\d{2}-\d{2})", re.M)
+
+
+def check_company_research():
+    """🔴 A company page is written once and REUSED, which makes it the artefact
+    that rots invisibly.
+
+    Financial results age in months. A page saying "revenue down 4%, no
+    redundancies announced" is a liability six months later and nothing about it
+    looks stale. 🔴 **`/career-lint` reports an EXPIRED page; it cannot report one
+    that never claimed an expiry** — so an undated research page is permanently
+    fresh and permanently wrong.
+
+    🟡 Scoped to research pages by their tags. `vault/companies/` also holds the
+    user's OWN employers — where they worked, not who they investigated — and
+    those are biography rather than a dated claim about a market.
+    """
+    d = os.path.join(paths.VAULT, "companies")
+    if not os.path.isdir(d):
+        return OPTIONAL, "no company research yet"
+    undated, expired, checked = [], [], 0
+    today = datetime.date.today().isoformat()
+    for f in sorted(glob.glob(os.path.join(d, "*.md"))):
+        try:
+            with open(f, encoding="utf-8") as fh:
+                head = fh.read(1200)
+        except OSError:
+            continue
+        if not RESEARCH_TAG.search(head):
+            continue
+        checked += 1
+        found = STALE_AFTER.search(head)
+        if not found:
+            undated.append(os.path.basename(f)[:-3])
+        elif found.group(1) < today:
+            expired.append(f"{os.path.basename(f)[:-3]} ({found.group(1)})")
+    if not checked:
+        return OPTIONAL, "no employer research pages yet"
+    if undated:
+        return MISSING, (f"{len(undated)} research page(s) carry no `stale_after`, so nothing can "
+                         f"ever report them as out of date: {', '.join(undated[:3])}")
+    if expired:
+        return WARN, (f"{len(expired)} research page(s) have expired and are being reused: "
+                      f"{', '.join(expired[:3])}")
+    return OK, f"all {checked} employer research page(s) carry an unexpired `stale_after`"
 
 
 def check_sources():
@@ -619,6 +668,7 @@ CHECKS = [
     ("oracle names", check_oracle_names),
     ("settings leak", check_settings_not_shipped),
     ("closed questions", check_gaps),
+    ("employer research", check_company_research),
     ("registry", check_registry),
     ("your CV", check_sources),
     ("your wiki", check_wiki),

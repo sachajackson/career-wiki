@@ -86,6 +86,29 @@ actually is**; a question about an office is often really a question about an ac
 
 **If the research changes the score, say so and rescore before continuing.**
 
+### 🔴 Two things that keep the page usable — both were designed and both got missed
+
+**1. Give it a `stale_after`, twelve weeks out.**
+
+**Financial results age in months, and a company page is written once and REUSED** — which makes it
+exactly the artefact that rots invisibly. A page saying *"revenue down 4%, no redundancies announced"* is
+a liability six months later, and nothing about it looks stale. **`/career-lint` reports an expired page;
+it cannot report a page that never claimed an expiry.**
+
+🟡 Twelve weeks is one reporting quarter, which is the interval at which the underlying facts actually
+change.
+
+**2. 🔴 Stop at what changes a decision. Due diligence has a natural size.**
+
+**Measured on three real pages: 2,350–4,500 words, 10–15 sections.** That is the shape. **Padding past it
+produces noise that gets skimmed** — and a page that gets skimmed is worse than a shorter one that gets
+read, because it was expensive and it still did not inform anything.
+
+**The test for including something: would this change whether he applies, what he asks on the call, or
+what he writes?** Company history, product catalogues and press-release summaries fail it. **Redundancies,
+the pay signal, whether the division is the growth engine or the drag, and what the local office actually
+is** all pass it.
+
 ### 🟢 Two more sections on every company page, because both get asked in every process
 
 **Both are cheap once the research exists, and neither can be written without it.**

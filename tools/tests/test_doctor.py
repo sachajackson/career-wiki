@@ -561,3 +561,62 @@ class TheUpdatableCheck(unittest.TestCase):
         doctor.ROOT = d
         self.addCleanup(setattr, doctor, "ROOT", saved)
         self.assertEqual(doctor.check_updatable()[0], doctor.OPTIONAL)
+
+
+class TheCompanyResearchExpiry(unittest.TestCase):
+    """🔴 A company page is written once and REUSED, which makes it the artefact
+    that rots invisibly. Financial results age in months; a page saying "revenue
+    down 4%, no redundancies announced" is a liability six months later and
+    nothing about it looks stale.
+
+    🔴 `/career-lint` reports an EXPIRED page. It cannot report one that never
+    claimed an expiry — so an undated research page is permanently fresh and
+    permanently wrong. Five of seven had no `stale_after` when this was written,
+    and the skill that creates them never asked for one.
+    """
+
+    def _vault(self, pages):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        saved = doctor.paths.VAULT
+        self.addCleanup(doctor.paths.use, saved)
+        os.makedirs(os.path.join(d, "companies"))
+        for name, body in pages.items():
+            with open(os.path.join(d, "companies", f"{name}.md"), "w", encoding="utf-8") as fh:
+                fh.write(body)
+        doctor.paths.use(d)
+        return doctor.check_company_research()
+
+    RESEARCH = ("---\ntype: entity\ntags: [career, company-research, due-diligence]\n"
+                "stale_after: 2099-01-01\nstatus: active\n---\n\n# Acme\n")
+
+    def test_a_dated_research_page_passes(self):
+        self.assertEqual(self._vault({"Acme - Company Research": self.RESEARCH})[0], doctor.OK)
+
+    def test_an_undated_research_page_is_caught(self):
+        body = self.RESEARCH.replace("stale_after: 2099-01-01\n", "")
+        v, detail = self._vault({"Acme - Company Research": body})
+        self.assertEqual(v, doctor.MISSING)
+        self.assertIn("Acme", detail)
+
+    def test_an_expired_page_is_reported_but_not_as_missing(self):
+        """🟡 Expired is a different state from never-dated: one is research that
+        needs refreshing, the other is research nothing can ever chase."""
+        body = self.RESEARCH.replace("2099-01-01", "2020-01-01")
+        self.assertEqual(self._vault({"Acme - Company Research": body})[0], doctor.WARN)
+
+    def test_the_users_own_employers_are_not_research_pages(self):
+        """🔴 THE FALSE-POSITIVE CASE. `vault/companies/` also holds where the
+        user WORKED — biography, not a dated claim about a market. Four of the
+        seven pages are that, and demanding an expiry on them would be asking
+        somebody to date their own career."""
+        own = ("---\ntype: entity\ntags: [career, employer, acme]\nstatus: active\n---\n\n# Acme\n")
+        self.assertEqual(self._vault({"Acme": own})[0], doctor.OPTIONAL)
+
+    def test_a_vault_with_no_companies_folder_is_not_a_fault(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        saved = doctor.paths.VAULT
+        self.addCleanup(doctor.paths.use, saved)
+        doctor.paths.use(d)
+        self.assertEqual(doctor.check_company_research()[0], doctor.OPTIONAL)

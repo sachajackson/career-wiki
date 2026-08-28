@@ -222,16 +222,6 @@ human-verified claims only would be the single highest-value addition.**
 Negotiation is second: the framework already holds the salary floor, the anchors and the priced-vs-hard
 veto distinction, so **comparing two offers is a scoring problem it can already do.**
 
-### 🟡 Employer research — two details still outstanding
-
-🟢 **Built 2026-08-24 as `build-application` Step 0.4.** The record and the original design are in
-[`docs/SHIPPED.md`](docs/SHIPPED.md). **Two things from that design did not make it:**
-
-- **`stale_after` on a company page.** Financial results age in months, and a reused company page is
-  exactly the artefact that rots invisibly. **Twelve weeks is the sensible default.**
-- **A scope rule.** Employer due diligence has a natural size and **padding it produces noise that gets
-  skimmed**, which is worse than a shorter page that gets read.
-
 ### 🟢 Email alerts as a universal source — designed, not built
 
 **The best idea for source coverage so far, and it comes from a user rather than the design.**
