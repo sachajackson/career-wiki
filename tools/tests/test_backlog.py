@@ -104,3 +104,50 @@ class AHeadingMustAgreeWithItsBody(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TheBacklogIsFutureWorkOnly(unittest.TestCase):
+    """🔴 The charter added 2026-08-28, made executable — because the two rules
+    above are about a backlog that LIES, and this is about one that HOARDS.
+
+    The file had reached 1,917 lines and about 500 of them were future work. The
+    rest was finished work, functional specifications and settled lessons, all
+    of it accumulating at roughly 250 lines a day for one banal reason: **a
+    backlog is the file that happens to be open while the work is happening.**
+
+    🔴 A lesson in a backlog reads as a task. A design reads as a proposal. And
+    real outstanding items sit buried under both.
+
+    🟢 The destinations exist now — `docs/SHIPPED.md`, `docs/DESIGN.md`,
+    `docs/LESSONS.md` — so this is cheap to obey and was not before.
+
+    🟡 Where a job is half done, the finished half moves and only the remainder
+    stays. A stub POINTING at the record is fine; the record itself is not.
+    """
+
+    # A heading claiming completion. `docs/SHIPPED.md` is where these belong.
+    DONE = re.compile(r"✅|\b(FIXED|BUILT|SHIPPED|DONE)\b")
+
+    def headings(self):
+        return [l for l in open(BACKLOG, encoding="utf-8").read().split("\n")
+                if re.match(r"^#{2,3} ", l)]
+
+    def test_no_heading_announces_completed_work(self):
+        bad = [h for h in self.headings() if self.DONE.search(h)]
+        self.assertEqual(bad, [], "a completed item is still in the backlog. Move the record to "
+                                  "docs/SHIPPED.md and leave only what is outstanding: " + str(bad))
+
+    def test_the_charter_names_where_the_other_kinds_go(self):
+        """🔴 A rule with nowhere to put the thing is a rule that gets ignored.
+        The file must tell a reader the destination, not just the prohibition."""
+        text = open(BACKLOG, encoding="utf-8").read()
+        for dest in ("docs/SHIPPED.md", "docs/DESIGN.md", "docs/LESSONS.md"):
+            self.assertIn(dest, text, f"the charter does not name {dest}")
+
+    def test_a_pointer_to_a_record_is_still_allowed(self):
+        """🟡 The false-positive direction, and it matters: half-finished items
+        must stay, and they need to say what was already done. Only HEADINGS are
+        checked, so a body may freely reference the record."""
+        body_mentions = [l for l in open(BACKLOG, encoding="utf-8").read().split("\n")
+                         if "docs/SHIPPED.md" in l and not l.startswith("#")]
+        self.assertTrue(body_mentions, "no entry points at its own record — expected at least one")

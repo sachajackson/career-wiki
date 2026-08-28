@@ -265,6 +265,11 @@ class NoToolNamesAFileThatMoved(unittest.TestCase):
     # `templates/settings/employers.example.json` tells the reader where it is;
     # a bare `employers.example.json` sends them looking in the wrong folder.
     GONE = ("config.json", "sync-to-vault")
+    # 🟢 A mention that says the thing is gone is the CORRECT use, and the old
+    # whole-file escape ("was deleted on" appears anywhere) exempted every other
+    # mention in the same document along with it. Per line, and by meaning.
+    HISTORICAL = re.compile(r"no longer|was deleted|were deleted|used to be|has been removed|"
+                            r"was removed|does not exist|no more|~~", re.I)
     BARE = ("employers.example.json", "search.example.json", "review.example.json")
 
     def test_no_user_facing_file_names_a_path_that_moved(self):
@@ -274,16 +279,31 @@ class NoToolNamesAFileThatMoved(unittest.TestCase):
             for f in files:
                 if not f.endswith((".py", ".md", ".sh", ".json")):
                     continue
-                # BACKLOG.md is a dated record of what was done; rewriting the
-                # history to match today's paths would make it a worse record.
-                if f in ("BACKLOG.md",):
-                    continue
+                # 🔴 BACKLOG.md WAS EXEMPT HERE, on the reasoning that it is "a
+                # dated record of what was done, and rewriting the history to
+                # match today's paths would make it a worse record." That was
+                # true, and it stopped being true on 2026-08-28 when the dated
+                # records moved to docs/SHIPPED.md and the backlog became future
+                # work only. Three separate sweeps out of that file each found
+                # rot the moment the text landed somewhere checks could see it.
+                #
+                # 🟢 The historical mention it was protecting is handled properly
+                # below instead: PER LINE, and by recognising the framing that
+                # makes a mention historical rather than by exempting a file.
                 path = os.path.join(base, f)
                 with open(path, encoding="utf-8", errors="ignore") as fh:
                     text = fh.read()
+                # 🔴 PARAGRAPHS, NOT LINES, and this is the fourth time that
+                # distinction has mattered this week. Prose here wraps at ~100
+                # characters, so "no longer in a tracked" and the token it
+                # qualifies routinely land on different lines. Line by line, the
+                # qualifier is invisible and a correct historical mention is
+                # reported as rot.
                 for token in self.GONE:
-                    if token in text and "was deleted on" not in text:
-                        offenders.append(f"{os.path.relpath(path, ROOT)}: {token}")
+                    for para in re.split(r"\n\s*\n", text):
+                        if token in para and not self.HISTORICAL.search(para):
+                            offenders.append(f"{os.path.relpath(path, ROOT)}: {token}")
+                            break
                 for token in self.BARE:
                     for line in text.splitlines():
                         if token in line and f"settings/{token}" not in line:

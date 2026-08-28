@@ -824,3 +824,57 @@ ordinary practice; **publishing it is not.** `wiki/` is gitignored, which alread
 that starts archiving postings should say so out loud rather than leave it implicit.
 
 ---
+
+
+---
+
+### 🟡 No application tracker — MOSTLY BUILT, corrected 2026-08-28
+
+**This entry said status lives in the scoring table "with no dates, no next action, and no follow-up
+cadence", and that a user with five live applications "has no prompt to chase anything". Two thirds of
+that is no longer true**, and it was recommended as work before anyone checked.
+
+🟢 **`tools/outcomes.py` built the cadence.** It reads submitted dates out of the table, asks after **7**
+days and records silence as an outcome after **21**, and it is the `outcomes` stage of `pipeline.py` — so
+a run is not finished while something is owed. On the vault it was written against it currently names
+three applications at 7 days.
+
+🔴 **What is still missing is the narrow part: a next action per application.** *"Chase"* and *"prepare
+for a call on Thursday"* are different states and the table cannot tell them apart.
+
+🟡 **Kept as a lesson, not just an item.** This is the second backlog entry to be recommended after the
+thing it describes was built — which is why the rule is *check a backlog entry still applies before
+acting on it*, and why entries now carry the date they were last checked.
+
+
+---
+
+### 🟡 Everything after the submit button — FIRST PIECE BUILT
+
+**Status: the interview pack ships 2026-08-25 as `build-application` Step 6.2. The rest of this entry
+stands.**
+
+🟢 **Written while the posting is open and the research is fresh, not the night before**: four STAR
+stories chosen against this employer's own requirements, **each one taken from a 🟢 row in the REQS tally
+so the citation is already there**; a Reflection line, because it is the half candidates skip and the half
+that separates a rehearsed anecdote from someone who has thought about it; **the gap answer drafted before
+it is needed**, since an improvised answer becomes a defence and a prepared one becomes a position;
+questions pulled from the role page's own open questions; and a negotiation position **drafted only for a
+role that clears the bar**, from the wiki's own numbers rather than from imagination.
+
+🔴 **Two rules in it are there to stop a specific failure.** *"One story per requirement, not one story
+reused"* — because the same incident told to three interviewers who compare notes is worse than three
+weaker ones. And **never invent a competing offer**: it is the commonest negotiation advice online, it is
+checkable, and a floor with a reason behind it does the same work and is true.
+
+🟡 **What remains, and it is most of the entry:** outcomes after the interview, the decision itself, the
+first ninety days, and the fact that **a rejection with a reason is worth more than a silent success** and
+nothing yet asks for one.
+
+
+---
+
+### ✅ The posting is the evidence, and it disappears — BUILT 2026-08-28
+
+🟢 **`tools/radar/archive_posting.py`** fetches the employer's own copy and archives it; runbook step 7
+names the command. **Record in [`docs/SHIPPED.md`](docs/SHIPPED.md).**

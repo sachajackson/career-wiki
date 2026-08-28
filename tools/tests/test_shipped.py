@@ -193,7 +193,10 @@ class TheDocsAreAMapNotAPile(unittest.TestCase):
         for base, dirs, files in os.walk(ROOT):
             dirs[:] = [d for d in dirs if d not in (".git", "__pycache__", "vault", "tests")]
             for f in files:
-                if not f.endswith(".md") or f == "BACKLOG.md":
+                # 🟢 BACKLOG.md was exempt here too, for the same expired
+                # reason. It is future work now, and future work has no
+                # business describing a scoring model replaced in August.
+                if not f.endswith(".md"):
                     continue
                 path = os.path.join(base, f)
                 with open(path, encoding="utf-8") as fh:
