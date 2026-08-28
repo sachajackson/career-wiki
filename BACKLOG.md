@@ -113,139 +113,25 @@ help it. That note is the real backlog.**
 
 ### 3. Then, in this order
 
-🟢 **The first two items on this list were done on 2026-08-25** — the seven-day window is now
-`--all-open`, and the radar's number is now `HIGH`/`MED`/`LOW`. Both entries are marked ✅ below and kept
-for the reasoning. **What follows is what is next.**
+**Rewritten 2026-08-28.** The previous version listed two items as done and pointed at entries marked ✅
+further down — which had all moved to [`docs/SHIPPED.md`](docs/SHIPPED.md), so it was directing a reader
+at nothing.
 
-| | Why first |
+| | Why here |
 |---|---|
-| 🔴 **Ask the user for their actual lists** | ✅ The mechanism is built and empty. **`employers.json` is the user's to write and nobody has been asked** — which employers they want watched, which they will not work for, and on what basis |
-| **Email alerts as a universal source** | Designed below, not built. Inverts the problem: *"we cannot scrape X"* becomes *"anything that will email us is a source"*, and it works with the sites' cooperation rather than against their terms |
-| **Everything after the submit button** | The system stops at submission and the process does not. **Interview prep is the largest piece and the wiki already holds what it needs** |
-| 🔴 **Nothing has been run end-to-end from a cold start** | `/career-init` on an empty repo has never been exercised, and the top of this file says it should be the first thing done |
+| 🔴 **1. Republish the repository** | Above. **Blocks the public launch and nothing else on this page outranks it** |
+| 🔴 **2. Decide the cover-letter repo link** | Coupled to the item above: a letter already sent carries the URL, so the recreate has to keep the name **and** the policy has to be settled before the next application repeats it |
+| **3. A browser dashboard** | The largest open piece, and the one the user asked for. ~96 scored rows that nothing can sort |
+| **4. `Migrate` has no log prefix** | Tiny, and the failure is silent |
+| **5. A next action per application** | Small. The cadence is built; the state is not |
+| **6. Employer research — two details** | Small. `stale_after` and a scope rule |
+| **7. Everything after the submit button** | Large and deliberately scoped out so far |
+| **8. Email alerts as a universal source** | Designed, not built. Needs a dedicated account before any code |
+| 🔴 **9. Nothing has been run end-to-end from a cold start** | Last only because it is a session of work, not a change. **It is the one that will find things nothing else can** |
 
-🟢 **Leave the rest until the cold run says which of them matter.**
-
-🔴 **If the work is the user/system boundary — moving user data out of `tools/` — read
-[the path inventory](#-read-this-before-moving-the-user-root--the-paths-that-are-load-bearing) FIRST.**
-It is near the bottom of this file, beside the entry it supersedes, and it lists every place a path is
-pinned and to what. **This pointer exists because a handover naturally sends the next session to these
-first two sections, and an inventory 1,300 lines further down is one nobody reaches** — which is the same
-shape as everything else on this page: the note existed, and existing is not the same as being found.
-
----
+🟡 **A user guide is deliberately absent from this order** — see its entry for the trigger that starts it.
 
 ## 🔴 Defects — things that behave wrongly
-
-### The defect it was built for
-
-**Status: found 2026-08-24, after the system asked the user a question its own knowledge base had already
-closed with the words "stop asking."**
-
-A role's requirements named a capability. The system searched the knowledge base for evidence of it, found
-none, marked it **"unknown rather than absent"**, and put the question to the user.
-
-🔴 **The knowledge base had resolved it three days earlier, in two separate places, as a confirmed
-absence** — with an explicit instruction not to raise it again.
-
-**The mechanism is general and will recur in any wiki-backed system.** Searching for *evidence of X* and
-finding nothing returns the same empty result whether X was never investigated or X was investigated and
-found not to hold. **They mean opposite things**: one is a question, the other is an input.
-
-🔴 **The cost is not just a wasted question.** A confirmed absence is a *scored fact* — it should lower a
-capability score at assessment time. Treating it as unknown leaves the score optimistic and defers the
-correction to whenever someone happens to ask.
-
-**Fix:**
-
-1. **Maintain an explicit standing-gaps list**: capability, status (confirmed absent / unknown / present),
-   the date it was resolved, where it has been demanded, and **the substitute claim if one exists**.
-   Cheap to maintain, and it is the only structure that makes "confirmed absent" searchable.
-2. **Before asking the user anything, search for the resolution, not the evidence.** Terms like *"stop
-   asking"*, *"resolved"*, *"confirmed"*, *"none"*, *"does not"* — the answer is usually phrased as a
-   negation, which is exactly what an evidence search misses.
-3. 🔴 **Never surface a question the knowledge base has marked closed.** If a page says stop asking, that is
-   a hard instruction, and re-asking costs credibility that the whole system depends on.
-4. 🟢 **Count how many times each gap has been demanded across postings.** Two is a coincidence, three is a
-   decision to put to the user — *is this worth going and acquiring?* — asked **once**, rather than
-   conceded repeatedly in cover letters.
-
----
-
-### 🟡 Near-miss facts need an explicit "does not apply" note
-
-**Status: found 2026-08-24. Related to the above but a distinct failure.**
-
-The user was asked whether he had ever commercialised internal tooling. He said no — **and the knowledge
-base contains a page about six years spent selling custom software to enterprise clients.**
-
-🔴 **On a keyword search that page looks like a direct contradiction.** It is not: that software was built
-to sell from the outset, and the requirement was about productising something built for internal use.
-**Adjacent, and different.**
-
-🔴 **Left unmarked, a future pass will "discover" that page and either re-ask the question or, worse, write
-the stretched claim into an application** — where it dies at the first follow-up question.
-
-**Fix:** when a user's answer conflicts on its face with existing content, **write the distinction onto the
-near-miss page itself**, not only onto the page where the question arose. The correction has to live where
-the next search will land.
-
-### 🟡 Example and template files are a leak vector — the seven are now one
-
-🔴 **The rules below were rules and not checks, and testing them found three gaps.** The original
-leak shape was replanted on 2026-08-28 — a real town, its county and a postal district — all lowercase — in
-`templates/settings/search.example.json` — and **it passed the entire suite.** The substance check
-matched only a PROPER NOUN, and a settings file's locations are conventionally lowercase. The job
-titles beside it were caught; **the geography, which is what actually leaked, was not.**
-
-🟢 **Closed: example settings values must now be `<placeholders>`, the repo's fiction, or one of 25
-listed technical identifiers.** Every one of those 25 was read before being listed, which is the
-point rather than a side effect. The original leak now fails the suite.
-
-🟢 **Closed: `doctor`'s `settings leak` check** covers what the suite structurally cannot — a public
-repo must not carry a denylist of its author's private details, so the comparison has to happen
-where the private data is. It reports employers from the user's own watch and avoid lists appearing
-in tracked files. 🔴 **The first draft scanned every settings value and reported 229 findings**,
-because a signal vocabulary is generic by design; scoped to employer names it reports 12.
-
-🟢 **Twelve became seven on 2026-08-28.** The excluded DIVISION — the one genuinely sensitive entry,
-because refusing to work somewhere is a fact about a person rather than about a company — is gone
-from every tracked file. `tools/radar/employers.py` and `tools/tests/test_employers.py` now carry
-the repo's own fiction, and the test still proves the bug it was written for: **a division posting
-under its own name escapes a parent-keyed exclusion**, which put 16 rows on a live shortlist.
-
-🔴 **Genericising it exposed a wrapping bug in my own edit**, and it is the third time this week: a
-line-by-line replacement left two occurrences intact because they wrapped across lines. **Sweep on
-the flattened text, not the raw lines.**
-
-🟢 **The seven were cleared on 2026-08-28.** Every one was avoidable: a test asserting that REAL
-organisations get flagged had named three actual employers to prove it, a registry fixture used a
-live entry, and two measurements named the board they were taken from. **All now fiction**, and the
-substring-collision test that needed two names sharing a prefix uses *Stateline Capital* and
-*Statesman Bank*.
-
-🟢 **The registry was settled on 2026-08-28 by seeding it.** It held 18 employers whose composition
-reflected who one person had looked up; it now holds **24**, and the added six — Airbnb, Coinbase,
-Duolingo, Pinterest, Spotify, Vercel — were chosen to be recognisable and unconnected to any one
-search. **Every endpoint answered and every canary was present** on a full `registry_check.py` run.
-
-🔴 **Every addition was verified BY CONTENT, never by name**, and one probe shows why that rule is
-not ceremony: `greenhouse/wise` answers with 21 roles and is **not Wise** — it belongs to *National
-Teachers Associates, a subsidiary of Horace Mann*. **A token guessed from a company name is a
-different company's board that looks identical from the outside**, and `add_employer.py` refuses to
-write one without a human saying so.
-
-🟡 **What seeding does and does not fix.** The three sensitive entries are still there — they are
-real ATS facts and removing them would break the coverage they provide. **What changed is the
-inference**: three names among 24 household ones read as a resource, where three among 18 read as
-somebody's shortlist. `doctor` still reports the count rather than excluding the file silently.
-
-🟡 **The old wording, kept because the reasoning still applies:** All name a WATCHED employer, in ATS-mapping
-code and in findings — `ats_registry.json` maps employers to their ATS and is contributed back
-deliberately, which is a public fact about a company. **Whether being seen to watch an employer
-matters is the user's call**, so the check WARNs and names files rather than gating.
-
----
 
 ## 🟡 Gaps — things the system does not do yet
 
@@ -291,60 +177,6 @@ and never recorded at all.**
 
 **That is the registry, already built, in the wrong shape.** It is the strongest argument that it should be
 one file.
-
----
-
-### 🟡 Taking an update: the code half works. The vault half is the gap
-
-**Status: re-measured 2026-08-26, and the original entry was wrong.** It was written on 2026-08-25 and
-claimed there was *no way* to take an update, resting on two premises that have both since evaporated:
-`sync-to-vault.sh` **no longer exists**, and the user's queries and geography are no longer in a tracked
-`config.json` — they are `vault/settings/search.json`, which is gitignored like everything else under
-`vault/`. **The ambiguous column that was "the whole problem" has mostly collapsed.**
-
-🔴 **So it was tested rather than argued about.** Clone the repo, rewind eight commits to simulate an old
-install, populate a vault, `git pull`:
-
-| | |
-|---|---|
-| Old install | 507 checks pass |
-| `git status` before pulling | **empty — the vault is invisible to git, as designed** |
-| `git pull` | exit 0 |
-| The vault afterwards | **untouched** |
-| After the update | 536 checks pass |
-
-**`git pull` is the update mechanism, and it works.** That half of the entry is closed.
-
-### 🔴 What is still open
-
-- 🟢 **The settings case is now generalised — `tools/settings_drift.py`, built 2026-08-26.** Verified on a
-  real pulled clone ten commits behind: it named the missing `linkedin` block and both missing location
-  lists, and exited 1. It found a genuine gap on its first run, too — `profile.json` shipped with no
-  example, so nobody cloning could discover the setting existed. **`doctor.py` and `settings_drift.py`
-  split the job**: drift says *your file is missing a key the system reads*, doctor says *this specific
-  absence will silently do nothing to you*.
-- ~~**A tuned `.claude/skills/` or `SCHEMA.md` is still clobbered by a pull**, silently.~~ 🔴 **TESTED
-  2026-08-28 AND IT IS NOT TRUE.** Cloned, rewound six commits, edited `SCHEMA.md` in the region the
-  update also changes, pulled. **git refuses and says so:** *"error: Your local changes to the following
-  files would be overwritten by merge: SCHEMA.md … Aborting."* A non-conflicting edit merges and
-  survives. **Nothing is silently clobbered, and this entry was wrong for three days.**
-
-  🔴 **But testing it found the real failure, which is the opposite one and IS quiet.** The pull ABORTS,
-  so nothing updates — and `git pull` is step 1 of `runbook.py update`, whose four remaining steps read
-  the code already on disk and all pass. **A user who does not read the git output concludes they are
-  current when they are several versions behind.**
-
-  🟢 **Built: `doctor`'s `updatable` check**, which reports tracked local modifications *before* the pull
-  and names the files. It makes no network call, so it says whether an update *could* land, never whether
-  one exists. **Third backlog entry this week that was fixed by testing its premise rather than its
-  claim.**
-- 🔴 **The rule from everywhere else on this page still applies: an update that silently drops a user's
-  change is the same class of failure as an ignore rule that silently drops a file.** It must fail loudly
-  and name what it could not merge.
-
-🟢 **`career-ops` is solving the same problem publicly** — *"[Umbrella] User/System boundary: make
-personalization legible and update-safe"* is their second-most-reacted issue, and their `update-system.mjs`
-has a **"SAFETY VIOLATION on pre-existing dirty user file"** guard. Worth watching for the skills case.
 
 ---
 
@@ -423,25 +255,6 @@ human-verified claims only would be the single highest-value addition.**
 
 Negotiation is second: the framework already holds the salary floor, the anchors and the priced-vs-hard
 veto distinction, so **comparing two offers is a scoring problem it can already do.**
-
-### Job search source coverage — CORRECTED 2026-08-25, this entry had gone stale
-
-🔴 **This said "only LinkedIn has been exercised" and that is no longer true**, which is the drift this
-file warns about: an entry that has gone stale sends work at a problem that no longer exists.
-
-| Source | Exercised? |
-|---|---|
-| **Workday** | 🟢 Verified against two live tenants, one of each hosting style |
-| **Oracle Cloud CX** | 🟢 Verified against three live tenants |
-| **Greenhouse** | 🟢 A real board resolved live via `sources_check` |
-| **LinkedIn** | 🟢 The original, and still the only one exercised at volume |
-| **Lever** | 🟡 Written and unit-tested; **no live board has been read** |
-| **Adzuna** | 🔴 **Still needs a real key and a real run.** The only remaining unexercised adapter that needs credentials |
-
-**The original entry follows.**
-
-The adapter architecture exists and Adzuna, Greenhouse and Lever are written. Indeed is confirmed unavailable — `401` on job pages, `403` on search, tested 2026-08-23.
-**Adzuna needs a real key and a real run before the adapter can be called working.**
 
 ### 🟡 Employer research — two details still outstanding
 

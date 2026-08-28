@@ -137,6 +137,38 @@ class TheBacklogIsFutureWorkOnly(unittest.TestCase):
         self.assertEqual(bad, [], "a completed item is still in the backlog. Move the record to "
                                   "docs/SHIPPED.md and leave only what is outstanding: " + str(bad))
 
+    def test_no_body_says_the_work_is_finished_while_the_heading_does_not(self):
+        """🔴 The heading rule caught nothing on 2026-08-28 while SIX finished
+        entries sat in the file, because none of their headings said so — one was
+        titled "The defect it was built for" and its body opened with the tool
+        that closed it.
+
+        🟡 A body may of course reference finished work: half-done items have to.
+        What it may not do is say the WHOLE entry is finished and stay here, so
+        this looks only at the opening paragraph, where an entry states its
+        status.
+        """
+        text = open(BACKLOG, encoding="utf-8").read()
+        settled = re.compile(r"\b(BUILT|FIXED|SHIPPED|DONE|CLOSED|SETTLED)\b|✅")
+        bad = []
+        for h, body in sections(text):
+            if self.DONE.search(h):
+                continue
+            opening = re.split(r"\n\s*\n", body.strip())[0] if body.strip() else ""
+            if not settled.search(opening):
+                continue
+            # 🟢 THE SIGNAL IS RELOCATION, NOT WORDING. The first version looked
+            # for words like "still" and "remaining" in the opening, and flagged
+            # the three entries doing exactly the right thing -- naming what was
+            # built and keeping only the remainder -- because their qualifier sat
+            # in the next sentence. An entry that has moved its record to
+            # SHIPPED.md has demonstrably done the split; one that declares
+            # itself finished and points nowhere has not.
+            if "docs/SHIPPED.md" not in body:
+                bad.append(h.strip()[:60])
+        self.assertEqual(bad, [], "an entry's opening says it is finished while its heading does "
+                                  "not. Move it to docs/SHIPPED.md: " + str(bad))
+
     def test_the_charter_names_where_the_other_kinds_go(self):
         """🔴 A rule with nowhere to put the thing is a rule that gets ignored.
         The file must tell a reader the destination, not just the prohibition."""
