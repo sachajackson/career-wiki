@@ -79,6 +79,46 @@ def check_git():
     return OK, "clone, with the commit guard installed"
 
 
+def check_updatable():
+    """🔴 Will the next `git pull` actually apply, or abort?
+
+    A backlog entry claimed a tuned `SCHEMA.md` or `.claude/skills/` file was
+    "silently clobbered by a pull". **Tested on a throwaway clone rewound six
+    commits, and it is not true** — git refuses, loudly:
+
+        error: Your local changes to the following files would be overwritten
+        by merge: SCHEMA.md ... Aborting
+
+    🟢 Nothing is lost. 🔴 But nothing is UPDATED either, and that failure is
+    quiet in the way that matters: the pull is one step of `runbook.py update`,
+    the four steps after it read the code that is already there, and every one
+    of them then passes. A user who does not read the git output concludes they
+    are current when they are several versions behind.
+
+    So this reports it BEFORE the pull, and names the files to deal with.
+    🟡 It makes no network call and cannot say whether an update exists — only
+    whether one could land.
+    """
+    if not os.path.isdir(os.path.join(ROOT, ".git")):
+        return OPTIONAL, "not a git clone — reported by the copy check above"
+    try:
+        r = subprocess.run(["git", "-C", ROOT, "status", "--porcelain", "--untracked-files=no"],
+                           capture_output=True, text=True, timeout=20)
+    except Exception as e:
+        return WARN, f"could not ask git: {type(e).__name__}"
+    if r.returncode != 0:
+        return WARN, "git could not report the working tree"
+    # 🟢 Only TRACKED, MODIFIED files block a merge. Untracked ones are excluded
+    # above, and everything under vault/ is ignored, so a user's own data cannot
+    # trigger this — which is the point of the boundary.
+    changed = [ln[3:].strip() for ln in r.stdout.splitlines() if ln[:2].strip()]
+    if not changed:
+        return OK, "a `git pull` would apply cleanly"
+    shown = ", ".join(changed[:3]) + (f" and {len(changed) - 3} more" if len(changed) > 3 else "")
+    return WARN, (f"{len(changed)} tracked file(s) modified locally, so `git pull` will ABORT "
+                  f"rather than update: {shown}. Commit or stash them, then pull")
+
+
 def check_sources():
     d = paths.SOURCES
     files = [f for f in os.listdir(d) if not f.startswith(".") and f != "README.md"] \
@@ -418,6 +458,7 @@ def check_registry():
 CHECKS = [
     ("python", check_python),
     ("this copy", check_git),
+    ("updatable", check_updatable),
     ("other tools", check_foreign_state),
     ("quotes", check_quotes),
     ("scores", check_scores),

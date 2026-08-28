@@ -1376,8 +1376,21 @@ reads as a quiet week, not as a broken install**, which is the worst failure thi
   example, so nobody cloning could discover the setting existed. **`doctor.py` and `settings_drift.py`
   split the job**: drift says *your file is missing a key the system reads*, doctor says *this specific
   absence will silently do nothing to you*.
-- **A tuned `.claude/skills/` or `SCHEMA.md` is still clobbered by a pull**, silently. This is the one
-  genuinely ambiguous case left, and it is much smaller than the original entry implied.
+- ~~**A tuned `.claude/skills/` or `SCHEMA.md` is still clobbered by a pull**, silently.~~ 🔴 **TESTED
+  2026-08-28 AND IT IS NOT TRUE.** Cloned, rewound six commits, edited `SCHEMA.md` in the region the
+  update also changes, pulled. **git refuses and says so:** *"error: Your local changes to the following
+  files would be overwritten by merge: SCHEMA.md … Aborting."* A non-conflicting edit merges and
+  survives. **Nothing is silently clobbered, and this entry was wrong for three days.**
+
+  🔴 **But testing it found the real failure, which is the opposite one and IS quiet.** The pull ABORTS,
+  so nothing updates — and `git pull` is step 1 of `runbook.py update`, whose four remaining steps read
+  the code already on disk and all pass. **A user who does not read the git output concludes they are
+  current when they are several versions behind.**
+
+  🟢 **Built: `doctor`'s `updatable` check**, which reports tracked local modifications *before* the pull
+  and names the files. It makes no network call, so it says whether an update *could* land, never whether
+  one exists. **Third backlog entry this week that was fixed by testing its premise rather than its
+  claim.**
 - 🔴 **The rule from everywhere else on this page still applies: an update that silently drops a user's
   change is the same class of failure as an ignore rule that silently drops a file.** It must fail loudly
   and name what it could not merge.

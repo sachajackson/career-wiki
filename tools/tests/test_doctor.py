@@ -15,7 +15,7 @@ The other distinction, which this repo has now got wrong in four places:
 OPTIONAL is not MISSING. Most of this is optional, and reporting an unconfigured
 thing as a fault sends someone to fix what they never wanted.
 """
-import importlib.util, io, json, os, shutil, sys, tempfile, unittest
+import importlib.util, io, json, os, shutil, subprocess, sys, tempfile, unittest
 from contextlib import redirect_stdout
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -495,3 +495,69 @@ class TheOracleEmployerName(unittest.TestCase):
             text = " ".join(json.load(fh)["oracle"]["_comment"])
         self.assertNotIn("only prettifies", text)
         self.assertIn("NOT cosmetic", text)
+
+
+class TheUpdatableCheck(unittest.TestCase):
+    """🔴 A backlog entry claimed a tuned SCHEMA.md was "silently clobbered by a
+    pull". Tested on a throwaway clone rewound six commits, and it is not true —
+    git aborts, loudly, and nothing is lost.
+
+    🔴 The real failure is the opposite one and it IS quiet: the pull is step 1
+    of `runbook.py update`, the four steps after it read the code already on
+    disk, and every one of them passes. A user who does not read the git output
+    concludes they are current when they are several versions behind.
+    """
+
+    def _repo(self, dirty):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        subprocess.run(["git", "init", "-q", d], check=True)
+        for cmd in (["config", "user.email", "t@t"], ["config", "user.name", "t"]):
+            subprocess.run(["git", "-C", d] + cmd, check=True)
+        with open(os.path.join(d, "SCHEMA.md"), "w", encoding="utf-8") as fh:
+            fh.write("# schema\n")
+        subprocess.run(["git", "-C", d, "add", "-A"], check=True)
+        subprocess.run(["git", "-C", d, "commit", "-qm", "x"], check=True)
+        if dirty:
+            with open(os.path.join(d, "SCHEMA.md"), "a", encoding="utf-8") as fh:
+                fh.write("\nnever call me a leader\n")
+        saved = doctor.ROOT
+        doctor.ROOT = d
+        self.addCleanup(setattr, doctor, "ROOT", saved)
+        return doctor.check_updatable()
+
+    def test_a_clean_clone_says_a_pull_would_apply(self):
+        self.assertEqual(self._repo(dirty=False)[0], doctor.OK)
+
+    def test_a_locally_tuned_tracked_file_is_reported_before_the_pull(self):
+        v, detail = self._repo(dirty=True)
+        self.assertEqual(v, doctor.WARN)
+        self.assertIn("SCHEMA.md", detail)
+        self.assertIn("ABORT", detail)
+
+    def test_an_untracked_file_does_not_block_and_is_not_reported(self):
+        """🟡 The false-positive direction. Untracked files never block a merge,
+        and reporting them would fire on every working session."""
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        subprocess.run(["git", "init", "-q", d], check=True)
+        for cmd in (["config", "user.email", "t@t"], ["config", "user.name", "t"]):
+            subprocess.run(["git", "-C", d] + cmd, check=True)
+        with open(os.path.join(d, "a.md"), "w", encoding="utf-8") as fh:
+            fh.write("x\n")
+        subprocess.run(["git", "-C", d, "add", "-A"], check=True)
+        subprocess.run(["git", "-C", d, "commit", "-qm", "x"], check=True)
+        with open(os.path.join(d, "scratch.txt"), "w", encoding="utf-8") as fh:
+            fh.write("working file\n")
+        saved = doctor.ROOT
+        doctor.ROOT = d
+        self.addCleanup(setattr, doctor, "ROOT", saved)
+        self.assertEqual(doctor.check_updatable()[0], doctor.OK)
+
+    def test_a_zip_download_is_OPTIONAL_not_a_fault(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        saved = doctor.ROOT
+        doctor.ROOT = d
+        self.addCleanup(setattr, doctor, "ROOT", saved)
+        self.assertEqual(doctor.check_updatable()[0], doctor.OPTIONAL)
