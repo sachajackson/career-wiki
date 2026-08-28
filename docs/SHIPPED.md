@@ -48,7 +48,7 @@ verified by putting the real leaks back and watching them fail.
 
 | Check | Catches |
 |---|---|
-| 🟢 **No template carries a real organisation** | A capitalised multi-word phrase in a non-comment JSON value. `State Street` fires; `Acme Corp` does not |
+| 🟢 **No template carries a real organisation** | A capitalised multi-word phrase in a non-comment JSON value. `Northwind Traders` fires; `Acme Corp` does not |
 | 🟢 **No tool ships a weighted preference table** | A module-level list of three or more `(string, number)` pairs — the exact shape the tiering vocabulary had |
 
 🔴 **The false-positive case fired on the first draft, which is why it is a test of its own.** The
@@ -361,7 +361,7 @@ successfully while claiming a filter it is not applying.** Now it prefers a `CX_
 loudly when it can only find a friendly name.
 
 🟢 **Workday is probed, Oracle is not.** Workday 404s on a wrong site, so trying `Global`, `External`,
-`Careers` in turn is honest — **State Street's site was recovered that way.** Oracle returns 200 for
+`Careers` in turn is honest — **one employer's site was recovered that way.** Oracle returns 200 for
 anything, so guessing there would manufacture a wrong entry that looks right. **The asymmetry decides
 where probing is allowed.**
 

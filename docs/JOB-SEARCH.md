@@ -20,10 +20,10 @@ are borderline.
 ### 🟢 Name employers, not endpoints
 
 **You should not have to know that watching Stripe means writing a Greenhouse board token and watching
-State Street means writing a host, a tenant and a site.** So you do not:
+one large employer means writing a host, a tenant and a site.** So you do not:
 
 ```json
-"watch": ["Stripe", "State Street", "Deel"]
+"watch": ["Northwind Traders", "Statesman Bank"]
 ```
 
 **A shipped registry — [`tools/radar/ats_registry.json`](../tools/radar/ats_registry.json) — knows which ATS each

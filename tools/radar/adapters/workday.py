@@ -52,7 +52,7 @@ PUBLIC_SHARED = "https://{host}/recruiting/{tenant}/{site}{path}"
 
 PAGE = 20              # the API's own per-request ceiling: 50 and 100 both 400
 # Safety ceiling on the whole-board read, in pages. 300 is 6,000 roles, which is
-# far above any board seen so far -- State Street, the largest, is 1,377. It
+# far above any board seen so far -- the largest measured holds 1,377. It
 # exists so a pathological board cannot run forever, not as a filter, and
 # TRUNCATED says so when it bites.
 BOARD_PAGES = 300
@@ -114,7 +114,7 @@ def _board(url, pages, delay):
     🔴 WHY THE WHOLE BOARD, RATHER THAN THE SERVER'S OWN SEARCH
 
     Workday HAS a real server-side search and this adapter used it for a year.
-    Measured on State Street, 2026-08-25: the board holds **1,377 roles, and
+    Measured on the largest board seen, 2026-08-25: the board holds **1,377 roles, and
     `searchText: "Engineering Manager"` returns 611 of them.** 44% of the board
     for one query, 682 for "Delivery". It is a loose match across several
     fields, ranked -- not a filter.
@@ -175,7 +175,7 @@ def fetch(cfg, query, days):
         return []
     # `pages` used to mean pages PER QUERY. Reusing it for the board read would
     # turn the common `pages: 5` into "the first 100 roles of the board" -- a
-    # silent 93% loss on State Street, and exactly the kind of quiet regression
+    # silent 93% loss on the largest board, and exactly the kind of quiet regression
     # a renamed meaning causes. So it is ignored here, and said out loud.
     pages = int(w.get("board_pages", BOARD_PAGES))
     delay = float(w.get("delay", 0.3))

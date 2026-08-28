@@ -13,9 +13,9 @@ registry = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(registry)
 
 REG = {"employers": [
-    {"employer": "State Street", "ats": "workday", "careers_url": "https://x",
+    {"employer": "Stateline Capital", "ats": "workday", "careers_url": "https://x",
      "params": {"host": "h", "tenant": "t", "site": "Global"}},
-    {"employer": "Grant Thornton Ireland", "ats": "oracle", "careers_url": "https://y",
+    {"employer": "Widget Advisory Ireland", "ats": "oracle", "careers_url": "https://y",
      "params": {"host": "gh", "site": "CX_1001"}},
     {"employer": "Stripe", "ats": "greenhouse", "careers_url": "https://z", "params": {"token": "stripe"}},
     {"employer": "Deel", "ats": "custom", "careers_url": "https://d", "params": {"list": "https://d/api"}},
@@ -36,8 +36,8 @@ def run(watch, config=None):
 
 class Resolving(unittest.TestCase):
     def test_a_workday_employer_becomes_host_tenant_site(self):
-        cfg, rep = run(["State Street"])
-        self.assertEqual(rep["State Street"][0], "RESOLVED")
+        cfg, rep = run(["Stateline Capital"])
+        self.assertEqual(rep["Stateline Capital"][0], "RESOLVED")
         self.assertEqual(cfg["workday"]["employers"],
                          [{"host": "h", "tenant": "t", "site": "Global"}])
 
@@ -46,20 +46,20 @@ class Resolving(unittest.TestCase):
         self.assertEqual(cfg["greenhouse"]["boards"], ["stripe"])
 
     def test_matching_is_case_insensitive_and_forgiving(self):
-        _, rep = run(["  grant thornton ireland  "])
-        self.assertEqual(rep["Grant Thornton Ireland"][0], "RESOLVED")
+        _, rep = run(["  widget advisory ireland  "])
+        self.assertEqual(rep["Widget Advisory Ireland"][0], "RESOLVED")
 
     def test_it_reports_the_canonical_name_and_says_what_was_typed(self):
         """Substring matching is where a wrong resolution would hide, so show it."""
-        _, rep = run(["Grant Thornton"])
-        status, msg = rep["Grant Thornton Ireland"]
+        _, rep = run(["Widget Advisory"])
+        status, msg = rep["Widget Advisory Ireland"]
         self.assertEqual(status, "RESOLVED")
-        self.assertIn("matched on 'Grant Thornton'", msg)
+        self.assertIn("matched on 'Widget Advisory'", msg)
 
 
 class NothingIsDroppedSilently(unittest.TestCase):
     def test_it_labels_the_rows_with_the_employer_not_the_slug(self):
-        """The registry knows the employer is called "State Street"; the ATS
+        """The registry knows the employer is called "Stateline Capital"; the ATS
         calls the tenant "statestreet". Adapters label every row with whatever
         the source says, so without this the shortlist shows slugs -- which
         reads badly, defeats cross-source dedup (one source says "Citi", the
@@ -68,14 +68,14 @@ class NothingIsDroppedSilently(unittest.TestCase):
 
         workday and oracle already read an optional `names` map whose stated
         purpose is exactly this. Nothing was filling it in."""
-        cfg, _ = registry.resolve({"watch": ["State Street", "Grant Thornton Ireland"]}, REG)
-        self.assertEqual(cfg["workday"]["names"].get("t"), "State Street")
-        self.assertEqual(cfg["oracle"]["names"].get("CX_1001"), "Grant Thornton Ireland")
+        cfg, _ = registry.resolve({"watch": ["Stateline Capital", "Widget Advisory Ireland"]}, REG)
+        self.assertEqual(cfg["workday"]["names"].get("t"), "Stateline Capital")
+        self.assertEqual(cfg["oracle"]["names"].get("CX_1001"), "Widget Advisory Ireland")
 
     def test_a_hand_written_name_is_not_overwritten(self):
         """The map is the user's file. Filling a gap is help; changing what
         somebody typed is not."""
-        cfg = {"watch": ["State Street"], "workday": {"names": {"t": "My Own Label"}}}
+        cfg = {"watch": ["Stateline Capital"], "workday": {"names": {"t": "My Own Label"}}}
         cfg, _ = registry.resolve(cfg, REG)
         self.assertEqual(cfg["workday"]["names"]["t"], "My Own Label")
 
@@ -130,12 +130,12 @@ class Ambiguity(unittest.TestCase):
         _, rep = run(["State"])
         status, msg = rep["State"]
         self.assertEqual(status, "AMBIGUOUS")
-        self.assertIn("State Street", msg)
+        self.assertIn("Stateline Capital", msg)
         self.assertIn("Statesman Bank", msg)
 
     def test_an_exact_name_beats_a_substring_collision(self):
-        _, rep = run(["State Street"])
-        self.assertEqual(rep["State Street"][0], "RESOLVED")
+        _, rep = run(["Stateline Capital"])
+        self.assertEqual(rep["Stateline Capital"][0], "RESOLVED")
 
 
 class HandWrittenConfigSurvives(unittest.TestCase):

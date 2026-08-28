@@ -142,6 +142,17 @@ def _generic_vocabulary():
     return {w.strip().lower() for w in out}
 
 
+def _read(path):
+    try:
+        with open(path, encoding="utf-8", errors="ignore") as fh:
+            return fh.read()
+    except OSError:
+        return ""
+
+
+REGISTRY = "tools/radar/ats_registry.json"
+
+
 def check_settings_not_shipped():
     """🔴 Do the employers on YOUR lists appear in files that ship?
 
@@ -168,6 +179,7 @@ def check_settings_not_shipped():
     🟢 WARN, never MISSING. Several of these are legitimate and only you can
     say which, so it names files and stops.
     """
+    in_registry = []
     reg = os.path.join(paths.SETTINGS, "employers.json")
     if not os.path.exists(reg):
         return OPTIONAL, "no employers.json — nothing of yours to leak"
@@ -200,7 +212,14 @@ def check_settings_not_shipped():
     for rel in tracked:
         if not rel or rel.endswith((".png", ".pdf", ".docx", ".pyc")):
             continue
-        if rel == os.path.join("tools", "radar", "ats_registry.json").replace(os.sep, "/"):
+        if rel == REGISTRY:
+            # 🟡 Excluded, and SAID rather than skipped. Mapping an employer to
+            # their ATS is a public fact about a company, and the registry is
+            # contributed back on purpose -- but its COMPOSITION still reflects
+            # who one person looked up, and a silent exclusion hides that.
+            reg_body = _read(os.path.join(ROOT, rel))
+            in_registry = [n for n in names
+                           if re.search(r"\b" + re.escape(n) + r"\b", reg_body)]
             continue
         full = os.path.join(ROOT, rel)
         if not os.path.isfile(full):
@@ -213,12 +232,14 @@ def check_settings_not_shipped():
         for n in names:
             if re.search(r"\b" + re.escape(n) + r"\b", body):
                 hits.append(f"{rel}: {n!r}")
+    note = (f"; {len(in_registry)} also named in the shipped ATS registry, which is a public fact "
+            f"about a company but whose CONTENTS still say who you looked up" if in_registry else "")
     if hits:
         where = "; ".join(sorted(set(hits))[:3])
         return WARN, (f"{len(set(hits))} appearance(s) of an employer from your own lists in "
                       f"TRACKED files: {where}. Some may be legitimate — **read each one** "
-                      f"before deciding")
-    return OK, f"none of your {len(names)} listed employer(s) appear in tracked files"
+                      f"before deciding{note}")
+    return OK, f"none of your {len(names)} listed employer(s) appear in tracked files{note}"
 
 
 def check_gaps():

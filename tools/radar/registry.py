@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""registry -- turn `"watch": ["State Street"]` into the config the adapters expect.
+"""registry -- turn `"watch": ["Northwind"]` into the config the adapters expect.
 
 The registry (ats_registry.json) knows which ATS an employer uses and under what
 identifier. The adapters know how to speak each ATS. Nothing joined the two, so
 a user had to know that watching Stripe means writing a Greenhouse board token,
-and that watching State Street means writing a host, a tenant and a site.
+and that watching one large employer means writing a host, a tenant and a site.
 
-    "watch": ["State Street", "Grant Thornton Ireland", "Stripe"]
+    "watch": ["Northwind Traders", "Widget Advisory", "Statesman Bank"]
 
 becomes
 

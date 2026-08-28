@@ -103,7 +103,7 @@ class TheTwoHostingStyles(unittest.TestCase):
         """🔴 Reversed on 2026-08-25, and the measurement is the reason.
 
         Workday does have a real server-side search and this adapter used it for
-        a year. On State Street the board holds 1,377 roles and
+        a year. On the largest board measured, 1,377 roles and
         `searchText: "Engineering Manager"` returns **611 of them** -- 44% of the
         board, ranked, not filtered. So 41 queries x 5 pages saw the first 100
         rows of each ranked set: about 7% of the board per query, largely the

@@ -59,7 +59,7 @@ Python.**
       "verified_returned": 214
     },
     {
-      "employer": "State Street",
+      "employer": "Northwind Traders",
       "ats": "workday",
       "params": {
         "host": "statestreet.wd1.myworkdayjobs.com",
@@ -195,7 +195,7 @@ tested.
 | **SS&C** | 🟢 **Complete** — `myworkdaysite.com/recruiting/ssctech/SSCTechnologies` is in the page, host, tenant and site together |
 | **Grant Thornton** | 🟢 **Complete** — host plus `sites/GrantThorntonIrelandExperiencedHires` |
 | **JPMorganChase** | 🟢 **Complete** — host plus `sites/CX_1001` |
-| **State Street** | 🟡 **Host only.** The tenant is inferable from the host and the site still has to be probed |
+| **A large employer** | 🟡 **Host only.** The tenant is inferable from the host and the site still has to be probed |
 | 🔴 **Deel** | 🔴 **Nothing.** No ATS marker anywhere in the HTML — **the endpoint was only ever visible in network traffic from a live browser** |
 
 🔴 **So the recovery key works for employers who front a third-party ATS and fails for employers who proxy

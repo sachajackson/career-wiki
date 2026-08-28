@@ -224,7 +224,10 @@ class NoUsersPreferencesShipInTheSystem(unittest.TestCase):
         for ok in ("Acme Corp", "Employer One", "Beta Corp", "Widget Industries",
                    "First Bank", "Halfling Ltd"):
             self.assertTrue(self.FICTIONAL.match(ok) or not self.PROPER_NOUN.match(ok), ok)
-        for real in ("State Street", "Grant Thornton Ireland", "Bank of Ireland"):
+        # 🔴 Real-LOOKING, not real. The point is that PROPER_NOUN fires and
+        # FICTIONAL does not; naming actual employers to prove it put three
+        # of them in a public repo, and one was on the user's own lists.
+        for real in ("Northwind Traders", "Contoso Financial", "Fabrikam Bank"):
             self.assertTrue(self.PROPER_NOUN.match(real) and not self.FICTIONAL.match(real), real)
 
     def test_no_tool_ships_a_weighted_preference_table(self):

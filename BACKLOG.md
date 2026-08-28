@@ -190,7 +190,7 @@ the stretched claim into an application** — where it dies at the first follow-
 near-miss page itself**, not only onto the page where the question arose. The correction has to live where
 the next search will land.
 
-### 🟡 Example and template files are a leak vector — VERIFIED AND HALF-CLOSED 2026-08-28
+### 🟡 Example and template files are a leak vector — the seven are now one
 
 🔴 **The rules below were rules and not checks, and testing them found three gaps.** The original
 leak shape was replanted on 2026-08-28 — a real town, its county and a postal district — all lowercase — in
@@ -218,7 +218,20 @@ under its own name escapes a parent-keyed exclusion**, which put 16 rows on a li
 line-by-line replacement left two occurrences intact because they wrapped across lines. **Sweep on
 the flattened text, not the raw lines.**
 
-🟡 **Seven remain and they are a different question.** All name a WATCHED employer, in ATS-mapping
+🟢 **The seven were cleared on 2026-08-28.** Every one was avoidable: a test asserting that REAL
+organisations get flagged had named three actual employers to prove it, a registry fixture used a
+live entry, and two measurements named the board they were taken from. **All now fiction**, and the
+substring-collision test that needed two names sharing a prefix uses *Stateline Capital* and
+*Statesman Bank*.
+
+🔴 **ONE REMAINS AND IT IS A REAL QUESTION, not an oversight.** `tools/radar/ats_registry.json` maps
+employers to their ATS and is contributed back deliberately — *X uses Workday* is a public fact
+about a company. 🔴 **But the registry holds 18 employers and its CONTENTS reflect who one person
+looked up**, including a current employer and a live application. `doctor` now says so rather than
+excluding it silently. **Decide before public launch**: either the registry is seeded to be
+obviously general, or it ships empty and fills from use.
+
+🟡 **The old wording, kept because the reasoning still applies:** All name a WATCHED employer, in ATS-mapping
 code and in findings — `ats_registry.json` maps employers to their ATS and is contributed back
 deliberately, which is a public fact about a company. **Whether being seen to watch an employer
 matters is the user's call**, so the check WARNs and names files rather than gating.
