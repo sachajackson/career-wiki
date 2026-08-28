@@ -435,3 +435,73 @@ class TheSuiteDoesNotReadTheUsersVault(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TheExampleSettingsAreOnlyPlaceholders(unittest.TestCase):
+    """🔴 THE ACTUAL LEAK, AND THE CHECK THAT WOULD HAVE CAUGHT IT.
+
+    `search.example.json` once shipped with one user's real commuting geography —
+    home county included — their real target job titles, and their geographic
+    exclusions, in a public repo under their own name.
+
+    🔴 The existing substance check catches only a PROPER NOUN, and a settings
+    file's locations are conventionally lowercase. Tested 2026-08-28 by planting
+    the original shape: `["drogheda", "louth", "dublin 1"]` passed the whole
+    suite. The job titles beside it were caught; the geography was not.
+
+    🟢 So the rule is the entry's own: an example is written as placeholders, not
+    as a sanitised real one. `<your city>` cannot leak, and it documents the
+    field better than a plausible value — a reader cannot tell whether `dublin`
+    is a default or an example.
+    """
+
+    # 🟡 The cost of this check, stated rather than hidden: a value that is
+    # genuinely not a placeholder has to be listed here, and somebody has to
+    # look at it to add it. That review is the point, not a side effect.
+    ALLOWED = {
+        # API vendors, model ids and env var names. Technical identifiers, and
+        # nothing about a person.
+        "openai", "claude-sonnet-5", "gpt-4o", "gemini-2.0-flash",
+        "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY",
+        # Seniority and domain vocabulary. Generic by construction -- these are
+        # the words a signal file is FOR, and a template with none of them
+        # teaches nothing.
+        "senior", "staff", "principal", "lead", "sr", "junior", "graduate", "trainee",
+        "software", "backend", "frontend", "full stack", "ai", "ml", "data", "cloud",
+        "platform",
+        # Work-pattern and locale enums the tools match on.
+        "remote", "hybrid", "onsite", "ie-uk", "us", "off",
+    }
+
+    def _strings(self, obj, path=""):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if str(k).startswith("_"):
+                    continue
+                yield from self._strings(v, f"{path}.{k}")
+        elif isinstance(obj, list):
+            for i, v in enumerate(obj):
+                yield from self._strings(v, f"{path}[{i}]")
+        elif isinstance(obj, str):
+            yield path, obj
+
+    def test_every_value_is_a_placeholder_fiction_or_a_listed_identifier(self):
+        bad = []
+        for f in sorted(glob.glob(os.path.join(ROOT, "templates", "settings", "*.json"))):
+            with open(f, encoding="utf-8") as fh:
+                doc = json.load(fh)
+            for path, s in self._strings(doc):
+                v = s.strip()
+                if not v or v.startswith("<") or v.lower() in {a.lower() for a in self.ALLOWED}:
+                    continue
+                bad.append(f"{os.path.relpath(f, ROOT)}{path} = {s!r}")
+        self.assertEqual(bad, [], "an example settings value is neither a <placeholder> nor a "
+                                  "listed technical identifier. If it is genuinely generic, add it "
+                                  "to ALLOWED — after reading it: " + str(bad))
+
+    def test_the_original_leak_would_now_fail(self):
+        """🔴 The regression this exists for, in its exact shape — lowercase, and
+        therefore invisible to a proper-noun rule."""
+        for value in ("drogheda", "louth", "dublin 1", "County Louth"):
+            self.assertNotIn(value.lower(), {a.lower() for a in self.ALLOWED},
+                             f"{value!r} must never be allowlisted")

@@ -104,7 +104,7 @@ class TheFalseTruncationCaveat(unittest.TestCase):
         saved = q.paths.VAULT
         self.addCleanup(q.paths.use, saved)
         os.makedirs(os.path.join(d, "postings"))
-        with open(os.path.join(d, "postings", "Citi - A role.txt"), "w", encoding="utf-8") as fh:
+        with open(os.path.join(d, "postings", "Northwind - A role.txt"), "w", encoding="utf-8") as fh:
             fh.write(body)
         q.paths.use(d)
         return q.load_postings()

@@ -279,7 +279,32 @@ the stretched claim into an application** — where it dies at the first follow-
 near-miss page itself**, not only onto the page where the question arose. The correction has to live where
 the next search will land.
 
-### 🔴 Example and template files are a leak vector, because they get made by copying a real one
+### 🟡 Example and template files are a leak vector — VERIFIED AND HALF-CLOSED 2026-08-28
+
+🔴 **The rules below were rules and not checks, and testing them found three gaps.** The original
+leak shape was replanted on 2026-08-28 — `["drogheda", "louth", "dublin 1"]` in
+`templates/settings/search.example.json` — and **it passed the entire suite.** The substance check
+matched only a PROPER NOUN, and a settings file's locations are conventionally lowercase. The job
+titles beside it were caught; **the geography, which is what actually leaked, was not.**
+
+🟢 **Closed: example settings values must now be `<placeholders>`, the repo's fiction, or one of 25
+listed technical identifiers.** Every one of those 25 was read before being listed, which is the
+point rather than a side effect. The original leak now fails the suite.
+
+🟢 **Closed: `doctor`'s `settings leak` check** covers what the suite structurally cannot — a public
+repo must not carry a denylist of its author's private details, so the comparison has to happen
+where the private data is. It reports employers from the user's own watch and avoid lists appearing
+in tracked files. 🔴 **The first draft scanned every settings value and reported 229 findings**,
+because a signal vocabulary is generic by design; scoped to employer names it reports 12.
+
+🔴 **STILL OPEN: those 12.** Six are in `tools/tests/` fixtures, which this entry explicitly said to
+add and which nothing had. Some are legitimate — `ats_registry.json` maps employers to their ATS and
+is contributed back deliberately — and **only the user can say which**, so the check WARNs and names
+files rather than gating.
+
+---
+
+### 🔴 The original entry, kept because the rules are still binding
 
 **Status: happened 2026-08-24. Caught, remediated by history rewrite, and worth a permanent rule.**
 

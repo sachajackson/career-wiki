@@ -1,7 +1,7 @@
 """radar: surfacing one job that arrived from two sources, and never merging it.
 
 🔴 WHAT HAPPENED. `same_role()` runs only against roles found in the SAME run,
-and `seen` is consulted by a source-prefixed id. So one JPMorganChase requisition
+and `seen` is consulted by a source-prefixed id. So one Acme Bank requisition
 reached a vault as `li-4453618843` on 2026-08-26 and `or-210778716` on 2026-08-27,
 was assessed twice, scored 9 and 13, and both rows sat in the scoring table until
 someone re-fetched the employer's own copy and noticed.
@@ -33,14 +33,14 @@ except SystemExit:                                    # argparse on import
     pass
 
 SEEN = {"li-4453618843": {"title": "Director of Software Engineering",
-                          "company": "JPMorganChase",
+                          "company": "Acme Bank",
                           "loc": "Dublin, County Dublin, Ireland",
                           "first_seen": "2026-08-26"}}
 
 
 def row(**kw):
     base = {"id": "or-210778716", "title": "Director of Software Engineering",
-            "company": "JPMorganChase", "loc": "Dublin, Ireland"}
+            "company": "Acme Bank", "loc": "Dublin, Ireland"}
     base.update(kw)
     return base
 
@@ -76,7 +76,7 @@ class TheThingsItMustNotDo(unittest.TestCase):
         self.assertEqual(radar.duplicate_candidates(row(loc="Nice, France"), seen), [])
 
     def test_a_different_employer_is_not_a_duplicate(self):
-        self.assertEqual(radar.duplicate_candidates(row(company="Citi"), SEEN), [])
+        self.assertEqual(radar.duplicate_candidates(row(company="Northwind"), SEEN), [])
 
     def test_a_different_title_is_not_a_duplicate(self):
         self.assertEqual(radar.duplicate_candidates(row(title="Product Delivery Manager"), SEEN), [])
@@ -90,7 +90,7 @@ class TheQuietDayOne(unittest.TestCase):
 
     def test_an_old_record_with_no_location_does_not_participate(self):
         old = {"li-1": {"title": "Director of Software Engineering",
-                        "company": "JPMorganChase", "first_seen": "2026-08-26"}}
+                        "company": "Acme Bank", "first_seen": "2026-08-26"}}
         self.assertEqual(radar.duplicate_candidates(row(), old), [])
 
     def test_a_new_row_with_no_location_does_not_either(self):

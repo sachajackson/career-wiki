@@ -19,7 +19,7 @@ and cannot tell you an endpoint answers -- `sources_check.py` does that and says
 so. And OPTIONAL never means broken: most of this is optional, and reporting an
 unconfigured thing as a fault sends people to fix something they never wanted.
 """
-import json, os, subprocess, sys
+import glob, json, os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # Seven paths were pinned in this file, which made it the place a vault move
@@ -117,6 +117,108 @@ def check_updatable():
     shown = ", ".join(changed[:3]) + (f" and {len(changed) - 3} more" if len(changed) > 3 else "")
     return WARN, (f"{len(changed)} tracked file(s) modified locally, so `git pull` will ABORT "
                   f"rather than update: {shown}. Commit or stash them, then pull")
+
+
+# Files that SHIP. Everything here reaches a stranger who clones the repo.
+_SHIPPED = ("templates", "tools", "docs", ".claude", "githooks")
+_SHIPPED_FILES = ("README.md", "SCHEMA.md", "AGENTS.md", "BACKLOG.md", "PRIVACY.md")
+
+
+def _generic_vocabulary():
+    """Every string the shipped EXAMPLES already use.
+
+    🟢 The neat part: if a value appears in a template, it is generic by
+    definition — the suite proves those are placeholders or listed identifiers.
+    So this needs no stoplist of common words and cannot drift from one.
+    """
+    out = set()
+    for f in glob.glob(os.path.join(ROOT, "templates", "settings", "*.json")):
+        try:
+            with open(f, encoding="utf-8") as fh:
+                text = fh.read()
+        except OSError:
+            continue
+        out |= {w for w in re.findall(r"[A-Za-z][A-Za-z .-]{2,}", text)}
+    return {w.strip().lower() for w in out}
+
+
+def check_settings_not_shipped():
+    """🔴 Do the employers on YOUR lists appear in files that ship?
+
+    `templates/settings/search.example.json` once shipped with one user's real commuting geography,
+    home county included, in a public repo under their own name. **Nobody wrote
+    that file — it was a working config with `.example` in the name**, which is
+    how almost every example file in every project gets made.
+
+    🟡 The suite proves the shipped examples are placeholders, and that is the
+    generic half. **It cannot do this half**: a public repo must not carry a
+    denylist of its author's private details, so the comparison has to happen
+    where the private data already is. That is here.
+
+    🔴 SCOPED TO EMPLOYER NAMES ON PURPOSE, and the first draft was not. Scanning
+    every settings value found 229 "leaks" — because a signal vocabulary is
+    generic by design and the docs legitimately discuss the same words. **A check
+    that reports 229 findings on a healthy repo is one nobody reads.** Who you
+    watch and who you refuse to work for is the part that is genuinely yours.
+
+    🟡 `tools/radar/ats_registry.json` is excluded: it maps employers to their ATS
+    and is contributed back deliberately — a public fact about a company, not a
+    fact about you.
+
+    🟢 WARN, never MISSING. Several of these are legitimate and only you can
+    say which, so it names files and stops.
+    """
+    reg = os.path.join(paths.SETTINGS, "employers.json")
+    if not os.path.exists(reg):
+        return OPTIONAL, "no employers.json — nothing of yours to leak"
+    try:
+        with open(reg, encoding="utf-8") as fh:
+            doc = json.load(fh)
+    except (OSError, ValueError):
+        return OPTIONAL, "employers.json unreadable — reported by the settings check"
+    names, stack = set(), [doc]
+    while stack:
+        v = stack.pop()
+        if isinstance(v, dict):
+            stack += [x for k, x in v.items() if not str(k).startswith("_")]
+        elif isinstance(v, list):
+            stack += list(v)
+        elif isinstance(v, str):
+            t = v.strip()
+            # A name, not a date, a reason, or a tag.
+            if 4 <= len(t) <= 40 and not re.fullmatch(r"[\d-]+", t) and " " not in t[:2] \
+                    and not t.endswith(".") and t[:1].isupper():
+                names.add(t)
+    if not names:
+        return OPTIONAL, "no employer names recorded"
+    try:
+        tracked = subprocess.run(["git", "-C", ROOT, "ls-files"], capture_output=True,
+                                 text=True, timeout=30).stdout.split("\n")
+    except Exception:
+        return OPTIONAL, "git could not list tracked files"
+    hits = []
+    for rel in tracked:
+        if not rel or rel.endswith((".png", ".pdf", ".docx", ".pyc")):
+            continue
+        if rel == os.path.join("tools", "radar", "ats_registry.json").replace(os.sep, "/"):
+            continue
+        full = os.path.join(ROOT, rel)
+        if not os.path.isfile(full):
+            continue
+        try:
+            with open(full, encoding="utf-8", errors="ignore") as fh:
+                body = fh.read()
+        except OSError:
+            continue
+        for n in names:
+            if re.search(r"\b" + re.escape(n) + r"\b", body):
+                hits.append(f"{rel}: {n!r}")
+    if hits:
+        where = "; ".join(sorted(set(hits))[:3])
+        return WARN, (f"{len(set(hits))} appearance(s) of an employer from your own lists in "
+                      f"TRACKED files: {where}. Some may be legitimate — **read each one** "
+                      f"before deciding")
+    return OK, f"none of your {len(names)} listed employer(s) appear in tracked files"
 
 
 def check_sources():
@@ -463,6 +565,7 @@ CHECKS = [
     ("quotes", check_quotes),
     ("scores", check_scores),
     ("oracle names", check_oracle_names),
+    ("settings leak", check_settings_not_shipped),
     ("registry", check_registry),
     ("your CV", check_sources),
     ("your wiki", check_wiki),

@@ -25,10 +25,10 @@ sys.path.insert(0, os.path.join(ROOT, "tools", "lib"))
 from adapters import oracle  # noqa: E402
 
 SHARED = "CX_1001"
-CFG = {"employers": [{"host": "jpmc.fa.oraclecloud.com", "site": SHARED},
+CFG = {"employers": [{"host": "acme.fa.oraclecloud.com", "site": SHARED},
                      {"host": "other.fa.oraclecloud.com", "site": SHARED},
-                     {"host": "acme.fa.oraclecloud.com", "site": "CX_9"}],
-       "names": {SHARED: "JPMorganChase",
+                     {"host": "widget.fa.oraclecloud.com", "site": "CX_9"}],
+       "names": {SHARED: "Acme Bank",
                  "CX_9": "Acme Corp",
                  "other.fa.oraclecloud.com|" + SHARED: "Other Bank"}}
 
@@ -43,39 +43,39 @@ class TheCompoundKey(unittest.TestCase):
         """🔴 The whole point. A confidently wrong employer name is worse than a
         slug, because a slug is obviously not an answer and a name gets believed."""
         self.assertNotEqual(
-            oracle.employer_name(CFG, "jpmc.fa.oraclecloud.com", SHARED), "JPMorganChase")
+            oracle.employer_name(CFG, "acme.fa.oraclecloud.com", SHARED), "Acme Bank")
 
     def test_the_fallback_is_unique_per_tenant(self):
         """🔴 Falling back to the SITE made two employers identical, which is how
         dedup could collapse across them. The host's first label cannot."""
-        a = oracle.employer_name(CFG, "jpmc.fa.oraclecloud.com", SHARED)
+        a = oracle.employer_name(CFG, "acme.fa.oraclecloud.com", SHARED)
         b = oracle.employer_name({"employers": CFG["employers"], "names": {}},
                                  "other.fa.oraclecloud.com", SHARED)
         self.assertNotEqual(a, b)
-        self.assertEqual(a, "jpmc")
+        self.assertEqual(a, "acme")
 
 
 class TheLabelsThatAlreadyWorked(unittest.TestCase):
     """🔴 The false-positive case, and the one the backlog said to test first."""
 
     def test_a_site_only_label_still_works_when_the_site_is_unique(self):
-        self.assertEqual(oracle.employer_name(CFG, "acme.fa.oraclecloud.com", "CX_9"), "Acme Corp")
+        self.assertEqual(oracle.employer_name(CFG, "widget.fa.oraclecloud.com", "CX_9"), "Acme Corp")
 
     def test_a_site_only_label_works_with_no_employers_list_at_all(self):
         """A config that names a site but never lists employers — the lookup must
         not decide it is ambiguous and drop a good label."""
         self.assertEqual(
             oracle.employer_name({"names": {"CX_9": "Acme Corp"}},
-                                 "acme.fa.oraclecloud.com", "CX_9"), "Acme Corp")
+                                 "widget.fa.oraclecloud.com", "CX_9"), "Acme Corp")
 
     def test_no_names_map_at_all_does_not_raise(self):
-        self.assertEqual(oracle.employer_name({}, "acme.fa.oraclecloud.com", "CX_9"), "acme")
+        self.assertEqual(oracle.employer_name({}, "widget.fa.oraclecloud.com", "CX_9"), "widget")
 
 
 class TheTenantSlug(unittest.TestCase):
 
     def test_it_is_the_first_label_of_the_host(self):
-        self.assertEqual(oracle.tenant("jpmc.fa.us2.oraclecloud.com"), "jpmc")
+        self.assertEqual(oracle.tenant("widget.fa.us2.oraclecloud.com"), "widget")
 
     def test_an_empty_host_does_not_produce_an_empty_employer(self):
         """🔴 An empty company field matches nothing and is matched BY nothing —

@@ -115,7 +115,7 @@ class TheClusterPages(unittest.TestCase):
 
     CLUSTER = ("# Three roles\n\n| Role | N·D·E | FIT | LIFE |\n|---|---|---|---|\n"
                "| **Alexion** — a role | **4·3·4** | **11** | 🔴 **1–2** |\n"
-               "| **JPMorganChase** — another | **4·2·4** | **10** | 🟡 TBC |\n"
+               "| **Acme Bank** — another | **4·2·4** | **10** | 🟡 TBC |\n"
                "| **PwC** — a third | **3·2·3** | **8** | 🔴 **2** |\n")
 
     def test_a_cluster_page_whose_rows_all_add_up_is_clean(self):

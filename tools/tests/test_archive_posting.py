@@ -1,7 +1,7 @@
 """archive_posting: the tool that exists because a fact was read and never written.
 
 🔴 WHAT IT COST. A requisition number, a street address and a posting date were
-read off JPMorgan's own site on 2026-08-18, used to score a role, printed on a CV
+read off the employer's own site on 2026-08-18, used to score a role, printed on a CV
 and a covering letter, and never written down anywhere. `raw.json` regenerates on
 every run, so within a week they existed in exactly one place: a role page citing
 a source nobody could open. Every one turned out to be correct -- which is not the
@@ -39,14 +39,14 @@ ITEM = {
                       "AddressLine1": "200 Capital Dock, 79 Sir John Rogerson's Quay",
                       "TownOrCity": "Dublin", "PostalCode": "D02 RK57"}],
 }
-URL = "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210768893/"
+URL = "https://acme.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210768893/"
 
 
 class TheURL(unittest.TestCase):
 
     def test_it_reads_host_site_and_requisition(self):
         self.assertEqual(ap.ORACLE_URL.search(URL).groups(),
-                         ("jpmc.fa.oraclecloud.com", "CX_1001", "210768893"))
+                         ("acme.fa.oraclecloud.com", "CX_1001", "210768893"))
 
     def test_a_share_query_string_does_not_break_it(self):
         """The URL a user pastes comes off a Share button and carries utm tags."""
