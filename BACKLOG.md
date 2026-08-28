@@ -137,51 +137,6 @@ how `config.json` behaves:**
   reported `UNREACHABLE!` on a connection reset and answered fine a second later. **Anything that calls a
   live endpoint needs retries before it is allowed to call something dead.**
 
-### 🔴 The first concurrency design was slower than serial, and the reason generalises
-
-**A thread pool over all (adapter, query) pairs, with a lock per adapter.** It ran 48 minutes against a
-20-minute baseline with 0.33s of CPU.
-
-**`map` dispatches in order and the pairs are grouped by adapter, so the pool fills with units belonging
-to one adapter and every worker but one blocks on that adapter's lock.** Effective concurrency of about 1,
-plus the overhead of pretending otherwise.
-
-🟢 **Interleaving the pairs would have hidden it. One thread per adapter removes the lock**, and satisfies
-the `TRUNCATED` contract by construction rather than by mutex — which is what the lock was there for:
-`TRUNCATED` is a module attribute set during `fetch()` and read straight after, so two concurrent calls
-into one module would each read the other's answer.
-
-🔴 **It was also silent for its entire duration**, because nothing printed until every adapter finished.
-**That is worse than the slowness it was fixing.** Progress now prints as each adapter lands.
-
-### 🔴 Two files, one letter apart, opposite privacy rules — know which is which
-
-**`vault/settings/employers.json` and `tools/radar/ats_registry.json` are not variants of each other.**
-
-| | `employers.json` | `ats_registry.json` |
-|---|---|---|
-| **Holds** | One user's **watch and avoid lists** — companies they will not work for, and why, some of it second-hand | **Public careers endpoints.** Host, tenant, token |
-| **Same for every user?** | 🔴 **No.** It is a personal document | 🟢 **Yes.** Identical for everybody |
-| **Ships?** | 🔴 **Never.** Ignored, and must stay ignored | 🟢 **Always.** A clone without it has tooling and no data |
-| **Contributions** | 🔴 Unthinkable | 🟢 **The one file here a stranger can send a PR for** |
-
-🔴 **They shared a name for a day and it cost the whole afternoon.** `ats_registry.json` was written as
-`employers.json`, matched by the `tools/radar/*.json` ignore rule, and **never committed** — every
-`git add -A` skipped it in silence while the resolver, the checker and the adapter that depend on it all
-shipped. **A clone got the tooling and no data.**
-
-🔴 **And the obvious fix was a trap.** Carving `employers.json` out of the ignore rule — exactly what was
-done a day earlier for `search.example.json` — **would have published every user's private avoid list.**
-The rule that correctly hides one file is what silently hid the other. **Renaming was the only fix; loosening the pattern was never available.**
-
-**So, for anyone touching that directory:**
-
-- **Do not "tidy" the carve-outs into `*.example.json` or a glob.** The hook's own comment explains why,
-  and this is the second file that proves it.
-- **Do not rename either file to bring them into line.** They are opposites; the names are load-bearing.
-- 🟢 **`tools/tests/test_shipped.py` now fails if a required file stops being tracked, or a private one
-  starts.** It is the only check that could have caught this — see below.
-
 ### 🟢 On checklists: yes, but only the executable kind — 2026-08-25
 
 **Raised after the above: would a commit checklist have caught it?**
@@ -215,137 +170,6 @@ that exists because of one untracked file found the next one immediately.**
 🟡 **Where a written checklist still earns its place: the things no test can reach.** The oversight pass,
 reading a document aloud before sending it, deciding whether a concession is honest. **Those are few, and
 they should be marked as the exception rather than the mechanism.**
-
-### 🔴 The suite got twelve times slower and the docs still promised a second — 2026-08-25
-
-**Found on the first action of the next session: the handover said "305 checks, about a second" and it
-took 11.9.**
-
-🔴 **Two tests cost 9.2 of that.** They drive `registry_check.py` **as a subprocess**, pointed at a dead
-port on purpose, so they pay its real retry backoff — 1.5s + 3.0s each — **and being a subprocess they
-cannot stub `time.sleep` the way the in-process retry test does.**
-
-🟢 **Fixed by making the backoff an environment variable**, set to zero by those two tests. Retries still
-happen; only the waiting goes. **11.9s → 2.9s.** And because nothing then proved the wait happens at all,
-the in-process test now asserts the backoff is **strictly increasing** — `[1.5, 1.5]` is sorted, and a flat
-retry is what hammers a host that has just reset on you.
-
-🔴 **Why this is a defect and not a nicety.** `CONTRIBUTING.md` tells every contributor to run the suite
-before every push. **A slow suite gets run less often, and the suite is the one control in this repo that
-has never failed.** Speed is not comfort here, it is whether the control gets used.
-
-### 🔴 The test count was written in three places and wrong in all three — 2026-08-25
-
-**`README.md` said 64. `CONTRIBUTING.md` said 65. A `BACKLOG.md` entry said 85. The real figure was past
-300.** Nobody had lied; **nothing forces prose to move when code does.**
-
-🟢 **Fixed by not writing it down.** The user-facing docs now describe the suite's *properties* — stdlib
-only, no install step, runs in seconds — which are stable, rather than its *size*, which is not.
-**And a test now fails if a fixed count reappears in either file.** `BACKLOG.md` is exempt: its counts are
-dated records of what one piece of work shipped with, not claims about the suite as it stands.
-
-🟢 **This is the same shape as everything else on this page.** *"Remember to update the count"* is an
-instruction. Instructions here have a perfect record of failing. **The check took four lines.**
-
-### 🔴 The backlog drifted again, inside the session that had just audited it — 2026-08-25
-
-**Asked plainly: "is everything that was to be built now done?" The honest answer needed a read, not a
-recollection — and the read found this file misreporting its own state in both directions.**
-
-| | |
-|---|---|
-| 🔴 **One item appeared twice** | *Greenhouse yield is low* — once as `PREFILTER FIXED` near the top and once untouched, **1,160 lines away.** Whichever a reader found first decided whether they thought there was work to do |
-| 🔴 **Worse: the wrong body was attached** | The fixed Greenhouse entry carried **the Remote entry's original write-up** under its *"the original write-up follows"* line. Two edits in one place, and the seam was invisible |
-| 🔴 **Five entries read as open and were shipped** | The transit-stop table, the internal-move row, the baseline row, the aggregator refetch, and `sources_check.py` — **each verified against the code before being marked**, not from memory |
-| 🔴 **Two headings disagreed with their own bodies** | Recording a fix in the text while the heading still read 🔴. **Nobody reads 1,900 lines; they skim headings, so the heading IS the entry** |
-
-🔴 **"Delete an item when it is done" is the instruction, and it is written at the top of this file.** It
-has now failed three times: twice caught by audits dated above, once by being asked a direct question.
-**An instruction that has failed three times is not going to start working.**
-
-🟢 **So the two mechanical halves are now a test** —
-[`tools/tests/test_backlog.py`](tools/tests/test_backlog.py):
-
-- **No two headings describe the same item**, by similarity, ignoring the continuation headings that
-  legitimately repeat under fixed entries
-- **A heading and its own body must agree** about whether the thing is done
-
-🟢 **It found one on its first run** — an entry whose body said *"✅ Fixed, and made mechanical"* under a
-🔴 heading. **Not by reading; by running.**
-
-🟡 **What it deliberately does not check: whether an entry is ACCURATE.** That needs judgement and a test
-claiming it would be worse than no test. **The check covers the two failures that are structural, and the
-audit discipline above still covers the rest.**
-
-🟢 **And `test_shipped.py` caught the new test file untracked, in the same run** — the second time in two
-sessions that the check about untracked files has caught the person adding a check.
-
-### 🔴 Mutation testing can be defeated by the bytecode cache — 2026-08-25
-
-**Found while mutation-testing `doctor.py`, and it invalidates results rather than just wasting time.**
-
-A mutation that **preserves the file's byte length** and is written **within the same second** as the
-original is invisible to CPython's `.pyc` invalidation, which compares **mtime and size**. The stale
-bytecode gets loaded and **the test runs against the unmutated code**.
-
-🔴 **It reported `MISSED!` for a mutant that the tests do catch** — reversing a severity list, where
-`[MISSING, PLACEHOLDER, WARN, OPTIONAL, OK]` and `[OK, OPTIONAL, WARN, PLACEHOLDER, MISSING]` are the
-same length to the character. **The wrong conclusion is the dangerous one**: it says a check is weaker
-than it is, and the natural response is to weaken the code to match.
-
-🟢 **Fix: run mutation checks with `python3 -B` and `PYTHONDONTWRITEBYTECODE=1`.** Re-run that way, all
-nine mutants were caught, including the one that had reported as missed.
-
-🟡 **The general shape is worth keeping.** Any harness that rewrites a file in place and re-executes it is
-exposed to this — **length-preserving edits are exactly the ones a careful mutation makes.**
-
-### 🔴 Two dead anchor links, one of them in the README's first sentence — 2026-08-25
-
-**Found by asking where a note had been logged, then checking the link resolved instead of assuming it.**
-
-🔴 **The quietest link failure there is: the page still opens and lands at the top.** Nothing errors, the
-prose reads correctly, and the reader silently arrives somewhere other than where the link said.
-
-| Where | What happened |
-|---|---|
-| `BACKLOG.md` | An entry was renamed on being marked ✅ FIXED **earlier the same session**, and a link to it 900 lines away stopped landing anywhere |
-| 🔴 `README.md`, line 6 | Pointed at `#-read-this-before-you-use-anything-here` — **a heading that does not exist and may never have.** The first sentence a stranger reads, in the file linked from job applications |
-
-🔴 **A markdown link check already existed and passed both.** `test_shipped.py` resolved the *file* half of
-every link and **split the `#fragment` off and threw it away** — so every anchor in the repo was unchecked
-while a test reported the links fine. **A check that covers most of a thing reads exactly like one that
-covers all of it.**
-
-🟢 **Now checked**: every `](#anchor)` in every shipped markdown file must match a heading in that file,
-slugged the way GitHub slugs them. Two mutations caught — renaming a linked heading, and pointing at one
-that never existed.
-
-🔴 **And the check cried wolf within a minute of shipping, on the entry describing it.** The prose above
-contains a backticked example of a link, and the first version read it as a link. **Documentation about a
-pattern contains the pattern** — the same shape as `_comment` blocks in the placeholder check. Code spans
-are now stripped before scanning, with a test for the example case.
-
-🔴 **Worse, that failure reached `main`.** The pre-push gate was
-`python3 tools/tests/run.py 2>&1 | tail -2 && git push`, and **a pipe replaces the exit status with
-`tail`'s**, so `&&` saw success and pushed a red suite. **The habit of piping test output to `tail` for
-readability silently disarms every `&&` after it.** Fixed within two minutes, and recorded because the
-gate was followed exactly and still let it through — which is the whole thesis of this file, arriving in
-the one place that was supposed to be immune.
-
-🟢 **The push gate is now a hook** — `githooks/pre-push`, which runs the suite and refuses a red push.
-**No test could have caught the piped version**: by the time anything runs, the shell has already thrown
-the status away, so the check had to move somewhere the shell cannot disarm. **That was the last
-instruction-shaped control on the push path.**
-
-🔴 **And the test guarding the hook had the same defect as the hook's own failure.** The first version
-asserted that no line containing `run.py` is piped — **the hook invokes `"$suite"`, so the one line that
-mattered was never checked**, and a mutation piping the suite passed. **Matching the literal and missing
-the variable is the same shape as the anchor check that split the fragment off and threw it away.** Three
-times in one session: a check that covers most of a thing reads exactly like one that covers all of it.
-
-🟢 **Same failure `wikilinks.py` was built for on the wiki side**, where 40 section links in one vault all
-still opened the right page and none went where they said. **It took eight days to arrive on the repo
-side, and it arrived because somebody asked a question that made me look.**
 
 ### 3. Then, in this order
 
@@ -400,36 +224,7 @@ rather than something someone has to remember to repeat.**
 | 8 | "Remote" is country-scoped | ✅ Fixed in code 2026-08-25. It had been doing the reverse |
 | 9 | Why-X answers, values with three examples | 🟢 Present and consistent |
 
-### 🟢 What this audit teaches about auditing
-
-🔴 **"The rule is written where it says" is the wrong question.** The previous audit asked it, passed
-everything, and missed all of the above. **Ask instead: what would contradict this, and does what it
-prescribes have somewhere to live?** Six of nine failed that question. Three ways:
-
-- **Contradicted by another file** (1, and the outcome vocabulary)
-- **Prescribes a structure that does not exist** (2, 3, 7)
-- **Refers to a place that cannot hold it** (6)
-
-🟢 **A rule that tells someone to write something on a page with no section for it is not a rule, it is a
-hope.** Where a rule prescribes a table, **ship the empty table**.
-
 ## 🔴 Defects — things that behave wrongly
-
-### 🟢 A total that does not move can still be a total that lied
-
-**Status: not a defect in the code. A defect in how results get reported. 2026-08-24.**
-
-An employer research pass produced a score of **15 before and 15 after** — while all four components moved:
-NEED 4→5, DELIVER 4→3, EDGE 4→5, WANT 3→2.
-
-🔴 **The naive report is "research complete, no change", and it is worse than useless** — it says the
-research was not worth running, when in fact it rebuilt the entire basis of the decision.
-
-**The framework already has a rule for this** (*read the row, not the sum*), and the rule was not enough,
-because the reporting habit is to lead with the number.
-
-**To do:** when re-scoring after research, **diff the components and lead with the diff**, not the total.
-If any component moved by 2 or more, say so in the first line even when the total is unchanged.
 
 ### The defect it was built for
 
@@ -483,60 +278,6 @@ the stretched claim into an application** — where it dies at the first follow-
 **Fix:** when a user's answer conflicts on its face with existing content, **write the distinction onto the
 near-miss page itself**, not only onto the page where the question arose. The correction has to live where
 the next search will land.
-
-### 🟢 One total hid the decision — split it, and count requirements instead of stretching the scale
-
-**Status: designed and migrated 2026-08-24. Recommended as the default shape.**
-
-The framework scored four dimensions 1-5 and summed them out of 20. **Two problems surfaced together.**
-
-🔴 **1. A near-constant factor carries no ranking information.** The user's lifestyle constraint (a
-contractual remote arrangement he is unlikely to match elsewhere) meant that dimension scored 2 or 3 for
-almost every option. **Inside a total it depressed everything roughly equally — noise, not signal.**
-
-🔴 **2. The total hid where the decision was actually being made.** **Seven roles tied on capability
-(14/15) while their old totals spread from 15 to 18** — that entire spread was the personal-fit dimension.
-**A role rejected outright scored exactly what the top recommendation scored on capability**, and the
-single number made it look weaker rather than equal-but-worse-anchored.
-
-🟢 **The fix, and it required no re-judging** because the composite dimension was already two things:
-
-| | | |
-|---|---|---|
-| **FIT** | capability + differentiation | /15 |
-| **LIFE** | lifestyle alone | /5 |
-| **SEC** | employer stability alone | /5 |
-
-**Keep the sub-scores visible.** Two roles both at 14 split into 5·5·4 (*would deliver it well, so would
-others*) and 5·4·5 (*brings something rare, with real gaps*) — **a distinction the sum destroys.**
-
-### 🔴 The related trap: do not answer a tie by lengthening the ruler
-
-**The user asked whether scoring each dimension out of 20 — a total out of 100 — would discriminate
-better. It would not, and the reasoning generalises.**
-
-- **The anchors are defined by evidence, not degree.** *Strong and evidenced* vs *good with gaps that do
-  not touch the core* is a defensible distinction. **16 vs 17 is not** — the digit gets generated rather
-  than derived, which is the one thing a knowledge-based system must never do.
-- 🔴 **It produces persuasive noise.** *16 versus 14* reads as a finding. It would be a coin flip.
-- 🟢 **It would not even fix the tie**, which is a *ceiling* effect: the user only assesses roles that
-  already look plausible, so everything clusters at the top of whatever scale exists. **A longer ruler
-  moves the cluster, it does not spread it.**
-
-🟢 **Precision has to come from decomposition.** Add a **requirements count** per role: take the
-employer's own named requirements, mark each **cleared / partial / gap**, half a point for a partial, and
-report the tally.
-
-- One role: **9 cleared, 2 partial, 1 gap of 12 = 83%** → capability 4
-- Another: **3 cleared, 3 partial, 1 gap of 7 = 64%** → capability 3
-
-🟢 **Both landed on the score already assigned by judgment. That is the test** — a decomposition worth
-trusting validates the judgment rather than replacing it, and it gives the user something checkable line by
-line instead of a number to take on faith.
-
-🔴 **Score it from the employer's own posting**, never an aggregator's — see the truncation defect above —
-and **mark it TBC where no full posting was ingested.** Most rows will be TBC, which usefully flags which
-scores came from a summary.
 
 ### 🔴 Example and template files are a leak vector, because they get made by copying a real one
 
