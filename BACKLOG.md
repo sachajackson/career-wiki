@@ -113,7 +113,7 @@ help it. That note is the real backlog.**
 
 ### 3. Then, in this order
 
-**Rewritten 2026-08-28.** The previous version listed two items as done and pointed at entries marked ✅
+**Rewritten 2026-08-28, and renumbered the same day as items 4 and 6 shipped.** The previous version listed two items as done and pointed at entries marked ✅
 further down — which had all moved to [`docs/SHIPPED.md`](docs/SHIPPED.md), so it was directing a reader
 at nothing.
 
@@ -122,29 +122,29 @@ at nothing.
 | 🔴 **1. Republish the repository** | Above. **Blocks the public launch and nothing else on this page outranks it** |
 | 🔴 **2. Decide the cover-letter repo link** | Coupled to the item above: a letter already sent carries the URL, so the recreate has to keep the name **and** the policy has to be settled before the next application repeats it |
 | **3. A browser dashboard** | The largest open piece, and the one the user asked for. ~96 scored rows that nothing can sort |
-| **4. `Migrate` has no log prefix** | Tiny, and the failure is silent |
-| **5. A next action per application** | Small. The cadence is built; the state is not |
-| **6. Employer research — two details** | Small. `stale_after` and a scope rule |
-| **7. Everything after the submit button** | Large and deliberately scoped out so far |
-| **8. Email alerts as a universal source** | Designed, not built. Needs a dedicated account before any code |
-| 🔴 **9. Nothing has been run end-to-end from a cold start** | Last only because it is a session of work, not a change. **It is the one that will find things nothing else can** |
+| **4. A next action per application** | Small. The cadence is built; the state is not |
+| **5. Everything after the submit button** | Large and deliberately scoped out so far |
+| **6. Email alerts as a universal source** | Designed, not built. Needs a dedicated account before any code |
+| 🔴 **7. Nothing has been run end-to-end from a cold start** | Last only because it is a session of work, not a change. **It is the one that will find things nothing else can** |
+
+🔴 **The sequencing is the user's, decided 2026-08-28**, and three of these are coupled rather than
+merely ordered:
+
+| | |
+|---|---|
+| **1 and 2 go together, and go LAST** | The repo is republished with the cover-letter policy already settled, so the recreate happens once and the next application does not repeat the question |
+| **3 waits for them** | A dashboard built before the republish would be built against a repo that is about to be replaced |
+| **4 and 5 go together** | Both are post-submit. Building the state without the process around it is guessing at what the state should hold |
 
 🟡 **A user guide is deliberately absent from this order** — see its entry for the trigger that starts it.
 
-## 🔴 Defects — things that behave wrongly
+## 🟢 Defects — none open, 2026-08-28
+
+**Every entry that was under here has shipped.** Records in [`docs/SHIPPED.md`](docs/SHIPPED.md).
+🔴 **That is a statement about this file, not about the system** — it means nothing is *recorded* as
+behaving wrongly, which is only as good as the last time somebody looked.
 
 ## 🟡 Gaps — things the system does not do yet
-
-## What already exists, in the wrong shape
-
-🔴 **In one week of real use, five employers' endpoints were found by hand and scattered across five
-places** — two on a preferences page, one on a role page, one in a company research note, and **one used
-and never recorded at all.**
-
-**That is the registry, already built, in the wrong shape.** It is the strongest argument that it should be
-one file.
-
----
 
 ### 🟡 A user guide — not yet, and the trigger is specific
 
