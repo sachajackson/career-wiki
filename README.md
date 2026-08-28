@@ -33,7 +33,9 @@ You never write the wiki. You answer questions and make the decisions.
 | **[PRIVACY.md](PRIVACY.md)** | What is held, where it goes, and what you should decide |
 | **[DISCLAIMER.md](docs/DISCLAIMER.md)** | What it cannot do, and what it will decline to do |
 | **[LESSONS.md](docs/LESSONS.md)** | **Rules learned by shipping the opposite** — kept with the failure that taught each one, so a later change does not quietly reverse it |
-| **[BACKLOG.md](BACKLOG.md)** | What does not work yet, and what has gone wrong once |
+| **[BACKLOG.md](BACKLOG.md)** | **Future work only.** What does not work yet |
+| **[SHIPPED.md](docs/SHIPPED.md)** | What was built, and what was wrong before it existed |
+| **[DESIGN.md](docs/DESIGN.md)** | How the parts that needed a decision actually work |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Using it and developing it, in the same clone |
 | **[SCHEMA.md](SCHEMA.md)** · **[AGENTS.md](AGENTS.md)** | The instructions the agent itself reads |
 

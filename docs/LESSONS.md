@@ -459,3 +459,282 @@ line instead of a number to take on faith.
 🔴 **Score it from the employer's own posting**, never an aggregator's — see the truncation defect above —
 and **mark it TBC where no full posting was ingested.** Most rows will be TBC, which usefully flags which
 scores came from a summary.
+
+
+---
+
+## 🟢 Moved out of `BACKLOG.md` on 2026-08-28 — the third pass, and the reason it keeps happening
+
+**Nine more.** This is the third sweep in three days, and the pattern is now clear enough to state:
+
+🔴 **The backlog is where findings LAND, because it is open while the work is happening.** Nothing is wrong with that. What is wrong is leaving them there — a lesson in a backlog reads as a task, an audit reads as a plan, and **real outstanding work gets buried under settled reasoning at a rate of roughly 250 lines a day.**
+
+🟢 **The sweep is now cheap because the destinations exist**: settled reasoning here, finished work in [`SHIPPED.md`](SHIPPED.md), specifications in [`DESIGN.md`](DESIGN.md). **`BACKLOG.md` holds future work and nothing else.**
+
+### 1. Nine of these are already fixed as *documented behaviour*, not as code
+
+**Ported into `SCHEMA.md`, `templates/` and the skills on 2026-08-24.** The entry stays because the
+reasoning is worth keeping — **but do not re-implement them:**
+
+| Now a documented rule | Where |
+|---|---|
+| Fetch the employer's own posting, never the aggregator's | `build-application` Step 1 |
+| Score the journey, not the address; a transit stop is not a commute | `templates/Role Scoring Framework.md` |
+| Standing-gaps list; *not recorded* ≠ *recorded as absent* | `SCHEMA.md` |
+| Three scores instead of one total; the requirement count | `templates/Role Scoring Framework.md` |
+| Do not answer a tie by lengthening the ruler | same |
+| Score against the user's baseline, not the field | same, plus `career-init` |
+| The internal move as a third option | `SCHEMA.md` |
+| ~~"Remote" is country-scoped~~ 🟢 **now a control, 2026-08-25** | `radar.py`, and it was doing the *reverse* |
+| The why-X answers and values-with-three-examples | `build-application` Step 0.4 |
+
+🔴 **A rule is not a control.** Several of these are the same class of thing as *"never wrap inside
+`[[ ]]`"*, which failed three times in one session before it became a check. **Where a rule can be made
+mechanical, that is still work outstanding** — it just is not *starting* work.
+
+🔴 **And one of these nine turned out to be worse than merely undocumented in code.** *"Remote is
+country-scoped"* was listed here as handled while `location_ok` was **waiving every location exclusion
+whenever the word appeared** — the reverse of the rule. Found 2026-08-25 by reading the code rather than
+the list. **Check the rest against their code before trusting this table.**
+
+---
+
+### 🔴 Audited 2026-08-24 before handover. Two entries were stale; both corrected
+
+**Worth knowing that this was checked, and worth knowing what it found**, because a backlog that has
+drifted is worse than a long one — it sends work at problems that no longer exist and leaves real ones
+looking handled.
+
+| Entry | Was | Actually |
+|---|---|---|
+| **The radar's SIGNAL number** | *"Done: the column is now `SIGNAL`"* | 🔴 **Never true of this repository.** That rename happened in a private copy. `radar.py` still writes `\| Score \|` — **the exact word that caused the confusion.** Corrected — and 🟢 **actually done 2026-08-25**, as `HIGH`/`MED`/`LOW` rather than as a second integer |
+| **Employer research** | *"designed, not built"* | 🟢 **Built** as `build-application` Step 0.4. Retitled, with the two details that genuinely did not make it |
+
+**Nothing else claims to be done that is not.** The nine rules listed above are documented rather than
+mechanical, and say so.
+
+🟢 **Two of those nine stopped being merely documented on 2026-08-25.** *"'Remote' is country-scoped"* and
+the rest are still instructions; but the SIGNAL vocabulary and the search window are now code with tests
+behind them. **The distinction this table exists to police is the one to keep applying: a rule is not a
+control.**
+
+---
+
+### 🟢 What changed on 2026-08-25 while the dev session was working — read before picking anything up
+
+**A registry and its tooling were built alongside your radar work. Five new files, and two of them change
+how the search config behaves:**
+
+| File | What it does to you |
+|---|---|
+| **`tools/radar/ats_registry.json`** | **15 employers, ~13,000 roles**, every entry verified by calling it. Not code — a contributor adds an object |
+| **`tools/radar/registry.py`** | 🔴 **the search config now supports `"watch": [...]`**, expanded into the shapes your adapters already expect. **`load_config()` calls it.** No adapter was changed |
+| **`tools/radar/adapters/custom.py`** | A sixth adapter, for employers running their own API. **Registered in `ADAPTERS`.** Driven by a field map in the registry, not by code per employer |
+| **`tools/registry_check.py`** | Calls every entry. Wired into `/career-lint` |
+| **`tools/add_employer.py`** | Verifies an employer, writes the entry, offers it upstream one file at a time |
+| 🔴 **`tools/tests/test_shipped.py`** | **The one most likely to fail on you.** Asserts every file the tools open is *tracked*, every private one is not, **every adapter in `ADAPTERS` has a tracked module**, and every test file is tracked. **Add an adapter and forget to `git add` it and this is what tells you** |
+
+🔴 **Three things that will bite if you do not know them:**
+
+1. **`radar.py`'s `load_config()` gained six lines** — it resolves `watch` and prints a report to stderr
+   before the run. **If you are mid-edit in that function, that is the collision.**
+2. **`adapters/__init__.py` gained `custom`** in the import line and in `ADAPTERS`.
+3. 🔴 **Two of your resolver tests were repointed, not deleted.** They encoded Deel as *"the ATS nothing
+   speaks"*, which stopped being true when `custom.py` shipped. **The `NO ADAPTER` branch keeps its
+   coverage via a fictional employer** — do not remove the stand-in thinking it is dead weight.
+4. 🔴 **`vault/settings/employers.json` (yours) and `tools/radar/ats_registry.json` (the registry) are one
+   letter apart and have opposite privacy rules.** Yours must never ship; the registry must always ship.
+   **Do not tidy the `.gitignore` carve-outs into a glob and do not rename either to match the other** —
+   see [the note below](#-two-files-one-letter-apart-opposite-privacy-rules--know-which-is-which). The
+   obvious tidy-up publishes a user's private avoid list.
+5. **`python3 tools/radar/registry.py --list`** shows who is in the registry without calling anything.
+   `registry_check.py` shows the same names but makes fifteen requests to do it.
+
+🟢 **Three findings from building it that generalise to the adapters you own:**
+
+- 🔴 **Oracle fails open, Workday fails closed.** A wrong Oracle `siteNumber` returns **200 and the
+  tenant's whole unfiltered list**; a wrong Workday site 404s with a named error. **That asymmetry decides
+  where probing is honest** — `add_employer.py` probes Workday site names and refuses to probe Oracle.
+- 🔴 **A first-of-many field is not the field.** Deel carries `location_name` (*"Israel"*, the first of
+  thirty) beside `all_locations`. **Mapping the obvious one would have dropped all 66 roles open to
+  Ireland and said nothing.**
+- 🔴 **`registry_check.py` shipped without retries and cried wolf within the hour** — one employer
+  reported `UNREACHABLE!` on a connection reset and answered fine a second later. **Anything that calls a
+  live endpoint needs retries before it is allowed to call something dead.**
+
+---
+
+### 🟢 On checklists: yes, but only the executable kind — 2026-08-25
+
+**Raised after the above: would a commit checklist have caught it?**
+
+🔴 **There already was one, it was followed, and the bug went straight through it.** `CONTRIBUTING.md`
+says *"Before every push: `git status --porcelain` — anything unexpected staged?"* **Status was clean.**
+The file was not unexpectedly *present*; it was expectedly *absent*, **and those look identical.**
+
+🔴 **Every instruction-shaped control in this repo has failed at least once.** *"Never wrap inside
+`[[ ]]`"* — three times in a day. *"Track outcomes"* — six weeks. *"Stop asking"* — ignored. **Every
+executable one has held.** A written checklist is an instruction with more steps.
+
+**And the second half of the question answers itself the same way:** a checklist that must be updated when
+functionality changes will not be, because nothing forces it. **A test lives beside the code and fails
+when the code moves.**
+
+🟢 **So the answer is a test that asks what a clone would contain, not what this machine has** —
+`tools/tests/test_shipped.py`, built 2026-08-25:
+
+- Every file the tools open by name **is tracked**
+- 🔴 Every file that must never ship **is not** — `employers.json`, the search config, `seen.json`, the radar's
+  working files
+- Every registered adapter has a tracked module; **every test file is tracked**, because an untracked test
+  is a check that only ever runs for its author
+- Every shipped `.json` under `tools/radar/` has **both** a `!` line in `.gitignore` **and** a carve-out in
+  the pre-commit hook — the two places that have to agree and did not
+
+🟢 **It caught something on its first run: itself.** `test_shipped.py` was not yet tracked. **The check
+that exists because of one untracked file found the next one immediately.**
+
+🟡 **Where a written checklist still earns its place: the things no test can reach.** The oversight pass,
+reading a document aloud before sending it, deciding whether a concession is honest. **Those are few, and
+they should be marked as the exception rather than the mechanism.**
+
+---
+
+## 🔴 Audited 2026-08-25: the nine "documented rules" checked against their code
+
+**Prompted by finding that one of the nine — *"Remote is country-scoped"* — was listed as handled while
+the code did the reverse. That is a bad enough hit rate to check the rest, and the rest were worse.**
+
+🔴 **All eight remaining rules ARE present where this file says they are.** The claim was not false, which
+is what the previous audit checked for. **That is not the same as the rule being in force**, and this pass
+asked the second question instead: *is there anything that contradicts it, and does the thing it
+prescribes have somewhere to live?*
+
+✅ **All six fixed 2026-08-25, and the audit itself is now a test** —
+[`tools/tests/test_templates.py`](tools/tests/test_templates.py), 8 checks, all six mutants caught. **It
+parses the outcome vocabulary out of both `SCHEMA.md` and the template and asserts they are the same set**,
+so the two copies cannot drift again, and it fails if any prescribed table is removed from the framework
+page. **This is the point: the audit found things no rule-reading could, so the audit became mechanical
+rather than something someone has to remember to repeat.**
+
+| | Rule | Verdict |
+|---|---|---|
+| 1 | Fetch the employer's own posting | ✅ **Fixed.** Was 🔴 **contradicted by another skill.** `role-radar` step 2 says *"read the cached description — already in `raw.json`, no refetch needed"*, then step 3 says score from it. For an aggregator row that cache **is** the truncated posting. **The truncation entry below is explicit that the employer's own posting must be fetched *before assessment*, because by packaging time the score has already been used to decide** |
+| 2 | Score the journey, not the address | ✅ **Fixed** — a *Known locations* table now exists. Was 🟡 **prescribing two things with nowhere to put them.** *"Store employment clusters once and reuse them"* and scoring from where the user actually lives — **no template has a slot for either**, so both get re-derived per role, which is the failure the rule describes |
+| 3 | Standing-gaps list | ✅ **Fixed** — the table is shipped empty. Was 🔴: **`SCHEMA.md` said to keep the table "on the framework page". The framework template has no such table.** A fresh vault starts with the instruction pointing at a section that does not exist — and this is the rule whose entire purpose is that an absence must be *recorded* rather than merely unfound |
+| 4 | Three scores, and the requirement count | 🟢 Present and consistent |
+| 5 | Do not lengthen the ruler | 🟢 Present and consistent |
+| 6 | Score against the baseline | ✅ **Fixed** — the table's first row is the current job. Was 🟡: said *"the first row of the table is the current job"* — **the table has no baseline row and no status value that could describe one** |
+| 7 | The internal move as a third option | ✅ **Fixed** — it is the table's second row, with the prompt. Was 🔴: **`SCHEMA.md` said "score it as a row in the table". The word *internal* does not appear in the framework template at all**, and nothing prompts for it — while `SCHEMA.md` itself says a user in a stable job will never raise it unprompted |
+| 8 | "Remote" is country-scoped | ✅ Fixed in code 2026-08-25. It had been doing the reverse |
+| 9 | Why-X answers, values with three examples | 🟢 Present and consistent |
+
+---
+
+### 🔴 The original entry, kept because the rules are still binding
+
+**Status: happened 2026-08-24. Caught, remediated by history rewrite, and worth a permanent rule.**
+
+`templates/settings/search.example.json` shipped with **one user's actual commuting geography — home county included — their
+real target job titles, and their geographic exclusions.** In a public repository, under their own name,
+alongside a README explaining the repo runs a job search.
+
+🔴 **Nobody wrote that file. It was a working config with `.example` in the name**, which is how almost
+every example file in every project gets made.
+
+**Three failures stacked, and the middle one is the serious one:**
+
+1. **The file was force-added to fix a broken clone — without being read.** *"It's just an example config"*
+   is precisely the assumption that makes this class of leak work.
+2. 🔴 **The pre-commit hook blocked it, correctly, saying it looked like personal material — and the rule
+   was carved out rather than the file being opened.** **The control fired and was overridden.** A
+   safety check that gets exempted whenever it is inconvenient is decoration.
+3. **`.gitignore` had been hiding the problem, not solving it.** The pattern `tools/radar/*.json` matched
+   the example too, so it was never committed — and therefore never reviewed, while sitting in the author's
+   working tree looking like part of the repo.
+
+**Rules that follow:**
+
+- 🔴 **Never commit a file you have not read.** Especially one being added to fix something else.
+- 🔴 **When a safety hook objects, read the file before deciding it is a false positive.** If an exemption
+  is genuinely right, it should be justified by the file's contents, not by the inconvenience.
+- 🟢 **Write example files as explicit placeholders, not as sanitised real ones.** `"<your city>"` cannot
+  leak, and it documents the field better than a plausible value does — a reader cannot tell whether
+  `"dublin"` is a default or an example.
+- 🟡 **Audit every `*.example.*`, `*.sample.*` and `templates/` file in a repo that is about to go public**,
+  and check them against the same rules as the ignore list. **They are the files most likely to have been
+  derived from something real.**
+- 🔴 **Add `tools/tests/` to that list.** Fixtures are example files under another name and were missed by
+  this entry for exactly that reason — the audit that eventually ran found a real first name, a real
+  city, and two fixtures built from the user's own history. **The naming convention is what made them
+  invisible: nothing in a filename ending `_test.py` says "read this before publishing".**
+
+🔴 **And a caveat on the remediation, because it is widely misunderstood.** The bad commit was removed by
+rebase and force-push within 25 minutes, with 0 forks and 0 stars — **and the orphaned commit remained
+fetchable from the host by its SHA afterwards.** Verified, not assumed. **A history rewrite removes a
+commit from the branch, not from the server.** For anything genuinely sensitive — a key, a credential —
+**rotate it and ask the host to garbage-collect; do not treat the force-push as the fix.**
+
+---
+
+---
+
+### 🔴 "Track outcomes" was shipped as an instruction and ignored for six weeks
+
+**Status: rule added 2026-08-24 with a trigger. The instruction alone had already failed.**
+
+`SCHEMA.md` said *"record what happened to every application"* and *"if the user asks why nothing is
+landing, you should already have the data to answer."* **Across seven applications and six weeks, one
+outcome was recorded.**
+
+🔴 **The reason is structural, not carelessness. Nothing inside the system happens when an employer
+replies, or fails to.** Every other operation has a trigger — a document arrives, a role is found, a
+document is written. **An outcome arrives in somebody's inbox and the system never hears about it.**
+
+**Two failures, and the second is worse:**
+
+1. **Six of seven applications have no outcome recorded** — which is indistinguishable from *"nothing has
+   come back"*, and those mean different things.
+2. 🔴 **The one outcome that *was* captured was filed under the wrong prefix**, so a later search for
+   outcomes found nothing and concluded none existed. **The record existed and could not be found**, which
+   for every practical purpose is the same as not existing. **This is the "not recorded versus recorded as
+   absent" defect again, in a third form.**
+
+**Fixed by giving it a trigger:** `/career-lint` now checks for submitted applications with no recorded
+outcome and **asks about each by name** — over 7 days, ask; over 21 days, **record `no response`, because
+silence is data and a blank field looks unasked rather than unanswered.**
+
+---
+
+### 🔴 "Rejected" meant both directions at once
+
+**Status: fixed 2026-08-24 by closing the vocabulary.**
+
+A scoring table used **"Rejected"** for both *the employer turned them down* and *they assessed it and
+chose not to apply*. **Two rows four days apart carried the same word for opposite facts.**
+
+🔴 **It makes the table unable to answer the single most important question about a search** — how many
+applications has an employer turned down? — **and that number is the one that tells you whether the level
+is right.**
+
+**Closed set:** `Submitted` · `Rejected by employer` · `Withdrew` · `Declined` · `Closed` · `Vetoed` ·
+`Not applied`.
+
+---
+
+---
+
+### What the test actually found instead
+
+🔴 **The gap is not the code. It is that an update can require a vault file it cannot deliver.**
+
+The tiering vocabulary moved into `vault/settings/signal.json` on 2026-08-26. A user who pulls that change
+gets the new radar and **not the file it reads**. The radar still runs, still fetches, still writes a
+shortlist — HIGH and MED are simply always empty and every role lands in the catch-all section. **That
+reads as a quiet week, not as a broken install**, which is the worst failure this system can have.
+
+🟢 **Two pieces of that are now covered**, both by executable checks rather than by a note:
+
+- **`doctor.py` reports a missing or unedited `signal.json`** — and is scoped to installs that actually
+  have a `search.json`, because it cried wolf on one that did not.
+- **`tools/template_drift.py`** already does the equivalent for `wiki/` pages.
