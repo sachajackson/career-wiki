@@ -2020,11 +2020,57 @@ makes it strictly better than a scraper rather than merely safer.
 **A dedicated account is part of the design, not an optional nicety**: it holds job alerts and nothing
 else, so it carries no personal correspondence and nothing tied to the user's identity.
 
-### No application tracker
+### 🟡 No application tracker — MOSTLY BUILT, corrected 2026-08-28
 
-Status lives in the scoring table with no dates, no next action, and no follow-up cadence. **A user with
-five live applications has no prompt to chase anything**, and "when do I conclude this one is dead" has no
-answer.
+**This entry said status lives in the scoring table "with no dates, no next action, and no follow-up
+cadence", and that a user with five live applications "has no prompt to chase anything". Two thirds of
+that is no longer true**, and it was recommended as work before anyone checked.
+
+🟢 **`tools/outcomes.py` built the cadence.** It reads submitted dates out of the table, asks after **7**
+days and records silence as an outcome after **21**, and it is the `outcomes` stage of `pipeline.py` — so
+a run is not finished while something is owed. On the vault it was written against it currently names
+three applications at 7 days.
+
+🔴 **What is still missing is the narrow part: a next action per application.** *"Chase"* and *"prepare
+for a call on Thursday"* are different states and the table cannot tell them apart.
+
+🟡 **Kept as a lesson, not just an item.** This is the second backlog entry to be recommended after the
+thing it describes was built — which is why the rule is *check a backlog entry still applies before
+acting on it*, and why entries now carry the date they were last checked.
+
+### 🟡 No way to LOOK at the scored roles — a browser dashboard
+
+**Added 2026-08-28 at Sacha's request.** *"Build a HTML UI where a user can view all the scored roles in a
+browser and additional information. Create a dashboard?"*
+
+**The problem is real and it showed up twice this week.** `Role Scoring Framework.md` now holds ~96 rows
+across several tables, and answering *"what are my top 20?"* took a purpose-written script — which then
+turned out to be reading **78 of 96 rows**, because the row regex could not see a decorated first cell.
+🔴 **A table nobody can sort is a table whose ordering nobody checks.**
+
+**Obsidian renders the markdown but will not sort, filter or total it**, and the questions that actually
+get asked are all sorting questions: *what is unapplied above FIT 12 · what is remote · what clears the
+floor · what have I not heard back on.*
+
+#### The design constraints, which are most of the work
+
+| | |
+|---|---|
+| 🔴 **One self-contained HTML file, no server, no CDN** | Same rule as `templates/cv.html`: needs nothing installed and behaves identically everywhere. Inline the CSS and JS; sorting and filtering are a few dozen lines of vanilla JS over a table that is already in the DOM |
+| 🔴 **Generated into `vault/state/`, and it must be safe to delete** | It is a VIEW. Regenerate it from the vault; never let it become a place where anything is stored |
+| 🔴 **It contains the user's entire search and must never be committed** | `vault/**` is gitignored and `test_boundary.py` enforces that. **Do not put it anywhere else**, and say plainly in the page that it is local |
+| 🔴 **Read-only, and it must look read-only** | The moment a score can be edited in the browser there are two sources of truth and the markdown loses. **No inputs, no buttons that write** |
+| 🟡 **N·D·E, FIT, LIFE and SEC all visible per row** | Sacha's standing rule: a total on its own hides which dimension is doing the work. Link each row to its role page and its archived posting |
+| 🟡 **Show what is stale** | Submitted with no outcome past 7 days, unreviewed scores at FIT 10+, missing posting URLs. The pipeline already computes all of it |
+
+#### 🔴 What would make it a mistake
+
+- **If it re-derives anything.** It must read the same parser the checks read — `tools/scores.py` — or it
+  becomes a second, disagreeing implementation of the table. **The top-20 bug is exactly what that looks
+  like**, and it happened in a throwaway script that lived for ten minutes.
+- **If it needs regenerating by hand to be trusted.** Stamp the generation time in the page and have
+  `pipeline.py` report when it is older than the table it describes.
+- **If it grows into an application tracker** without the entry above being done properly first.
 
 ### Nothing has been run end-to-end from a cold start
 
