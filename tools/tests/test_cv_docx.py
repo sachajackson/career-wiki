@@ -33,7 +33,7 @@ def text_of(path):
     with zipfile.ZipFile(path) as z:
         doc = z.read("word/document.xml").decode()
     # unescaped, because that is what a parser sees -- "SS&amp;C" in the XML
-    # is a correctly encoded "SS&C" on the page.
+    # is a correctly encoded "N&W" on the page.
     import html
     raw = " ".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>", doc))
     return html.unescape(raw), doc
@@ -110,11 +110,17 @@ class TheConverter(unittest.TestCase):
 
     def test_xml_special_characters_survive(self):
         """🔴 An ampersand in an employer name is common and an unescaped one
-        makes the file unopenable. "SS&C" and "Johnson & Johnson" both occur."""
+        makes the file unopenable — real employers are routinely written
+        "X&Y" or "X & Y".
+
+        🟡 The fixture is fictional on purpose. It named a real employer until
+        2026-08-28, when that employer went on the user's watch list and
+        doctor's settings-leak check found it here. The ampersand is the thing
+        under test; whose name carries it is irrelevant."""
         out = os.path.join(tempfile.mkdtemp(), "x.docx")
-        cv.write_docx([("SS&C Technologies <Europe>", None)], out)
+        cv.write_docx([("Northwind & Widget <Europe>", None)], out)
         text, _ = text_of(out)
-        self.assertIn("SS&C Technologies <Europe>", text)
+        self.assertIn("Northwind & Widget <Europe>", text)
 
     def test_empty_paragraphs_are_dropped(self):
         self.assertEqual(cv.convert("<body><p></p><p>  </p><p>Real</p></body>"),
