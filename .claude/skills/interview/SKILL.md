@@ -5,7 +5,25 @@ description: Interview the user about what they actually do at work, and file th
 
 # Interview
 
-## 🔴 Run this before the first question, and before any question you are unsure about
+## 🔴 Before the first question: read `Operating Model.md` IN FULL
+
+**All of it, every time, however long it is** — not the *Interview backlog* section, not a grep, not a
+skim of the headings. **An interview happens at any point in the life of a vault**, not at the start, and
+by the second one that page is the densest record of the user's working life that exists.
+
+🔴 **This rule is here because it was broken.** A round of seven questions was drafted on 2026-08-28 after
+reading only the backlog section. **Four of the seven were already answered in full** — one of them with a
+before-and-after pair the questioner then asked for. The page it should have read was 897 lines and named
+a second page, [[Delivery Tooling]], devoted entirely to the subject being asked about.
+
+**Read the pages it links to as well.** `Operating Model.md` is an index as much as a record: the answer
+is often one link away, on a page written specifically because the topic outgrew this one.
+
+🟢 **Every wiki page carries its own *Open questions* section, and those are the real round.** They were
+written by whoever last knew the most about the subject. **Start there rather than composing from
+scratch** — a question the page already asks of itself is guaranteed not to be redundant.
+
+## 🟡 Then run the guard, and know what it cannot do
 
 ```
 python3 tools/known.py "<the thing>"
@@ -17,6 +35,12 @@ them the system does not retain what they say, which is the one thing it exists 
 🔴 **`SETTLED` or `PRESENT` means do not ask.** Read the lines, use what is there, and if it needs
 extending, **ask the narrower question the existing record raises** rather than the broad one it already
 answered. See [[SCHEMA.md]] for the verdicts and what each obliges.
+
+🔴 **`NOT FOUND` DOES NOT MEAN NOT RECORDED, and this is the trap.** The guard matches wording. On
+2026-08-28 `"applications built with AI"` returned `NOT FOUND` while **two pages** described exactly that,
+because they use the words *delivery tooling*. **Try the user's vocabulary and the wiki's, and if a
+`NOT FOUND` is surprising, believe the page and not the tool.** The guard narrows a round; reading is
+what makes it safe.
 
 **This is the most valuable thing in the repo.** Everything else — the scoring, the CVs, the profiles —
 is downstream of how well this is done.
@@ -116,6 +140,31 @@ material as it stands.
 
 **File contradictions rather than resolving them.** If an answer conflicts with a source document, record
 both and flag it. Two of the user's own documents disagreeing is a finding, not an error to smooth over.
+
+## 🔴 An artefact is not a source. Check it against `Operating Model.md`, every time
+
+**A CV, a LinkedIn profile or an old application pack is a SNAPSHOT of what was true when somebody wrote
+it.** `Operating Model.md` is maintained. **When they disagree, the wiki is usually right and the artefact
+is usually just old** — and the artefact is the one that goes to an employer.
+
+🔴 **The gap is routinely years.** One vault's CV is dated **July 2023** while its Operating Model carries
+2026 material — a second AI build in the org, an apprenticeship programme run personally, a capacity model
+with a before-and-after pair, a team that has changed size by attrition. **A round composed from that CV
+would ask about a job the user stopped doing.**
+
+**So, whenever an artefact is in play — read for an interview, quoted in a question, or about to be
+rewritten:**
+
+| | |
+|---|---|
+| 🔴 **Reconcile before asking** | Anything the artefact asserts that the wiki contradicts is a QUESTION, and often the best one in the round: *"your CV says X, the wiki says Y — which is current?"* |
+| 🔴 **Never let the artefact silently win** | It is older and it is the one that leaves the building. A stale claim in front of a recruiter is the failure this whole system exists to prevent |
+| 🟢 **The wiki being AHEAD is the normal case** | It is not an error to report. It means the interviews have been working, and it tells you what the next CV rewrite has to pick up |
+| 🟡 **File the contradiction, do not smooth it** | Two of the user's own documents disagreeing is a finding. Record both and flag it — see *Filing the answers* below |
+
+🟢 **Say what you found, in one line, before the round starts.** *"Your CV predates four things the wiki
+now records — I am not going to ask about those."* It proves the system retained what they said, which is
+the whole point of running this before asking anything.
 
 ## Getting it wrong
 

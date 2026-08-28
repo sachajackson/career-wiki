@@ -111,6 +111,53 @@ class TheRulesOtherThingsDependOn(unittest.TestCase):
         self.assertRegex(body(), r"six to eight")
 
 
+class TheTwoRulesAddedAfterTheyWereBroken(unittest.TestCase):
+    """🔴 Both were written on 2026-08-28, the day each failed.
+
+    A round of seven questions was drafted after reading only the *Interview
+    backlog* section of a 897-line `Operating Model.md`. **Four of the seven were
+    already answered in full**, one of them with the before-and-after pair the
+    questioner then asked for — and the page named a second page devoted entirely
+    to the subject.
+    """
+
+    def test_it_says_to_read_the_operating_model_in_full(self):
+        b = body()
+        self.assertIn("Operating Model.md", b)
+        self.assertRegex(b, r"IN FULL|in full")
+        self.assertRegex(b, r"not the \*Interview backlog\*|not a skim|every time",
+                         "the rule must say what NOT reading it looks like — a skim reads as compliance")
+
+    def test_it_says_an_interview_happens_at_any_time(self):
+        """🔴 The reason the rule exists. Reading it once at setup is not the
+        same as reading it before each round, and by the second interview that
+        page is the densest record of the user's working life."""
+        self.assertRegex(body(), r"any point in the life|at any point|not at the start")
+
+    def test_it_points_at_the_pages_own_open_questions(self):
+        """🟢 A question the page already asks of itself cannot be redundant."""
+        self.assertIn("Open questions", body())
+
+    def test_it_warns_that_NOT_FOUND_is_not_proof(self):
+        """🔴 The guard matches wording. `applications built with AI` returned
+        NOT FOUND while two pages described exactly that, in different words."""
+        self.assertIn("NOT FOUND", body())
+        self.assertRegex(body(), r"does not mean not recorded|DOES NOT MEAN NOT RECORDED")
+
+    def test_it_says_to_reconcile_an_artefact_against_the_wiki(self):
+        """🔴 A CV is a snapshot; the wiki is maintained. One vault's CV is dated
+        July 2023 against 2026 material — a round composed from it would ask
+        about a job the user had stopped doing."""
+        b = body()
+        self.assertRegex(b, r"snapshot|artefact is not a source|An artefact is not a source")
+        self.assertRegex(b, r"CV", "the rule must name the artefact people actually reach for")
+        self.assertRegex(b, r"contradict|disagree", "it must say what to do when they conflict")
+
+    def test_it_does_not_let_the_artefact_win(self):
+        """🟡 The artefact is older AND it is the one that leaves the building."""
+        self.assertRegex(body(), r"never let the artefact silently win|Never let the artefact", )
+
+
 class ItShipsLikeTheOthers(unittest.TestCase):
 
     def test_it_has_frontmatter_with_a_name_and_a_description(self):
