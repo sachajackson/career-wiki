@@ -70,7 +70,16 @@ if [ -z "$cfg" ]; then
   exit 2
 fi
 
-out=$(python3 "$root/tools/verify.py" "$path" --config "$cfg" --wiki "$root/wiki" --coverage 2>&1)
+# 🔴 --wiki WAS PASSED AS "$root/wiki" AND THAT FOLDER MOVED TO vault/wiki.
+# verify.py then printed "no wiki at ..." and exited 1, so this hook reported
+# DETERMINISTIC LAYER FAILED on every artefact write while running NO CHECK AT
+# ALL. A control that fails for a reason unrelated to the document is worse
+# than one that is absent: it trains whoever reads it to ignore the output.
+#
+# 🟢 verify.py defaults --wiki to paths.WIKI. This repo's own rule is that
+# paths come from tools/lib/paths.py and never from a string literal; the one
+# place that broke it was a shell script nothing tested.
+out=$(python3 "$root/tools/verify.py" "$path" --config "$cfg" --coverage 2>&1)
 status=$?
 
 # Refresh the reviewer's export on every write, so it can never be stale and

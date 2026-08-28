@@ -1211,3 +1211,46 @@ practice was already right** — the sent letter offers it in the closing, as pr
 *"If it is of interest, the process I used to assess this role, including the requirement-by-requirement
 scoring, is open source at …"* **What was missing was that nothing recorded the decision**, so it was
 being made again on every application, which is how something gets added silently.
+
+---
+
+## ✅ `verify-artefact.sh` tested — and it had been broken for days, 2026-08-28
+
+**The only control in the repo that gated everything and was checked by nothing.** It fires on **every
+Write and Edit**, and its whole design is that *"the agent does not get to decide whether to check its own
+work"*. `install-guard.sh`, sitting beside it, had three behavioural tests. This had one assertion that
+the file exists.
+
+### 🔴 What writing the first test found, before the test even ran
+
+**It passed `--wiki "$root/wiki"`, and that folder had moved to `vault/wiki`.** So on every artefact
+write:
+
+```
+DETERMINISTIC LAYER FAILED on CV.html. Fix these before doing anything else.
+
+no wiki at /…/career-wiki/wiki
+```
+
+🔴 **`verify.py` exited 1 having indexed nothing — 0 pages where there are 31, 0 figures where there are
+399.** The hook then announced a failure of a layer that never ran.
+
+🔴 **That is worse than the check being absent.** A control that fails for a reason unrelated to the
+document trains whoever reads it to ignore the output — and the message gave no way to tell the two
+apart.
+
+🟢 **The proof is a test that fails against the old version:** a CV containing the fabricated figure
+`9,412` produced `DETERMINISTIC LAYER FAILED` **without the number appearing anywhere in the output**,
+because nothing had looked at it. It appears now.
+
+### The rule it broke, which the repo already had
+
+**"Paths come from `tools/lib/paths.py`, never from string literals."** `verify.py` defaults `--wiki` to
+`paths.WIKI` and was correct. **The one place that broke the rule was a shell script nothing ran** — and
+`test_boundary`'s stale-path check already scanned `.sh` files; it simply did not know that name had
+moved. It does now.
+
+**Nine behavioural tests**, covering what it skips (no path, ordinary text, DOCX left to `/pre-submit`),
+the wrapped-link check, the missing `application.json` message, a fabricated figure, and the regression —
+asserted on **behaviour**, by pointing the hook at a vault in the environment and checking it indexed
+*that* one.

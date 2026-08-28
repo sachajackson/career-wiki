@@ -267,12 +267,16 @@ class NoToolNamesAFileThatMoved(unittest.TestCase):
     # Bare names of files that moved. A path-qualified mention is fine --
     # `templates/settings/employers.example.json` tells the reader where it is;
     # a bare `employers.example.json` sends them looking in the wrong folder.
-    GONE = ("config.json", "sync-to-vault")
+    # 🔴 `$root/wiki` is here because a shell hook passed it to verify.py for days
+    # after the folder moved to vault/wiki. The tool defaults the flag correctly;
+    # the hook overrode the default with a literal. This check already scanned
+    # .sh files -- it just did not know that name had moved.
+    GONE = ("config.json", "sync-to-vault", "$root/wiki")
     # 🟢 A mention that says the thing is gone is the CORRECT use, and the old
     # whole-file escape ("was deleted on" appears anywhere) exempted every other
     # mention in the same document along with it. Per line, and by meaning.
     HISTORICAL = re.compile(r"no longer|was deleted|were deleted|used to be|has been removed|"
-                            r"was removed|does not exist|no more|~~", re.I)
+                            r"was removed|does not exist|no more|~~|moved to|was passed|used to", re.I)
     BARE = ("employers.example.json", "search.example.json", "review.example.json")
 
     def test_no_user_facing_file_names_a_path_that_moved(self):
