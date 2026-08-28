@@ -1,130 +1,130 @@
 {
-  "_README": [
-    "Copy this to vault/settings/search.json, then REPLACE EVERY PLACEHOLDER. vault/ is never committed.",
-    "The angle-bracket values below are placeholders, not defaults. Left as they are,",
-    "the location filter matches nothing and the radar returns nothing.",
-    "Nothing in this file should describe a real person until you fill it in yourself."
+ "_README": [
+  "Copy this to vault/settings/search.json, then REPLACE EVERY PLACEHOLDER. vault/ is never committed.",
+  "The angle-bracket values below are placeholders, not defaults. Left as they are,",
+  "the location filter matches nothing and the radar returns nothing.",
+  "Nothing in this file should describe a real person until you fill it in yourself."
+ ],
+ "queries": [
+  "<a job title you would take>",
+  "<another job title you would take>",
+  "<a third \u2014 10 to 40 queries is a sensible range>"
+ ],
+ "location": {
+  "_comment": [
+   "Plain substrings, matched case-insensitively against the posting's location.",
+   "'ok' alone wins nothing; 'bad' and 'edge' both exclude. Add 'remote' to ok if",
+   "you want remote roles \u2014 but note that most boards scope remote to one country."
   ],
-  "queries": [
-    "<a job title you would take>",
-    "<another job title you would take>",
-    "<a third — 10 to 40 queries is a sensible range>"
+  "ok": [
+   "<your city>",
+   "<your region>",
+   "<your country>",
+   "remote"
   ],
-  "location": {
-    "_comment": [
-      "Plain substrings, matched case-insensitively against the posting's location.",
-      "'ok' alone wins nothing; 'bad' and 'edge' both exclude. Add 'remote' to ok if",
-      "you want remote roles — but note that most boards scope remote to one country."
-    ],
-    "ok": [
-      "<your city>",
-      "<your region>",
-      "<your country>",
-      "remote"
-    ],
-    "bad": [
-      "<somewhere you will not commute to>"
-    ],
-    "edge": [
-      "<somewhere you would consider only for the right role>"
-    ]
-  },
-  "adzuna": {
-    "_comment": "Free key from https://developer.adzuna.com/ . country is an ISO-2 code. Coverage varies by country — check yours is supported before relying on it.",
-    "app_id": "",
-    "app_key": "",
-    "country": "<iso-2, e.g. gb>",
-    "where": "<your city>",
-    "distance": 40,
-    "pages": 2
-  },
-  "_watch_comment": [
-    "Name employers here and the endpoint is looked up in ats_registry.json -- no need to know whether",
-    "they use Greenhouse, Workday or Oracle. Anything that cannot be resolved is reported at the",
-    "start of every run rather than quietly skipped. Run `python3 tools/radar/registry.py NAME` to",
-    "test a name, and `python3 tools/registry_check.py` to confirm the endpoints still answer.",
-    "🔴 This shipped naming two REAL employers until 2026-08-26 -- taken from one user's own",
-    "watch list. A template that says REPLACE EVERY PLACEHOLDER and then quietly carries",
-    "somebody's actual answers teaches the reader that some of it is already right."
+  "bad": [
+   "<somewhere you will not commute to>"
   ],
-  "_postings_comment": [
-    "Where to archive the description of every shortlisted role. Default: ../../wiki/postings.",
-    "A posting is the evidence behind a score, a requirement tally and an interview story, and it is",
-    "the one input guaranteed to be deleted -- usually right when it becomes useful. Never overwritten:",
-    "an archived posting records what was actually read at the time."
+  "edge": [
+   "<somewhere you would consider only for the right role>"
+  ]
+ },
+ "adzuna": {
+  "_comment": "Free key from https://developer.adzuna.com/ . country is an ISO-2 code. Coverage varies by country \u2014 check yours is supported before relying on it.",
+  "app_id": "",
+  "app_key": "",
+  "country": "<iso-2, e.g. gb>",
+  "where": "<your city>",
+  "distance": 40,
+  "pages": 2
+ },
+ "_watch_comment": [
+  "Name employers here and the endpoint is looked up in ats_registry.json -- no need to know whether",
+  "they use Greenhouse, Workday or Oracle. Anything that cannot be resolved is reported at the",
+  "start of every run rather than quietly skipped. Run `python3 tools/radar/registry.py NAME` to",
+  "test a name, and `python3 tools/registry_check.py` to confirm the endpoints still answer.",
+  "\ud83d\udd34 This shipped naming two REAL employers until 2026-08-26 -- taken from one user's own",
+  "watch list. A template that says REPLACE EVERY PLACEHOLDER and then quietly carries",
+  "somebody's actual answers teaches the reader that some of it is already right."
+ ],
+ "_postings_comment": [
+  "Where to archive the description of every shortlisted role. Default: ../../wiki/postings.",
+  "A posting is the evidence behind a score, a requirement tally and an interview story, and it is",
+  "the one input guaranteed to be deleted -- usually right when it becomes useful. Never overwritten:",
+  "an archived posting records what was actually read at the time."
+ ],
+ "postings_dir": null,
+ "watch": [
+  "<an employer you want watched by name>",
+  "<another>"
+ ],
+ "greenhouse": {
+  "_comment": "Board tokens of employers you want watched directly. Find one in their careers URL: boards.greenhouse.io/<token>",
+  "boards": []
+ },
+ "lever": {
+  "_comment": "Company slugs, from jobs.lever.co/<slug>",
+  "companies": []
+ },
+ "workday": {
+  "_comment": [
+   "Employers whose careers site runs on Workday \u2014 a large share of big ones do,",
+   "even where the site looks bespoke. No key needed.",
+   "host, tenant and site are THREE SEPARATE VALUES and you cannot derive one from",
+   "another: there are two hosting styles and an adapter that assumes either one",
+   "misses the other silently.",
+   "  per-tenant:  <tenant>.wd1.myworkdayjobs.com   shared: wd1.myworkdaysite.com",
+   "The shard number varies (wd1/wd3/wd5). A 422 means the wrong shard, not a bad",
+   "request \u2014 the adapter says so when it sees one.",
+   "Read all three values off the employer's careers URL, which looks like:",
+   "  https://<host>/en-US/<site>/job/...",
+   "'names' is optional and only prettifies the tenant slug in the shortlist."
   ],
-  "postings_dir": null,
-  "watch": [
-    "<an employer you want watched by name>",
-    "<another>"
+  "employers": [],
+  "names": {},
+  "pages": 5,
+  "delay": 0.3
+ },
+ "oracle": {
+  "_comment": [
+   "Employers on Oracle Cloud Recruiting. No key needed, and unlike Workday it needs",
+   "only TWO values \u2014 both are in the careers URL, which looks like:",
+   "  https://<host>/hcmUI/CandidateExperience/en/sites/<site>/jobs",
+   "Take host and site verbatim. Do not derive the host: tenants appear both with a",
+   "region (<pod>.fa.us2.oraclecloud.com) and without (<pod>.fa.oraclecloud.com).",
+   "'names' maps each site to the EMPLOYER'S NAME, and it is NOT cosmetic. Without it a row's company field is the site slug (CX_1001), and every filter that matches on employer -- avoid, avoid_sectors, watch -- silently stops applying to this adapter, while dedup can never recognise the same job arriving from LinkedIn. doctor reports a configured site with no name."
   ],
-  "greenhouse": {
-    "_comment": "Board tokens of employers you want watched directly. Find one in their careers URL: boards.greenhouse.io/<token>",
-    "boards": []
-  },
-  "lever": {
-    "_comment": "Company slugs, from jobs.lever.co/<slug>",
-    "companies": []
-  },
-  "workday": {
-    "_comment": [
-      "Employers whose careers site runs on Workday — a large share of big ones do,",
-      "even where the site looks bespoke. No key needed.",
-      "host, tenant and site are THREE SEPARATE VALUES and you cannot derive one from",
-      "another: there are two hosting styles and an adapter that assumes either one",
-      "misses the other silently.",
-      "  per-tenant:  <tenant>.wd1.myworkdayjobs.com   shared: wd1.myworkdaysite.com",
-      "The shard number varies (wd1/wd3/wd5). A 422 means the wrong shard, not a bad",
-      "request — the adapter says so when it sees one.",
-      "Read all three values off the employer's careers URL, which looks like:",
-      "  https://<host>/en-US/<site>/job/...",
-      "'names' is optional and only prettifies the tenant slug in the shortlist."
-    ],
-    "employers": [],
-    "names": {},
-    "pages": 5,
-    "delay": 0.3
-  },
-  "oracle": {
-    "_comment": [
-      "Employers on Oracle Cloud Recruiting. No key needed, and unlike Workday it needs",
-      "only TWO values — both are in the careers URL, which looks like:",
-      "  https://<host>/hcmUI/CandidateExperience/en/sites/<site>/jobs",
-      "Take host and site verbatim. Do not derive the host: tenants appear both with a",
-      "region (<pod>.fa.us2.oraclecloud.com) and without (<pod>.fa.oraclecloud.com).",
-      "'names' is optional and only prettifies the site slug in the shortlist."
-    ],
-    "employers": [],
-    "names": {},
-    "pages": 5,
-    "delay": 0.3
-  },
-  "linkedin": {
-    "_comment": "OFF by default. Undocumented endpoint, against LinkedIn's terms of service. Read adapters/linkedin.py and decide for yourself.",
-    "enabled": false,
-    "location": "<your country>",
-    "pages": 4,
-    "delay": 0.8
-  },
-  "google": {
-    "_comment": [
-      "Google runs its own careers site: no third-party ATS, and no JSON API (the old",
-      "careers.google.com/api/v3 endpoint answers 404). The results page is SERVER-RENDERED,",
-      "so the adapter reads the HTML directly. Leave 'locations' empty to disable this source.",
-      "",
-      "'locations' are Google's own location strings, exactly as they appear in the ?location=",
-      "parameter of the careers URL. Their site writes 'Dublin Ireland', not 'Dublin, Ireland' --",
-      "open the careers page, filter to your city, and copy the value out of the address bar.",
-      "",
-      "🔴 GOOGLE PUBLISHES NO POSTING DATE anywhere on a job card. Worse than Workday's",
-      "'30+ days', which at least gives you a floor. Rows carry an empty date and may be any",
-      "age, so never report a Google role as new.",
-      "",
-      "pages is a budget of 20 roles each. The adapter stops early on a short page or a repeat,",
-      "so a generous number costs nothing when the board is smaller than the budget."
-    ],
-    "locations": [],
-    "pages": 8,
-    "delay": 0.5
-  }
+  "employers": [],
+  "names": {},
+  "pages": 5,
+  "delay": 0.3
+ },
+ "linkedin": {
+  "_comment": "OFF by default. Undocumented endpoint, against LinkedIn's terms of service. Read adapters/linkedin.py and decide for yourself.",
+  "enabled": false,
+  "location": "<your country>",
+  "pages": 4,
+  "delay": 0.8
+ },
+ "google": {
+  "_comment": [
+   "Google runs its own careers site: no third-party ATS, and no JSON API (the old",
+   "careers.google.com/api/v3 endpoint answers 404). The results page is SERVER-RENDERED,",
+   "so the adapter reads the HTML directly. Leave 'locations' empty to disable this source.",
+   "",
+   "'locations' are Google's own location strings, exactly as they appear in the ?location=",
+   "parameter of the careers URL. Their site writes 'Dublin Ireland', not 'Dublin, Ireland' --",
+   "open the careers page, filter to your city, and copy the value out of the address bar.",
+   "",
+   "\ud83d\udd34 GOOGLE PUBLISHES NO POSTING DATE anywhere on a job card. Worse than Workday's",
+   "'30+ days', which at least gives you a floor. Rows carry an empty date and may be any",
+   "age, so never report a Google role as new.",
+   "",
+   "pages is a budget of 20 roles each. The adapter stops early on a short page or a repeat,",
+   "so a generous number costs nothing when the board is smaller than the budget."
+  ],
+  "locations": [],
+  "pages": 8,
+  "delay": 0.5
+ }
 }

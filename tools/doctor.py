@@ -202,6 +202,40 @@ def check_scores():
     return OK, f"all {scored} score(s) add up and agree with the table{note}"
 
 
+def check_oracle_names():
+    """🔴 An Oracle site configured with no employer name silently disables the
+    exclusion list for that whole adapter.
+
+    `oracle.py` falls back to the site slug when `names` has no entry, so a row's
+    company field reads `CX_1001` rather than the employer. `employers.py` matches
+    every avoid, avoid_sectors and watch rule against that field -- so none of them
+    can ever fire, and dedup can never recognise the same job arriving from
+    LinkedIn under the employer's real name.
+
+    🔴 It was documented as cosmetic. `templates/settings/search.example.json` said `names` "only
+    prettifies the site slug in the shortlist", which is why nobody set it, and
+    1,308 rows in one vault carried a site code as their employer.
+    """
+    if not os.path.exists(paths.SEARCH):
+        return OPTIONAL, "no search.json — the radar runs on employer boards only"
+    try:
+        with open(paths.SEARCH, encoding="utf-8") as fh:
+            cfg = json.load(fh)
+    except (OSError, ValueError):
+        return OPTIONAL, "search.json unreadable — reported by the search check"
+    oracle = cfg.get("oracle") or {}
+    sites = [e for e in (oracle.get("employers") or []) if isinstance(e, dict)]
+    if not sites:
+        return OPTIONAL, "no Oracle employers configured"
+    names = oracle.get("names") or {}
+    unnamed = [e.get("site") for e in sites if e.get("site") and not names.get(e.get("site"))]
+    if unnamed:
+        return MISSING, (f"{len(unnamed)} Oracle site(s) have no entry in `names`: "
+                         f"{', '.join(str(u) for u in unnamed[:3])}. Their rows carry the site "
+                         f"slug as the employer, so avoid/watch rules never match them")
+    return OK, f"all {len(sites)} Oracle site(s) map to an employer name"
+
+
 def check_foreign_state():
     """🔴 What another tool left beside the code, naming the user's files.
 
@@ -372,6 +406,7 @@ CHECKS = [
     ("other tools", check_foreign_state),
     ("quotes", check_quotes),
     ("scores", check_scores),
+    ("oracle names", check_oracle_names),
     ("registry", check_registry),
     ("your CV", check_sources),
     ("your wiki", check_wiki),

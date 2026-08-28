@@ -436,3 +436,62 @@ class TheExamplesMustNeverLookConfigured(unittest.TestCase):
         self.assertFalse(isinstance(days, (int, float)) and not isinstance(days, bool),
                          "profile.example.json ships a real working_days_per_year, so a user "
                          "who never edits it inherits it silently")
+
+
+class TheOracleEmployerName(unittest.TestCase):
+    """🔴 A field documented as cosmetic that silently disables the exclusion list.
+
+    `oracle.py` falls back to the site slug when `names` has no entry, so a row's
+    company reads `CX_1001` rather than the employer. `employers.py` matches every
+    avoid, avoid_sectors and watch rule against that field — so none of them can
+    fire, and dedup can never recognise the same job arriving from LinkedIn under
+    the employer's real name.
+
+    🔴 `templates/settings/search.example.json` said `names` "only prettifies the
+    site slug in the shortlist". That is why nobody set it, and why 1,308 rows in
+    one vault carried a site code as their employer.
+    """
+
+    def _vault(self, oracle):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        saved = doctor.paths.VAULT
+        self.addCleanup(doctor.paths.use, saved)
+        os.makedirs(os.path.join(d, "settings"))
+        with open(os.path.join(d, "settings", "search.json"), "w", encoding="utf-8") as fh:
+            json.dump({"oracle": oracle}, fh)
+        doctor.paths.use(d)
+        return doctor.check_oracle_names()
+
+    def test_a_site_with_no_name_is_reported(self):
+        v, detail = self._vault({"employers": [{"host": "jpmc.fa.oraclecloud.com",
+                                                "site": "CX_1001"}], "names": {}})
+        self.assertEqual(v, doctor.MISSING)
+        self.assertIn("CX_1001", detail)
+
+    def test_a_named_site_passes(self):
+        v, _ = self._vault({"employers": [{"host": "jpmc.fa.oraclecloud.com", "site": "CX_1001"}],
+                            "names": {"CX_1001": "JPMorganChase"}})
+        self.assertEqual(v, doctor.OK)
+
+    def test_no_oracle_employers_is_OPTIONAL_not_a_fault(self):
+        """🟡 Most installs never configure Oracle. Reporting that as a problem is
+        how a check gets ignored."""
+        v, _ = self._vault({"employers": [], "names": {}})
+        self.assertEqual(v, doctor.OPTIONAL)
+
+    def test_no_search_json_at_all_is_OPTIONAL(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        saved = doctor.paths.VAULT
+        self.addCleanup(doctor.paths.use, saved)
+        doctor.paths.use(d)
+        self.assertEqual(doctor.check_oracle_names()[0], doctor.OPTIONAL)
+
+    def test_the_example_no_longer_calls_names_cosmetic(self):
+        """🔴 The comment IS the bug. A field described as cosmetic does not get set."""
+        with open(os.path.join(ROOT, "templates", "settings",
+                               "search.example.json"), encoding="utf-8") as fh:
+            text = " ".join(json.load(fh)["oracle"]["_comment"])
+        self.assertNotIn("only prettifies", text)
+        self.assertIn("NOT cosmetic", text)
