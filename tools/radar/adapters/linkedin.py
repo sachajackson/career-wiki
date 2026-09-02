@@ -1,6 +1,6 @@
 """LinkedIn guest endpoint.
 
-🔴 IT GETS THE USER'S OWN IP BLOCKED. Reported 2026-08-28, after a run: LinkedIn
+🔴 IT GETS THE USER'S OWN IP BLOCKED. Reported 2026-09-02, after a run: LinkedIn
 then refused that user's normal browsing from the same address.
 
 That is a different class of cost from every other caveat in this file, and it

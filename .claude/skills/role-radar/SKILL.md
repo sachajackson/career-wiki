@@ -147,7 +147,7 @@ It is not a failure and there is nothing broken. **It means you must not report 
 of open roles** — say the search was capped, and either raise `pages` for that adapter in `vault/settings/search.json` or
 narrow the query and run it again.
 
-### 🔴 LinkedIn blocks the user's own IP after a run — reported 2026-08-28
+### 🔴 LinkedIn blocks the user's own IP after a run — reported 2026-09-02
 
 **A run makes up to 47 queries × `pages` requests from one address.** At `pages: 10` that is roughly
 **470 automated requests in a few minutes**, and LinkedIn responds by refusing that address for ordinary
