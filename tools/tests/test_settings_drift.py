@@ -296,3 +296,37 @@ class TheShippedExamples(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class AMapKeyedByUserDataIsOpaque(unittest.TestCase):
+    """🔴 `oracle.names` maps an employer identity to a display name. The template
+    ships it empty, so every entry a user adds came back as drift:
+
+        ?? nothing reads this any more, or it is your own:
+             oracle.names.jpmc.fa.oraclecloud.com|CX_1001
+
+    **Permanent, unactionable, and two lines long** — which is how the two real
+    findings above it stop being read. Same reasoning the module already gives
+    for lists: the KEY is schema, the CONTENTS are the user's.
+    """
+
+    def test_entries_inside_a_names_map_are_not_reported(self):
+        tpl = {"oracle": {"employers": [], "names": {}}}
+        mine = {"oracle": {"employers": [], "names": {"host|SITE": "Some Employer",
+                                                      "other|SITE": "Another"}}}
+        self.assertEqual(drift.shape(mine) - drift.shape(tpl), set())
+
+    def test_the_map_itself_is_still_schema(self):
+        """🟡 The false-positive direction. Going opaque must not hide the map
+        DISAPPEARING from a template — that is a real update the user has not
+        taken."""
+        self.assertIn("oracle.names", drift.shape({"oracle": {"names": {}}}))
+
+    def test_a_normal_nested_object_is_still_walked(self):
+        """🔴 The other direction, and the one that matters more: making maps
+        opaque must not make ordinary config opaque. `workday.host` is schema and
+        a missing one is a real gap."""
+        tpl = {"workday": {"host": "", "tenant": "", "site": ""}}
+        mine = {"workday": {"host": ""}}
+        self.assertEqual(drift.shape(tpl) - drift.shape(mine),
+                         {"workday.tenant", "workday.site"})

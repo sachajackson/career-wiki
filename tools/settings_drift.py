@@ -65,11 +65,25 @@ TEMPLATES = os.path.join(os.path.dirname(HERE), "templates", "settings")
 SUFFIX = ".example.json"
 
 
+# 🔴 A MAP WHOSE KEYS ARE USER DATA CAN NEVER MATCH A TEMPLATE, so recursing into
+# one reports the user's own content as drift forever. `oracle.names` and
+# `workday.names` map an employer identity to that employer's display name; the
+# template ships them empty, so every entry a user adds came back as "nothing
+# reads this any more, or it is your own" -- a warning that is permanent, cannot
+# be actioned, and trains people to ignore the two lines above it.
+#
+# 🟢 Same reasoning the module docstring already gives for lists: the KEY is
+# schema, the CONTENTS are the user's. These are opaque for the same reason.
+OPAQUE_MAPS = ("names",)
+
+
 def shape(obj, prefix=""):
-    """Every key path in an object, ignoring prose and treating lists as values.
+    """Every key path in an object, ignoring prose and treating lists — and
+    free-form maps — as values.
 
     See the module docstring: the underscore rule is the whole difference
-    between a check people run and a check people mute.
+    between a check people run and a check people mute. OPAQUE_MAPS is the same
+    rule for a map that is keyed by the user's own data.
     """
     out = set()
     if isinstance(obj, dict):
@@ -77,6 +91,8 @@ def shape(obj, prefix=""):
             if k.startswith("_"):
                 continue
             out.add(prefix + k)
+            if k in OPAQUE_MAPS:
+                continue                  # the key is schema; what is inside is not
             out |= shape(v, prefix + k + ".")
     return out
 
