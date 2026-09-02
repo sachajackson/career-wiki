@@ -1,5 +1,32 @@
 """LinkedIn guest endpoint.
 
+🔴 IT GETS THE USER'S OWN IP BLOCKED. Reported 2026-08-28, after a run: LinkedIn
+then refused that user's normal browsing from the same address.
+
+That is a different class of cost from every other caveat in this file, and it
+is worth stating plainly rather than as a footnote:
+
+  - A run is up to 47 queries x `pages` requests. At pages=10 that is ~470
+    automated requests from one address in a few minutes.
+  - The person running it NEEDS LinkedIn for the job search itself -- their
+    profile, recruiter contact, and many applications start there.
+  - So the tool damages the thing it exists to serve. **A source that costs the
+    user access to that source is not a source, it is a trade**, and it has to
+    be a decision rather than a default.
+
+🟢 WHAT IT UNIQUELY BUYS, MEASURED, so the trade can be judged rather than
+argued: of the role pages in one real vault, five cite a LinkedIn URL and no
+other, and they are AGENCY postings -- the employer is withheld, so there is no
+board to watch and no other route exists. Everything else LinkedIn found was
+also reachable from an employer's own ATS.
+
+🟡 THE DESIGNED ALTERNATIVE IS ALREADY WRITTEN DOWN. `role-radar` says of
+bot-protected sources: "use their own saved-search email alerts and paste
+anything interesting in for scoring." **That applies here exactly**, and it is
+the standing backlog item *Email alerts as a universal source*, which this
+finding promotes from a good idea to the answer to a live problem.
+
+
 *** OFF BY DEFAULT. READ THIS BEFORE ENABLING. ***
 
 This uses an undocumented endpoint that backs LinkedIn's logged-out job widget.

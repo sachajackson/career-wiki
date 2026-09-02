@@ -59,13 +59,36 @@ class Wiki:
         shutil.rmtree(self.dir, ignore_errors=True)
 
 
+# 🔴 THIS FILE HAS TWO CLOCKS AND A HARDCODED DATE WALKED OFF ONE OF THEM.
+#
+# `review()` is given a frozen TODAY, which is right -- a test of "over seven
+# days" must not mean something different next week. But `run()` goes through
+# the CLI, which calls datetime.date.today(), so those tests are on the REAL
+# clock.
+#
+# `Submitted 2026-08-24` was written when it was four days before both. On
+# 2026-09-02 it is nine days before the real one, and
+# test_a_recent_submission_says_nothing failed for no reason but the calendar.
+#
+# 🟢 Two helpers, named for which clock they belong to, so the next person
+# cannot pick the wrong one by accident.
+def days_ago(n):
+    """Relative to the FROZEN clock -- for anything going through review()."""
+    return (TODAY - datetime.timedelta(days=n)).isoformat()
+
+
+def real_days_ago(n):
+    """Relative to the REAL clock -- for anything going through run()."""
+    return (datetime.date.today() - datetime.timedelta(days=n)).isoformat()
+
+
 class TheFalsePositives(unittest.TestCase):
     """🔴 Tested first, because a check that nags about settled applications is
     one that gets muted -- and muting this one restores the original failure."""
 
     def test_a_recent_submission_says_nothing(self):
         with Wiki() as w:
-            w.page("t.md", HEAD + "| [[Role A\\|A]] | 🟢 **Submitted 2026-08-24** |\n")
+            w.page("t.md", HEAD + f"| [[Role A\\|A]] | 🟢 **Submitted {real_days_ago(4)}** |\n")
             self.assertEqual(w.review(), ([], [], []))
             code, out = w.run()
             self.assertEqual(code, 0)
@@ -103,9 +126,9 @@ class TheCatchingCases(unittest.TestCase):
 
     def test_over_seven_days_is_asked_about(self):
         with Wiki() as w:
-            w.page("t.md", HEAD + "| [[Osborne Role\\|Osborne]] | 🟢 **Submitted 2026-08-13** |\n")
+            w.page("t.md", HEAD + f"| [[Osborne Role\\|Osborne]] | 🟢 **Submitted {days_ago(15)}** |\n")
             ask, record, undateable = w.review()
-            self.assertEqual([(n, d) for n, d, _ in ask], [("Osborne", 14)])
+            self.assertEqual([(n, d) for n, d, _ in ask], [("Osborne", 15)])
             self.assertEqual((record, undateable), ([], []))
 
     def test_a_note_containing_a_vocabulary_word_does_not_settle_a_live_row(self):
@@ -118,7 +141,7 @@ class TheCatchingCases(unittest.TestCase):
         the tool itself.
         """
         with Wiki() as w:
-            w.page("t.md", HEAD + "| [[Osborne Role\\|Osborne]] | 🟢 **Submitted 2026-08-13** | "
+            w.page("t.md", HEAD + f"| [[Osborne Role\\|Osborne]] | 🟢 **Submitted {days_ago(15)}** | "
                                   "the earlier posting closed before applying, and they declined "
                                   "to say why |\n")
             ask, _, _ = w.review()
@@ -126,7 +149,7 @@ class TheCatchingCases(unittest.TestCase):
 
     def test_over_twenty_one_days_becomes_record_an_outcome(self):
         with Wiki() as w:
-            w.page("t.md", HEAD + "| [[Role A\\|A]] | **Submitted 2026-07-20** |\n")
+            w.page("t.md", HEAD + f"| [[Role A\\|A]] | **Submitted {days_ago(43)}** |\n")
             ask, record, _ = w.review()
             self.assertEqual(ask, [])
             self.assertEqual([n for n, _, _ in record], ["A"])

@@ -147,6 +147,32 @@ It is not a failure and there is nothing broken. **It means you must not report 
 of open roles** — say the search was capped, and either raise `pages` for that adapter in `vault/settings/search.json` or
 narrow the query and run it again.
 
+### 🔴 LinkedIn blocks the user's own IP after a run — reported 2026-08-28
+
+**A run makes up to 47 queries × `pages` requests from one address.** At `pages: 10` that is roughly
+**470 automated requests in a few minutes**, and LinkedIn responds by refusing that address for ordinary
+browsing.
+
+🔴 **This is a different class of cost from every other caveat in this file.** The person running the
+radar **needs LinkedIn for the search itself** — their profile, recruiter contact, and many applications
+start there. **A source that costs the user access to that source is a trade, not a source**, and it must
+be a decision rather than a default.
+
+🟢 **What it uniquely buys, measured rather than argued:** in one real vault, **five role pages cite a
+LinkedIn URL and no other** — and they are **agency postings**, where the employer is withheld so no board
+exists to watch. **Everything else LinkedIn found was also reachable from an employer's own ATS.**
+
+**Three options, and the middle one is not obviously right:**
+
+| | |
+|---|---|
+| **Turn it off** — `"enabled": false` | Costs the agency-posted roles, which is a real loss: three of the highest-scoring contract and withheld-employer roles came this way |
+| **Shrink the footprint** | Fewer queries against LinkedIn, `pages` down, `delay` up. 🔴 **Reduces the risk without removing it**, and the measured evidence is that depth past `pages: 4` bought nothing anyway |
+| 🟢 **Use their saved-search email alerts instead** | **The pattern this file already prescribes for bot-protected sources**, and it inverts the problem: LinkedIn sends the roles instead of being scraped. Designed, not built — see `BACKLOG.md` |
+
+🟡 **Say the cost before running it**, the same way the six-minute figure gets said. A user who does not
+know a run may cost them LinkedIn access cannot consent to it.
+
 ### 🔴 Before trusting a quiet run, check the sources answer
 
 ```bash
