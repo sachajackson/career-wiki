@@ -197,3 +197,65 @@ class TheCompletenessMarkers(unittest.TestCase):
         for body in ["You will lead a team of engineers building payment systems.",
                      "Requirements: 10 years of delivery leadership in financial services."]:
             self.assertIsNone(q.COMPLETE.search(body), body)
+
+
+class APostingIdIsPerATS(unittest.TestCase):
+    """🔴 `/job/` FOLLOWED BY ANYTHING PAIRED PAGES TO THE WRONG ARCHIVES.
+
+    Oracle puts the requisition straight after /job/. Workday puts the LOCATION
+    there, then the title, then the id:
+
+        .../job/Ireland---Dublin/AI-Builder--Emerging-Talent-Senior-Manager_JR354003
+
+    So every Workday URL yielded `Ireland---Dublin` as its posting id. A
+    Salesforce AI role was compared against a Salesforce COMPLIANCE role and its
+    quotations reported as misquotes — the quote was fine and the pairing was
+    broken.
+
+    🔴 And the damage was the opposite of what it looked like. The check reported
+    **55 assessments checked** on those collisions; with correct ids it dropped to
+    12, because most role pages carry no URL at all. **A gate reporting inflated
+    coverage is worse than one reporting none** — the number is what stops anyone
+    looking.
+    """
+
+    CASES = {
+        "https://www.linkedin.com/jobs/view/4458039835/": "4458039835",
+        "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210773432": "210773432",
+        "https://salesforce.wd12.myworkdayjobs.com/External_Career_Site/job/Ireland---Dublin/"
+        "AI-Builder--Emerging-Talent-Senior-Manager_JR354003": "JR354003",
+        "https://citi.wd5.myworkdayjobs.com/2/job/Dublin--Ireland/Director--Services-Ops_26987524": "26987524",
+        "https://boards.greenhouse.io/acme?gh_jid=8094855": "8094855",
+    }
+
+    def test_each_ats_yields_its_own_requisition(self):
+        for url, want in self.CASES.items():
+            with self.subTest(url=url[:48]):
+                self.assertEqual(q.ids_in(url), {want})
+
+    def test_an_oracle_site_slug_is_not_mistaken_for_a_workday_id(self):
+        """🔴 The second attempt at this fix matched `CX_1001` inside an Oracle
+        URL and returned `1001`, because a single alternation picks the leftmost
+        match and cannot see which host it is looking at. Hence per-host rules."""
+        url = ("https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/"
+               "CX_1001/job/210773432")
+        self.assertNotIn("1001", q.ids_in(url))
+
+    def test_a_location_segment_is_never_an_id(self):
+        """The original bug, named so a later edit cannot reintroduce it."""
+        url = ("https://salesforce.wd12.myworkdayjobs.com/External_Career_Site/job/"
+               "Ireland---Dublin/Some-Role_JR111111")
+        self.assertNotIn("Ireland---Dublin", q.ids_in(url))
+
+    def test_a_repost_suffix_survives(self):
+        """🟡 `_JR358522-1` is a repost. Requiring the id to end at the digits
+        dropped it, and that archive then had no id at all."""
+        url = ("https://salesforce.wd12.myworkdayjobs.com/External_Career_Site/job/"
+               "Ireland---Dublin/Compliance-Delivery_JR358522-1")
+        self.assertEqual(q.ids_in(url), {"JR358522-1"})
+
+    def test_two_workday_roles_in_one_city_do_not_collide(self):
+        """🔴 The consequence that did the damage: same city, different jobs."""
+        a = "https://x.myworkdayjobs.com/s/job/Ireland---Dublin/Role-A_JR100001"
+        b = "https://x.myworkdayjobs.com/s/job/Ireland---Dublin/Role-B_JR100002"
+        self.assertNotEqual(q.ids_in(a), q.ids_in(b))

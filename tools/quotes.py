@@ -151,11 +151,54 @@ def quotations(page_text):
 # posting five ways -- a markdown link, a bare host, a backticked path with no
 # scheme at all -- and a regex requiring "https://" found none of them on the very
 # page it was written to check.
-POSTING_ID = re.compile(r"(?:jobs/view/|/job/|gh_jid=|ashby_jid=)([A-Za-z0-9-]{4,})")
+# 🔴 `/job/` FOLLOWED BY ANYTHING WAS WRONG, AND WORKDAY IS WHY.
+#
+# Oracle puts the requisition straight after /job/ -- .../sites/CX_1001/job/210773432
+# -- but Workday puts the LOCATION there, then the title, then the id:
+#   .../job/Ireland---Dublin/AI-Builder--Emerging-Talent-Senior-Manager_JR354003
+#
+# So every Workday URL yielded `Ireland---Dublin` as its posting id. Two roles in
+# one city collided on it, load_postings kept one, and a page was checked against
+# an unrelated archive -- a Salesforce AI role compared to a Salesforce compliance
+# role, reporting a good quotation as a misquote because the PAIRING was broken.
+# Same class as the Guidewire/Yuno fuzzy-filename failure recorded above, reached
+# by a different route.
+#
+# 🟢 The rules are per HOST, applied to one URL at a time. A single alternation
+# cannot do this: the second attempt matched `CX_1001` inside an Oracle URL and
+# returned `1001`, because alternation picks the leftmost match and has no idea
+# which host it is looking at.
+URL_IN_TEXT = re.compile(r"https?://[^\s)\]|>\"']+")
+_RULES = (
+    ("linkedin.com",     re.compile(r"jobs/view/(\d{4,})")),
+    # 🟡 The id may carry a repost suffix -- `_JR358522-1` -- so the digits are
+    # not the end of it. Take everything from the underscore to the end of the
+    # path, which is what Workday actually puts there.
+    ("myworkdayjobs",    re.compile(r"_([A-Za-z]{0,3}\d{4,}(?:-\d+)?)(?:[/?#]|$)")),
+    ("myworkdaysite",    re.compile(r"_([A-Za-z]{0,3}\d{4,}(?:-\d+)?)(?:[/?#]|$)")),
+    ("oraclecloud",      re.compile(r"/job/(\d{4,})")),
+    ("greenhouse",       re.compile(r"gh_jid=([A-Za-z0-9-]{4,})")),
+    ("ashby",            re.compile(r"ashby_jid=([A-Za-z0-9-]{4,})")),
+)
+# Anything not matched by host: the old general shapes, which are safe on their own.
+_FALLBACK = re.compile(r"jobs/view/(\d{4,})|gh_jid=([A-Za-z0-9-]{4,})|ashby_jid=([A-Za-z0-9-]{4,})")
 
 
 def ids_in(text):
-    return set(POSTING_ID.findall(text))
+    """Every posting id in some text, read per URL and per host."""
+    out = set()
+    for url in URL_IN_TEXT.findall(text or ""):
+        hit = False
+        for host, pat in _RULES:
+            if host in url:
+                m = pat.search(url)
+                if m:
+                    out.add(m.group(1)); hit = True
+                break
+        if not hit:
+            for groups in _FALLBACK.findall(url):
+                out |= {g for g in groups if g}
+    return out
 
 
 def postings_for(page_text, postings):
@@ -282,6 +325,35 @@ def load_postings():
     return out
 
 
+# 🔴 MOST ROLE PAGES DO NOT CARRY THEIR OWN POSTING URL -- the scoring table does.
+# `pipeline.py`'s `recorded` stage accepts either, which is right for its purpose,
+# and it is why "all 81 assessments carry a URL" sat happily beside a quote check
+# covering twelve of them.
+#
+# Worse, the shortfall was invisible: before the per-host id fix, `/job/<anything>`
+# matched a Workday LOCATION segment, so pages paired with arbitrary archives and
+# the check reported 55 assessments "checked" against postings that were not
+# theirs. **A gate reporting inflated coverage is worse than one reporting none**,
+# because the number is what stops anyone looking.
+def table_urls():
+    """{page name: [urls]} from the scoring table, for pages that cite none."""
+    out = {}
+    fw = os.path.join(paths.WIKI, "Role Scoring Framework.md")
+    try:
+        with open(fw, encoding="utf-8") as fh:
+            text = fh.read()
+    except OSError:
+        return out
+    for line in text.split("\n"):
+        m = re.match(r"^\|\s*(?:[^|\[]*)\[\[([^\]\\|]+)", line)
+        if not m:
+            continue
+        urls = URL_IN_TEXT.findall(line)
+        if urls:
+            out.setdefault(m.group(1).strip(), []).extend(urls)
+    return out
+
+
 def check(page_path, postings):
     """(posting name or None, [quotes that are not in it], total checked)."""
     with open(page_path, encoding="utf-8") as fh:
@@ -290,6 +362,12 @@ def check(page_path, postings):
     if not quotes:
         return None, [], 0
     matched = postings_for(page, postings)
+    if not matched:
+        # 🟢 Fall back to the URL the scoring table records for this role.
+        name = os.path.basename(page_path)[:-3]
+        extra = " ".join(table_urls().get(name, []))
+        if extra:
+            matched = postings_for(extra, postings)
     if not matched:
         return None, [], len(quotes)
     filename = matched[0][0] + (f" +{len(matched)-1} more" if len(matched) > 1 else "")
